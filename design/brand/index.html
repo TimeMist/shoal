@@ -1,0 +1,910 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sweetspot Brand Guidelines</title>
+<meta name="description" content="Brand and design guidelines for Sweetspot, the AI negotiation agent for online shops.">
+<link rel="icon" href="logo/sweetspot-favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Funnel+Display:wght@400..800&family=Funnel+Sans:ital,wght@0,400..700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --blush: #FFF7F6; --white: #FFFFFF; --ink: #1F0A24; --mut: #6E5670; --rule: #F1DFE3; --tint: #F9E6EC;
+    --jam: #7A0E3A; --berry: #E0146F; --coral: #F45D4F; --plum: #5A1E8C; --leaf: #7FAE34; --leaf-ink: #4F7A16;
+    --ease-out: cubic-bezier(.16,1,.3,1); --ease-spring: cubic-bezier(.34,1.4,.64,1); --ease-pop: cubic-bezier(.34,1.56,.64,1);
+    --r-sm: 10px; --r-md: 16px; --r-lg: 24px; --r-xl: 28px;
+    --shadow: 0 1px 0 var(--rule), 0 24px 60px -36px rgba(31,10,36,.32);
+    --display: "Funnel Display", system-ui, sans-serif; --sans: "Funnel Sans", system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 24px; }
+  body { margin: 0; background: var(--blush); color: var(--ink); font: 16px/1.55 var(--sans); -webkit-font-smoothing: antialiased; }
+  ::selection { background: var(--berry); color: #fff; }
+  :focus-visible { outline: 2px solid var(--berry); outline-offset: 3px; border-radius: 6px; }
+  a { color: var(--jam); text-underline-offset: 3px; text-decoration-thickness: 1px; }
+  a:hover { color: var(--berry); }
+  code { font: 500 .88em/1 ui-monospace, "SF Mono", Menlo, monospace; background: var(--tint); padding: 2px 6px; border-radius: 6px; }
+  img { max-width: 100%; display: block; }
+  ::-webkit-scrollbar { width: 12px; height: 12px; } ::-webkit-scrollbar-thumb { background: #E9CBD4; border-radius: 999px; border: 3px solid var(--blush); } ::-webkit-scrollbar-track { background: transparent; }
+  .num { font-variant-numeric: tabular-nums; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  .shell { max-width: 1320px; margin: 0 auto; padding: 0 32px; display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 56px; }
+  .index { position: sticky; top: 0; align-self: start; height: 100vh; padding: 32px 0; display: flex; flex-direction: column; gap: 28px; }
+  .index .brand { display: flex; align-items: center; gap: 10px; font: 700 21px var(--display); letter-spacing: -.025em; color: var(--ink); text-decoration: none; }
+  .index nav { display: flex; flex-direction: column; gap: 2px; }
+  .index nav a { color: var(--mut); text-decoration: none; padding: 6px 10px; border-radius: 10px; font-size: 14px; }
+  .index nav a:hover, .index nav a[aria-current="true"] { color: var(--ink); background: var(--tint); }
+  .index .meta { margin-top: auto; font-size: 12px; color: var(--mut); line-height: 1.5; }
+  main { min-width: 0; padding: 32px 0 120px; }
+
+  section { padding: 72px 0 24px; }
+  section + section { border-top: 1px solid var(--rule); }
+  h1, h2, h3 { font-family: var(--display); letter-spacing: -.03em; margin: 0; text-wrap: balance; }
+  h2 { font-size: clamp(34px, 4vw, 52px); line-height: 1; font-weight: 750; margin-bottom: 14px; }
+  h3 { font-size: 22px; letter-spacing: -.02em; font-weight: 700; margin: 40px 0 12px; }
+  .lead { font-size: 19px; color: var(--mut); max-width: 62ch; margin: 0 0 28px; }
+  p { max-width: 70ch; }
+  .muted { color: var(--mut); }
+  .grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+  .panel { background: var(--white); border-radius: var(--r-lg); box-shadow: var(--shadow); padding: 24px; }
+  .panel.flat { box-shadow: 0 1px 0 var(--rule); }
+  .label { font: 600 12px var(--sans); letter-spacing: .06em; text-transform: uppercase; color: var(--mut); margin: 0 0 10px; }
+
+  /* ---------- hero ---------- */
+  .hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 40px; align-items: center; min-height: calc(100vh - 64px); padding: 24px 0 48px; }
+  .hero h1 { font-size: clamp(52px, 6.4vw, 96px); line-height: .95; font-weight: 750; letter-spacing: -.04em; margin-bottom: 22px; }
+  .hero h1 span { color: var(--berry); }
+  .hero .idea { font-size: 20px; color: var(--mut); max-width: 44ch; margin: 0 0 28px; }
+  .hero .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip-link { font-size: 14px; padding: 8px 14px; border-radius: 999px; background: var(--white); box-shadow: inset 0 0 0 1px var(--rule); color: var(--ink); text-decoration: none; }
+  .chip-link:hover { box-shadow: inset 0 0 0 1px var(--berry); color: var(--ink); }
+  .stage { position: relative; background: var(--white); border-radius: 32px; box-shadow: var(--shadow); padding: 28px; display: grid; gap: 8px; }
+  .stage .agent-big { width: min(260px, 70%); margin: 4px auto 0; display: block; overflow: visible; }
+  .stage .caption { text-align: center; font-size: 14px; color: var(--mut); min-height: 22px; }
+
+  /* ---------- agent tag (living logo) ---------- */
+  .agent .pupil { transition: transform .45s var(--ease-out); }
+  .agent .eye { transform-box: fill-box; transform-origin: center; transition: transform .14s ease-in; }
+  .agent.blink .eye { transform: scaleY(.08); }
+  .agent .happy { opacity: 0; transition: opacity .2s; }
+  .agent.is-happy .eye { opacity: 0; }
+  .agent.is-happy .happy { opacity: 1; }
+  .agent .body { transform-box: fill-box; transform-origin: 30% 50%; }
+  .agent.is-happy .body { animation: hop .6s var(--ease-pop); }
+  .agent.is-thinking .body { animation: think 1.6s ease-in-out infinite; }
+  @keyframes hop { 40% { transform: translateY(-4px) scale(1.04); } }
+  @keyframes think { 50% { transform: rotate(2.5deg); } }
+
+  /* ---------- negotiation track ---------- */
+  .track svg { width: 100%; height: auto; display: block; overflow: visible; }
+  .drop { transition: cx 1.1s var(--ease-spring), r .6s var(--ease-pop); }
+  .chipg { transition: transform 1.1s var(--ease-spring), opacity .35s; }
+  .chipg text { font-family: var(--display); font-weight: 750; letter-spacing: -.03em; fill: var(--ink); font-variant-numeric: tabular-nums; }
+  .chipg .who { font: 500 12px var(--sans); fill: var(--mut); letter-spacing: 0; }
+  .axis { font: 12px var(--sans); fill: var(--mut); }
+  .ripple { fill: none; stroke: var(--berry); stroke-width: 2.5; opacity: 0; transform-box: fill-box; transform-origin: center; }
+  .ripple.on { animation: ripple 1.1s var(--ease-out); }
+  @keyframes ripple { from { opacity: .85; transform: scale(.5); } to { opacity: 0; transform: scale(2.3); } }
+  .nudge { animation: nudge .5s cubic-bezier(.36,.07,.19,.97); transform-box: fill-box; transform-origin: center; }
+  @keyframes nudge { 30% { transform: scaleX(.8) translateX(-6px); } 60% { transform: scaleX(1.05); } }
+
+  /* ---------- voice ---------- */
+  /* typographic definition rows, used instead of card grids */
+  .defs { display: grid; gap: 28px 32px; margin: 8px 0; }
+  .defs.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .defs.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .defs.four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .defs > div { border-top: 2px solid var(--ink); padding-top: 14px; }
+  .defs dt { font: 700 18px/1.2 var(--display); letter-spacing: -.02em; margin-bottom: 6px; }
+  .defs.big dt { font-size: clamp(26px, 2.6vw, 34px); font-weight: 750; letter-spacing: -.03em; color: var(--jam); }
+  .defs dd { margin: 0; color: var(--mut); font-size: 15px; }
+  .drop-card { display: flex; gap: 14px; align-items: flex-start; }
+  .drop-card svg { flex: none; }
+  .drop-card p { margin: 4px 0 0; }
+  .jam-band { background: var(--jam); color: #fff; border-radius: var(--r-xl); padding: 32px; margin: 40px 0; }
+  .jam-band h3 { color: #fff; margin-top: 0; font-size: clamp(28px, 3vw, 40px); font-weight: 750; letter-spacing: -.03em; }
+  .jam-band .rules li { background: transparent; box-shadow: none; border-top: 2px solid rgba(255,255,255,.35); border-radius: 0; padding: 14px 0 0; color: #F6D9E3; }
+  .jam-band .rules b { color: #fff; font: 700 18px/1.2 var(--display); letter-spacing: -.02em; margin-bottom: 6px; }
+  .leaf-txt { color: #C5E88A; font-weight: 600; }
+  .lab { display: grid; grid-template-columns: 160px 1fr; gap: 24px; align-items: center; }
+  .lab .btn { white-space: nowrap; }
+  .dodont { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .say { border-radius: var(--r-md); padding: 16px 18px; background: var(--white); box-shadow: 0 1px 0 var(--rule); }
+  .say .tag { display: inline-flex; align-items: center; gap: 6px; font: 600 12px var(--sans); letter-spacing: .04em; text-transform: uppercase; margin-bottom: 8px; }
+  .say.do .tag { color: var(--leaf-ink); } .say.dont .tag { color: var(--jam); }
+  .say ul { margin: 0; padding-left: 18px; font-size: 15px; } .say li + li { margin-top: 6px; }
+
+  /* ---------- logo ---------- */
+  .logo-hero { display: grid; grid-template-columns: 1.2fr 1fr; gap: 20px; }
+  .tile { border-radius: var(--r-lg); display: grid; place-items: center; min-height: 220px; position: relative; overflow: hidden; padding: 20px 20px 36px; }
+  .tile.light { background: var(--white); box-shadow: 0 1px 0 var(--rule); }
+  .tile.jam { background: var(--jam); } .tile.ink { background: var(--ink); } .tile.blush { background: var(--tint); }
+  .tile .cap { position: absolute; left: 14px; bottom: 12px; font-size: 12px; color: var(--mut); }
+  .tile.jam .cap, .tile.ink .cap { color: #F3D3DE; }
+  .construction { position: relative; }
+  .construction svg { width: 100%; height: auto; display: block; }
+  .variants { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-top: 12px; }
+  .variants .tile { min-height: 160px; }
+  .variants img { width: 64px; height: 64px; }
+  .sizes { display: flex; align-items: flex-end; gap: 22px; flex-wrap: wrap; }
+  .sizes figure { margin: 0; text-align: center; font-size: 12px; color: var(--mut); }
+  .sizes img { margin: 0 auto 6px; }
+  .misuse { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+  .misuse figure { margin: 0; background: var(--white); border-radius: var(--r-md); padding: 16px; box-shadow: 0 1px 0 var(--rule); text-align: center; font-size: 13px; color: var(--mut); }
+  .misuse .art { height: 84px; display: grid; place-items: center; position: relative; margin-bottom: 8px; }
+  .misuse .art::after { content: ""; position: absolute; inset: 8px 22%; background: linear-gradient(to top right, transparent calc(50% - 1.5px), var(--jam) calc(50% - 1.5px), var(--jam) calc(50% + 1.5px), transparent calc(50% + 1.5px)); opacity: .75; }
+  .downloads { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+
+  /* ---------- colour ---------- */
+  .palette { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+  .sw { border-radius: var(--r-md); overflow: hidden; background: var(--white); box-shadow: 0 1px 0 var(--rule); }
+  .sw .c { height: 120px; padding: 14px; display: flex; flex-direction: column; justify-content: flex-end; font: 700 18px var(--display); letter-spacing: -.02em; }
+  .sw .c small { font: 500 12px var(--sans); letter-spacing: 0; opacity: .9; }
+  .sw .m { padding: 12px 14px; font-size: 13px; color: var(--mut); line-height: 1.5; }
+  .sw .m b { color: var(--ink); font-weight: 600; }
+  .ratio { display: inline-block; margin-right: 6px; font-weight: 600; }
+  .ratio.ok { color: var(--leaf-ink); } .ratio.no { color: var(--jam); }
+  .rules { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; counter-reset: r; }
+  .rules li { background: var(--white); border-radius: var(--r-md); padding: 16px; font-size: 14px; color: var(--mut); box-shadow: 0 1px 0 var(--rule); }
+  .rules b { display: block; color: var(--ink); font-size: 15px; margin-bottom: 4px; }
+  .proportion { display: flex; height: 56px; border-radius: var(--r-md); overflow: hidden; box-shadow: 0 1px 0 var(--rule); }
+  .proportion span { display: grid; place-items: center; font-size: 12px; font-weight: 600; }
+  .paypal-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: center; }
+  .pp-btn { height: 46px; border-radius: 8px; background: #FFC439; color: #003087; font: 700 15px var(--sans); display: grid; place-items: center; }
+
+  /* ---------- type ---------- */
+  .specimen { display: grid; grid-template-columns: 1.1fr 1fr; gap: 20px; }
+  .specimen .big { font: 750 120px/0.9 var(--display); letter-spacing: -.045em; }
+  .specimen .alpha { font: 500 22px/1.5 var(--display); letter-spacing: -.01em; color: var(--mut); word-break: break-all; }
+  .scale { display: flex; flex-direction: column; gap: 4px; }
+  .scale .row { display: grid; grid-template-columns: 120px 1fr; gap: 16px; align-items: baseline; padding: 10px 0; border-bottom: 1px solid var(--rule); }
+  .scale .row:last-child { border-bottom: 0; }
+  .scale .tok { font-size: 12px; color: var(--mut); }
+  .prices { display: flex; gap: 28px; align-items: baseline; flex-wrap: wrap; }
+  .prices .p { font: 750 56px var(--display); letter-spacing: -.035em; font-variant-numeric: tabular-nums; }
+  .prices .was { font: 500 24px var(--display); color: var(--mut); text-decoration: line-through; text-decoration-thickness: 2px; }
+
+  /* ---------- components ---------- */
+  .btn { display: inline-flex; align-items: center; gap: 8px; font: 600 15px var(--sans); border: 0; border-radius: 999px; padding: 12px 20px; cursor: pointer; transition: transform .12s var(--ease-out), background .2s, box-shadow .2s; }
+  .btn:active { transform: scale(.97); }
+  .btn.primary { background: var(--jam); color: #fff; } .btn.primary:hover { background: #5E0A2C; }
+  .btn.ghost { background: var(--white); color: var(--ink); box-shadow: inset 0 0 0 1px var(--rule); } .btn.ghost:hover { box-shadow: inset 0 0 0 1px var(--ink); }
+  .btn.deal { background: var(--berry); color: #fff; } .btn.deal:hover { background: #C2105F; }
+  .btn[disabled] { background: #EEDDE2; color: #6E5670; cursor: not-allowed; box-shadow: none; }
+  .btn .spin { width: 14px; height: 14px; border-radius: 50%; border: 2px solid rgba(255,255,255,.4); border-top-color: #fff; animation: spin .8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .btnrow { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .field { display: flex; flex-direction: column; gap: 6px; font-size: 14px; max-width: 280px; }
+  .field input { font: 500 16px var(--sans); padding: 11px 14px; border-radius: 12px; border: 1px solid #E3C9D1; background: var(--white); color: var(--ink); }
+  .field input:focus { outline: none; border-color: var(--berry); box-shadow: 0 0 0 3px rgba(224,20,111,.18); }
+  .field .err { color: var(--jam); font-size: 13px; }
+  .field input[aria-invalid="true"] { border-color: var(--jam); }
+  .status { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; padding: 4px 10px; border-radius: 999px; }
+  .status::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+  .status.paid { color: var(--leaf-ink); background: #EEF5E2; } .status.live { color: #B0105A; background: #FCE3EE; } .status.none { color: var(--mut); background: #F2EAEE; } .status.held { color: var(--plum); background: #EEE6F7; }
+
+  .widget { border-radius: 22px; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+  .widget .p-name { margin: 0; font-size: 17px; }
+  .widget .p-price { margin: 0 0 4px; font-size: 14px; }
+  .msgs { display: flex; flex-direction: column; gap: 8px; font-size: 14px; line-height: 1.4; }
+  .m { max-width: 84%; padding: 9px 13px; border-radius: 16px; animation: bubble .45s var(--ease-out) both; }
+  .m.you { align-self: flex-end; border-bottom-right-radius: 5px; }
+  .m.agent { border-bottom-left-radius: 5px; }
+  @keyframes bubble { from { opacity: 0; transform: translateY(8px) scale(.97); } }
+  .typing { display: inline-flex; gap: 4px; padding: 12px 14px; border-radius: 16px; border-bottom-left-radius: 5px; align-self: flex-start; }
+  .typing i { width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: .5; animation: dot 1s infinite; }
+  .typing i:nth-child(2) { animation-delay: .15s; } .typing i:nth-child(3) { animation-delay: .3s; }
+  @keyframes dot { 50% { transform: translateY(-4px); opacity: 1; } }
+  .badge { display: inline-flex; align-items: center; gap: 6px; font: 500 12px var(--sans); opacity: .85; }
+  .shop-coffee { background: #FBF6EE; color: #2B2118; font-family: Georgia, "Times New Roman", serif; }
+  .shop-coffee .m.you { background: #2B2118; color: #FBF6EE; font-family: var(--sans); } .shop-coffee .m.agent { background: #EFE5D6; font-family: var(--sans); } .shop-coffee .typing { background: #EFE5D6; color: #2B2118; }
+  .shop-coffee .badge { color: #6B5847; }
+  .shop-street { background: #111214; color: #F1F1F1; font-family: "Helvetica Neue", Arial, sans-serif; }
+  .shop-street .m.you { background: #D7FF3A; color: #111214; } .shop-street .m.agent { background: #24262B; } .shop-street .badge { color: #B9BCC4; }
+  .deal-card { border-radius: 14px; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; gap: 10px; font-family: var(--sans); }
+  .shop-coffee .deal-card { background: #fff; box-shadow: inset 0 0 0 1px #E6D9C6; } .shop-street .deal-card { background: #1C1D21; box-shadow: inset 0 0 0 1px #33363C; }
+  .deal-card .amt { font: 750 22px var(--display); letter-spacing: -.02em; }
+  .deal-card small { display: block; font-size: 12px; opacity: .75; }
+
+  .dash { display: grid; grid-template-columns: 1.15fr 1fr; gap: 16px; }
+  .won { background: var(--jam); color: #fff; border-radius: var(--r-lg); padding: 24px; display: flex; flex-direction: column; justify-content: space-between; gap: 18px; }
+  .won .v { font: 750 64px/1 var(--display); letter-spacing: -.035em; font-variant-numeric: tabular-nums; }
+  .won .k { color: #F6D9E3; font-size: 14px; }
+  .won .up { color: #C5E88A; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; }
+  .won .mini { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; border-top: 1px solid rgba(255,255,255,.18); padding-top: 14px; }
+  .won .mini b { display: block; font: 700 24px var(--display); letter-spacing: -.02em; }
+  .won .mini span { font-size: 12px; color: #F3CFDC; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 11px 10px; border-bottom: 1px solid var(--rule); }
+  th { font: 600 11px var(--sans); letter-spacing: .06em; text-transform: uppercase; color: var(--mut); }
+  td.r, th.r { text-align: right; font-variant-numeric: tabular-nums; }
+  tbody tr:hover { background: #FFF1F4; }
+
+  .vs { display: grid; grid-template-columns: 1fr minmax(0, 1.3fr) 1fr; gap: 16px; align-items: stretch; }
+  .party { background: var(--white); border-radius: var(--r-lg); padding: 18px; box-shadow: 0 1px 0 var(--rule); display: flex; flex-direction: column; gap: 10px; }
+  .party header { display: flex; align-items: center; gap: 10px; }
+  .party header svg { width: 44px; height: 44px; overflow: visible; }
+  .party h4 { margin: 0; font: 700 16px var(--display); letter-spacing: -.01em; }
+  .party small { color: var(--mut); font-size: 12px; }
+  .party .lines { display: flex; flex-direction: column; gap: 6px; font-size: 13px; }
+  .party .line { padding: 8px 10px; border-radius: 12px; background: var(--tint); animation: bubble .45s var(--ease-out) both; }
+  .party.buyer .line { background: #FFE9E6; } .party.seller .line { background: #EFE7F8; }
+  .vs-mid { background: var(--white); border-radius: var(--r-lg); padding: 18px; box-shadow: 0 1px 0 var(--rule); display: flex; flex-direction: column; justify-content: center; gap: 8px; }
+  .vs-mid .note { text-align: center; font-size: 13px; color: var(--mut); }
+
+  /* ---------- motion ---------- */
+  .principles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+  .principles div { background: var(--white); border-radius: var(--r-md); padding: 18px; box-shadow: 0 1px 0 var(--rule); }
+  .principles b { display: block; font: 700 18px var(--display); letter-spacing: -.02em; margin-bottom: 4px; }
+  .principles span { font-size: 14px; color: var(--mut); }
+  .curves { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+  .curve { background: var(--white); border-radius: var(--r-md); padding: 16px; box-shadow: 0 1px 0 var(--rule); overflow: hidden; }
+  .curve .lane { height: 34px; border-radius: 999px; background: var(--tint); position: relative; margin: 10px 0; }
+  .curve .ball { position: absolute; top: 5px; left: 5px; width: 24px; height: 24px; border-radius: 50%; background: var(--berry); }
+  .curve.go .ball { animation: go 1.4s var(--e) infinite alternate; }
+  @keyframes go { to { left: calc(100% - 29px); } }
+  .curve code { font-size: 12px; }
+  .curve p { font-size: 13px; color: var(--mut); margin: 6px 0 0; }
+  .timeline { position: relative; display: grid; gap: 0; }
+  .tl { display: grid; grid-template-columns: 90px 1fr; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--rule); font-size: 15px; }
+  .tl:last-child { border-bottom: 0; }
+  .tl .t { font: 700 15px var(--display); color: var(--berry); font-variant-numeric: tabular-nums; }
+  .tl span { color: var(--mut); }
+  .backlog { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .bl { background: var(--white); border-radius: var(--r-md); padding: 16px 18px; box-shadow: 0 1px 0 var(--rule); display: grid; grid-template-columns: 58px 1fr; gap: 14px; align-items: start; }
+  .bl .demo { width: 58px; height: 58px; padding: 8px; border-radius: 14px; background: var(--tint); display: grid; place-items: center; overflow: hidden; }
+  .bl b { display: block; font-size: 15px; margin-bottom: 2px; }
+  .bl span { font-size: 13px; color: var(--mut); }
+  .bl .when { display: inline-block; margin-top: 6px; font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--plum); }
+  .d-stamp { font: 800 10px var(--display); letter-spacing: .04em; color: var(--jam); border: 1.5px solid var(--jam); border-radius: 5px; padding: 2px 4px; transform: rotate(-8deg); }
+  .backlog.play .d-stamp { animation: stamp .6s .4s var(--ease-pop) both; }
+  @keyframes stamp { from { transform: rotate(-8deg) scale(1.15); } }
+  .d-count { font: 750 16px var(--display); color: var(--jam); font-variant-numeric: tabular-nums; }
+  .d-dots { display: flex; gap: 4px; } .d-dots i { width: 7px; height: 7px; border-radius: 50%; background: var(--plum); animation: dot 1s infinite; } .d-dots i:nth-child(2) { animation-delay: .15s; } .d-dots i:nth-child(3) { animation-delay: .3s; }
+  .d-rally { position: relative; width: 44px; height: 20px; } .d-rally i { position: absolute; top: 4px; width: 12px; height: 12px; border-radius: 50%; }
+  .d-rally i:first-child { background: var(--coral); animation: ra 1.6s var(--ease-spring) infinite alternate; left: 0; } .d-rally i:last-child { background: var(--plum); animation: rb 1.6s var(--ease-spring) infinite alternate; right: 0; }
+  @keyframes ra { to { left: 13px; } } @keyframes rb { to { right: 13px; } }
+  .d-pay { width: 40px; height: 14px; border-radius: 4px; background: #FFC439; }
+  .backlog.play .d-pay { animation: payin .45s .2s var(--ease-out) both; }
+  @keyframes payin { from { opacity: .35; transform: translateY(6px); } }
+  .d-bounce { width: 18px; height: 18px; border-radius: 50%; background: var(--coral); animation: bnc 1.6s cubic-bezier(.36,.07,.19,.97) infinite; }
+  @keyframes bnc { 0%, 40% { transform: translateX(-10px); } 55% { transform: translateX(6px) scaleX(.75); } 70%, 100% { transform: translateX(-10px); } }
+  .d-melt { width: 44px; height: 30px; }
+  .d-scrub { width: 44px; height: 6px; border-radius: 3px; background: #EBD3DB; position: relative; } .d-scrub::after { content: ""; position: absolute; top: -4px; left: 0; width: 14px; height: 14px; border-radius: 50%; background: var(--jam); animation: scrub 2.4s ease-in-out infinite alternate; }
+  @keyframes scrub { to { left: 30px; } }
+
+  .a11y { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .a11y div { background: var(--white); border-radius: var(--r-md); padding: 16px 18px; box-shadow: 0 1px 0 var(--rule); font-size: 14px; color: var(--mut); }
+  .a11y b { display: block; color: var(--ink); font-size: 15px; margin-bottom: 4px; }
+  .sources { columns: 2; column-gap: 32px; font-size: 14px; padding-left: 18px; }
+  .sources li { break-inside: avoid; margin-bottom: 8px; color: var(--mut); }
+  footer { margin-top: 56px; padding-top: 24px; border-top: 1px solid var(--rule); font-size: 13px; color: var(--mut); display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+
+  @media (max-width: 1100px) {
+    .rules { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .vs { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 900px) {
+    .shell { grid-template-columns: minmax(0, 1fr); gap: 0; padding: 0 16px; }
+    .index, .index nav, .hero > *, main > * { min-width: 0; }
+    .index { position: sticky; top: 0; z-index: 5; height: auto; padding: 12px 0; flex-direction: row; align-items: center; gap: 12px; background: var(--blush); border-bottom: 1px solid var(--rule); }
+    .index nav { flex-direction: row; overflow-x: auto; gap: 2px; scrollbar-width: none; }
+    .index nav a { white-space: nowrap; padding: 6px 9px; }
+    .index .meta, .index .brand span { display: none; }
+    .hero, .grid2, .logo-hero, .specimen, .dash, .paypal-row, .dodont { grid-template-columns: 1fr; }
+    .hero { min-height: auto; padding-top: 32px; }
+    .grid3, .principles, .curves, .backlog, .a11y, .defs.two, .defs.three, .lab { grid-template-columns: 1fr; }
+    .defs.four { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .lab svg { justify-self: center; }
+    .jam-band { padding: 24px 20px; }
+    .palette, .variants, .misuse { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .specimen .big { font-size: 84px; }
+    .sources { columns: 1; }
+    section { padding-top: 48px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; scroll-behavior: auto !important; }
+  }
+</style>
+</head>
+<body>
+<!-- shared SVG defs -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="ss-g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F45D4F"/><stop offset=".5" stop-color="#E0146F"/><stop offset="1" stop-color="#5A1E8C"/></linearGradient>
+    <linearGradient id="g-coral" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FF8476"/><stop offset="1" stop-color="#F45D4F"/></linearGradient>
+    <linearGradient id="g-plum" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7A35B5"/><stop offset="1" stop-color="#5A1E8C"/></linearGradient>
+    <radialGradient id="glaze" cx=".34" cy=".28" r=".7"><stop offset="0" stop-color="#fff" stop-opacity=".6"/><stop offset=".42" stop-color="#fff" stop-opacity="0"/></radialGradient>
+    <filter id="melt" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur in="SourceGraphic" stdDeviation="7" result="b"/><feColorMatrix in="b" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 22 -9"/></filter>
+    <path id="tag" d="M24 14 H50 Q58 14 58 22 V42 Q58 50 50 50 H24 Q21 50 19 48 L7 35 Q5 32 7 29 L19 16 Q21 14 24 14 Z"/>
+    <symbol id="mark" viewBox="0 0 64 64"><g transform="rotate(-35 32 32)"><use href="#tag" fill="url(#ss-g)"/><ellipse cx="45" cy="21.5" rx="8.5" ry="2.6" fill="#fff" opacity=".28"/><circle cx="22" cy="32" r="7" fill="#fff"/><circle cx="23" cy="32" r="3.4" fill="#1F0A24"/></g></symbol>
+    <symbol id="up" viewBox="0 0 16 16"><path d="M8 3 L13 10 H3 Z" fill="currentColor"/></symbol>
+    <symbol id="check" viewBox="0 0 16 16"><path d="M3 8.5 L6.5 12 L13 4.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="cross" viewBox="0 0 16 16"><path d="M4 4 L12 12 M12 4 L4 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  </defs>
+</svg>
+
+<div class="shell">
+  <aside class="index">
+    <a class="brand" href="#top"><svg width="30" height="30" aria-hidden="true"><use href="#mark"/></svg><span>sweetspot</span></a>
+    <nav aria-label="Guidelines sections">
+      <a href="#idea">Brand idea</a><a href="#voice">Voice</a><a href="#logo">Logo</a><a href="#colour">Colour</a><a href="#type">Type</a><a href="#components">Components</a><a href="#motion">Motion</a><a href="#access">Accessibility</a><a href="#research">Research</a>
+    </nav>
+    <p class="meta">Brand guidelines v1 · October 2026<br>Demo figures are illustrative, not real results.</p>
+  </aside>
+
+  <main id="top">
+    <!-- ================= HERO ================= -->
+    <div class="hero">
+      <div>
+        <h1>Haggling, but <span>make it sweet.</span></h1>
+        <p class="idea">Sweetspot is where two prices melt into one deal. Our brand is warm, fair and quietly clever: a shop's AI agent that negotiates inside the merchant's rules and closes every deal with PayPal.</p>
+        <div class="chips"><a class="chip-link" href="#logo">Logo</a><a class="chip-link" href="#colour">Colour</a><a class="chip-link" href="#components">Components</a><a class="chip-link" href="#motion">Motion</a></div>
+      </div>
+      <div class="stage" aria-live="polite">
+        <svg class="agent agent-big" id="hero-agent" viewBox="0 0 64 64" role="img" aria-label="The Sweetspot agent tag, watching the negotiation">
+          <g transform="rotate(-35 32 32)"><g class="body">
+            <use href="#tag" fill="url(#ss-g)"/>
+            <ellipse cx="45" cy="21.5" rx="8.5" ry="2.6" fill="#fff" opacity=".28"/>
+            <g class="eye"><circle cx="22" cy="32" r="7" fill="#fff"/><circle class="pupil" cx="23" cy="32" r="3.4" fill="#1F0A24"/></g>
+            <path class="happy" d="M16.5 33.5 Q22 27 27.5 33.5" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/>
+          </g></g>
+        </svg>
+        <div class="track" id="hero-track"></div>
+        <p class="caption" id="hero-cap">Shopper offers $180</p>
+      </div>
+    </div>
+
+    <!-- ================= BRAND IDEA ================= -->
+    <section id="idea">
+      <h2>Two prices, one sweet spot</h2>
+      <p class="lead">Every negotiation has a shopper's price and a shop's price. Sweetspot's job is to find the point where both are happy, and our identity is built entirely on that moment: two drops sliding together until they melt into one.</p>
+      <div class="grid3">
+        <div class="drop-card"><svg width="56" height="56" viewBox="0 0 56 56" aria-hidden="true"><circle cx="28" cy="28" r="24" fill="url(#g-coral)"/><circle cx="28" cy="28" r="24" fill="url(#glaze)"/></svg><p><b>Coral, the shopper.</b> Warm, hopeful, making an offer. Coral is the colour of the person on the other side.</p></div>
+        <div class="drop-card"><svg width="56" height="56" viewBox="0 0 56 56" aria-hidden="true"><circle cx="28" cy="28" r="24" fill="url(#g-plum)"/><circle cx="28" cy="28" r="24" fill="url(#glaze)"/></svg><p><b>Plum, the shop's agent.</b> Considered and dependable, holding the merchant's line.</p></div>
+        <div class="drop-card"><svg width="56" height="56" viewBox="0 0 56 56" aria-hidden="true"><circle cx="28" cy="28" r="24" fill="url(#ss-g)"/><circle cx="28" cy="28" r="24" fill="url(#glaze)"/></svg><p><b>Berry, the deal.</b> When they agree, coral and plum melt into berry. It's the only place our gradient ever appears.</p></div>
+      </div>
+      <h3>Who we're talking to</h3>
+      <dl class="defs two">
+        <div><dt>Merchants, our customers</dt><dd>Independent online shops selling things people think twice about buying. They want sales back without public markdowns, and they need to trust that the agent never goes below their floor. Speak to them about <b>control</b> and <b>money won back</b>.</dd></div>
+        <div><dt>Shoppers, their customers</dt><dd>They meet Sweetspot inside a shop, in that shop's own look, with a small "Negotiated by Sweetspot" badge. They should leave feeling they were treated fairly, even when the agent held the line.</dd></div>
+      </dl>
+    </section>
+
+    <!-- ================= VOICE ================= -->
+    <section id="voice">
+      <h2>Voice</h2>
+      <p class="lead">We sound like a good shopkeeper: friendly, straight-talking and fair. Never a pushy salesperson, never a trading terminal.</p>
+      <dl class="defs four big">
+        <div><dt>Warm</dt><dd>Friendly and human. We say "deal", not "transaction".</dd></div>
+        <div><dt>Fair</dt><dd>We explain the why when we say no, and never invent urgency.</dd></div>
+        <div><dt>Clear</dt><dd>Prices, limits and next steps in plain words. Numbers first.</dd></div>
+        <div><dt>Quietly clever</dt><dd>The AI is impressive; we let the result show it, not the jargon.</dd></div>
+      </dl>
+      <h3>How the agent talks to shoppers</h3>
+      <div class="dodont">
+        <div class="say do"><span class="tag"><svg width="14" height="14" aria-hidden="true"><use href="#check"/></svg>Do</span><ul>
+          <li>"That's below what I can do on this grinder. I can do $232."</li>
+          <li>"Meet me at $219 and I'll ship it free."</li>
+          <li>"Deal. $214.00 with free shipping, held for you for 15 minutes."</li>
+        </ul></div>
+        <div class="say dont"><span class="tag"><svg width="14" height="14" aria-hidden="true"><use href="#cross"/></svg>Don't</span><ul>
+          <li>"Only 2 left! Offer expires in 60 seconds!" (fake scarcity)</li>
+          <li>"Your offer has been rejected." (cold, no reason, no counter)</li>
+          <li>"As an AI language model, I'm unable to…" (breaks the experience)</li>
+        </ul></div>
+      </div>
+      <h3>How we talk to merchants</h3>
+      <div class="dodont">
+        <div class="say do"><span class="tag"><svg width="14" height="14" aria-hidden="true"><use href="#check"/></svg>Do</span><ul>
+          <li>"$3,480 won back this week from shoppers who were about to leave."</li>
+          <li>"Your agent never goes below your floor. Every offer is checked in code."</li>
+          <li>"Set a floor, a maximum discount and the extras you're happy to give."</li>
+        </ul></div>
+        <div class="say dont"><span class="tag"><svg width="14" height="14" aria-hidden="true"><use href="#cross"/></svg>Don't</span><ul>
+          <li>"Leverage cutting-edge AI to supercharge conversions."</li>
+          <li>"Revolutionise your pricing strategy."</li>
+          <li>Claims about results we haven't measured.</li>
+        </ul></div>
+      </div>
+    </section>
+
+    <!-- ================= LOGO ================= -->
+    <section id="logo">
+      <h2>Logo: the Agent Tag</h2>
+      <p class="lead">A price tag whose hole is the agent's eye. It says "price" to anyone in a second, and the eye gives our AI a recognisable presence without a cartoon mascot. In the product, the eye is alive: it watches each offer, blinks, and smiles when a deal lands.</p>
+      <div class="logo-hero">
+        <div class="tile light construction">
+          <svg viewBox="0 0 64 64" role="img" aria-label="Logo construction: the tag on a 64-unit grid, rotated 35 degrees, with an eye of radius 7">
+            <defs><pattern id="grid" width="4" height="4" patternUnits="userSpaceOnUse"><path d="M4 0 H0 V4" fill="none" stroke="#F1DFE3" stroke-width=".2"/></pattern></defs>
+            <rect width="64" height="64" fill="url(#grid)"/>
+            <g transform="rotate(-35 32 32)">
+              <use href="#tag" fill="url(#ss-g)" opacity=".92"/>
+              <circle cx="22" cy="32" r="7" fill="#fff"/><circle cx="23" cy="32" r="3.4" fill="#1F0A24"/>
+              <use href="#tag" fill="none" stroke="#1F0A24" stroke-width=".25" stroke-dasharray="1 1"/>
+              <circle cx="22" cy="32" r="14" fill="none" stroke="#5A1E8C" stroke-width=".25" stroke-dasharray="1 1"/>
+              <line x1="22" y1="32" x2="58" y2="32" stroke="#1F0A24" stroke-width=".2"/>
+            </g>
+          </svg>
+          <span class="cap">64-unit grid · rotated −35° · eye r7, pupil r3.4 · clear space = one eye diameter</span>
+        </div>
+        <div style="display:grid;gap:20px">
+          <div class="tile jam"><img src="logo/sweetspot-lockup-white.svg" alt="Sweetspot lockup, white wordmark" style="width:72%"><span class="cap">Lockup on Jam</span></div>
+          <div class="tile light"><img src="logo/sweetspot-lockup-ink.svg" alt="Sweetspot lockup, ink wordmark" style="width:72%"><span class="cap">Lockup on white</span></div>
+        </div>
+      </div>
+      <div class="variants">
+        <div class="tile light"><img src="logo/sweetspot-mark.svg" alt="Full-colour mark"><span class="cap">Full colour</span></div>
+        <div class="tile blush"><img src="logo/sweetspot-mark-mono-jam.svg" alt="One-colour Jam mark"><span class="cap">One colour · Jam</span></div>
+        <div class="tile ink"><img src="logo/sweetspot-mark-mono-white.svg" alt="One-colour white mark"><span class="cap">One colour · white</span></div>
+        <div class="tile jam"><img src="logo/sweetspot-app-icon.svg" alt="App icon" style="width:96px;height:96px"><span class="cap">App icon</span></div>
+      </div>
+      <h3>Sizes</h3>
+      <div class="panel flat">
+        <div class="sizes">
+          <figure><img src="logo/sweetspot-mark.svg" width="96" height="96" alt=""><figcaption>96px</figcaption></figure>
+          <figure><img src="logo/sweetspot-mark.svg" width="48" height="48" alt=""><figcaption>48px</figcaption></figure>
+          <figure><img src="logo/sweetspot-mark.svg" width="32" height="32" alt=""><figcaption>32px</figcaption></figure>
+          <figure><img src="logo/sweetspot-mark.svg" width="24" height="24" alt=""><figcaption>24px · smallest full mark</figcaption></figure>
+          <figure><img src="logo/sweetspot-favicon.svg" width="16" height="16" alt=""><figcaption>16px · favicon version (bigger eye, no glaze)</figcaption></figure>
+        </div>
+      </div>
+      <h3>Don't</h3>
+      <div class="misuse">
+        <figure><div class="art"><svg width="64" height="64" style="transform:rotate(35deg)" aria-hidden="true"><use href="#mark"/></svg></div><figcaption>Rotate it level or re-angle it</figcaption></figure>
+        <figure><div class="art"><svg width="64" height="64" viewBox="0 0 64 64" aria-hidden="true"><g transform="rotate(-35 32 32)"><use href="#tag" fill="#7C3AED"/><circle cx="22" cy="32" r="7" fill="#fff"/><circle cx="23" cy="32" r="3.4" fill="#1F0A24"/></g></svg></div><figcaption>Recolour it outside the palette</figcaption></figure>
+        <figure><div class="art"><svg width="64" height="64" viewBox="0 0 64 64" aria-hidden="true"><g transform="rotate(-35 32 32)"><use href="#tag" fill="url(#ss-g)"/><circle cx="22" cy="32" r="7" fill="#fff"/><circle cx="22" cy="32" r="3.4" fill="#1F0A24"/><circle cx="34" cy="32" r="5" fill="#fff"/><path d="M38 40 Q44 44 50 38" stroke="#fff" stroke-width="2" fill="none"/></g></svg></div><figcaption>Add a face or extra features</figcaption></figure>
+        <figure><div class="art"><svg width="64" height="64" style="filter:drop-shadow(0 0 10px #E0146F)" aria-hidden="true"><use href="#mark"/></svg></div><figcaption>Add glows, shadows or effects</figcaption></figure>
+      </div>
+      <div class="downloads">
+        <a class="btn ghost" href="logo/sweetspot-mark.svg" download>Mark (SVG)</a>
+        <a class="btn ghost" href="logo/sweetspot-lockup-ink.svg" download>Lockup (SVG)</a>
+        <a class="btn ghost" href="logo/sweetspot-favicon.svg" download>Favicon (SVG)</a>
+        <a class="btn ghost" href="logo/sweetspot-app-icon.svg" download>App icon (SVG)</a>
+      </div>
+    </section>
+
+    <!-- ================= COLOUR ================= -->
+    <section id="colour">
+      <h2>Colour: Berry</h2>
+      <p class="lead">A berry palette with one rule above all: the gradient belongs to the deal. Everything else is calm blush, deep Jam and clear ink, so the moment two prices melt together is the most colourful thing on screen.</p>
+      <div class="palette" id="palette"></div>
+      <div class="jam-band">
+        <h3>Five rules that keep it ours</h3>
+        <ol class="rules">
+          <li><b>One gradient, one moment</b>Coral → berry → plum appears only in the deal drop and the logo. Never on backgrounds, buttons, cards or text.</li>
+          <li><b>Jam, not black</b>Deep surfaces like this one, headline numbers and primary buttons use Jam, never near-black or navy.</li>
+          <li><b>Plum, not electric violet</b>The shop agent is a red-leaning purple that reads as fruit. Generic AI violets are off the table.</li>
+          <li><b>Leaf for money won</b>Leaf green marks revenue won back and paid deals, like <span class="leaf-txt">$3,480 won back</span>. Never decoration.</li>
+          <li><b>Glaze, not glow</b>Drops get a soft sugar-glaze highlight. No neon halos, glassmorphism or colour blurs.</li>
+        </ol>
+      </div>
+      <h3>Proportion</h3>
+      <div class="proportion" aria-label="Approximate colour proportions on a typical screen">
+        <span style="flex:58;background:#FFF7F6;color:#6E5670">Blush 58%</span><span style="flex:16;background:#fff;color:#6E5670;box-shadow:inset 1px 0 #F1DFE3">White 16%</span><span style="flex:12;background:#1F0A24;color:#fff">Ink 12%</span><span style="flex:8;background:#7A0E3A;color:#fff">Jam 8%</span><span style="flex:3;background:#E0146F"></span><span style="flex:1.5;background:#F45D4F"></span><span style="flex:1.5;background:#5A1E8C"></span>
+      </div>
+      <p class="muted" style="font-size:14px">Coral, berry and plum together stay under about 6% of a screen. Their rarity is what makes them land.</p>
+      <h3>Next to PayPal</h3>
+      <div class="paypal-row">
+        <div class="panel flat" style="display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;gap:10px"><span class="btn deal" style="flex:1;justify-content:center">Accept $214.00</span></div>
+          <div class="pp-btn">PayPal</div>
+        </div>
+        <p style="margin:0">The PayPal button is gold with navy text and closes every deal, so we never use gold, yellow or PayPal blue in our own UI. That keeps the PayPal button unmistakable, and keeps the two brands clearly separate. Always render PayPal's own buttons through their SDK; never restyle them.</p>
+      </div>
+    </section>
+
+    <!-- ================= TYPE ================= -->
+    <section id="type">
+      <h2>Type</h2>
+      <p class="lead">Funnel Display for headlines and prices, Funnel Sans for everything else. One family, so the voice stays consistent from a giant price to a tiny label. Both are free Google Fonts.</p>
+      <div class="specimen">
+        <div class="panel flat"><div class="big">Aa $214</div><p class="muted" style="margin:12px 0 0">Funnel Display · 750 for headlines and prices, 700 for titles</p></div>
+        <div class="panel flat"><div class="alpha">ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz 0123456789 $€£%</div><p class="muted" style="margin:12px 0 0;font-family:var(--sans)">Funnel Sans · 400 body, 600 labels and buttons</p></div>
+      </div>
+      <h3>Scale</h3>
+      <div class="panel flat scale">
+        <div class="row"><span class="tok">Display · 96 / .95</span><span style="font:750 clamp(40px,6vw,96px)/.95 var(--display);letter-spacing:-.04em">Make it sweet</span></div>
+        <div class="row"><span class="tok">H2 · 52 / 1</span><span style="font:750 clamp(30px,4vw,52px)/1 var(--display);letter-spacing:-.03em">Money won back</span></div>
+        <div class="row"><span class="tok">H3 · 22 / 1.2</span><span style="font:700 22px/1.2 var(--display);letter-spacing:-.02em">Negotiation settings</span></div>
+        <div class="row"><span class="tok">Body · 16 / 1.55</span><span>Set a floor price and the agent will never offer less, whatever the shopper says.</span></div>
+        <div class="row"><span class="tok">Label · 12 caps</span><span style="font:600 12px var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--mut)">Average discount</span></div>
+      </div>
+      <h3>Prices</h3>
+      <div class="panel flat">
+        <div class="prices"><span class="p">$214.00</span><span class="was num">$249.00</span><span class="status paid">Paid</span></div>
+        <p class="muted" style="margin:12px 0 0;font-size:14px">Prices always use tabular figures so they don't jump as they change. The deal price is ink, never red; a struck-through list price in muted plum shows the saving.</p>
+      </div>
+    </section>
+
+    <!-- ================= COMPONENTS ================= -->
+    <section id="components">
+      <h2>Components</h2>
+      <p class="lead">The building blocks for the four product surfaces. The shopper chat takes on each shop's own look; everything merchants see is pure Sweetspot.</p>
+
+      <h3>Negotiation track</h3>
+      <p>The signature component. Price chips ride in their own lane above the track, so text never overlaps the drops. A lowball offer gets a small nudge back; each counter slides the drops closer; on a deal they melt into one berry drop with a single ripple.</p>
+      <div class="panel"><div class="track" id="demo-track"></div><div class="btnrow" style="margin-top:12px"><button class="btn ghost" id="replay-track">Replay negotiation</button></div></div>
+
+      <h3>Shopper offer chat (white-labelled)</h3>
+      <p>The same chat in two very different shops. It inherits the shop's fonts and colours; only the small badge is Sweetspot. The deal card and the PayPal button appear only once a price is agreed.</p>
+      <div class="grid2" style="align-items:start">
+        <div class="widget shop-coffee" aria-label="Offer chat styled for a coffee equipment shop">
+          <p class="p-name">Burr Espresso Grinder</p><p class="p-price">$249.00 · Ground Control Coffee (demo shop)</p>
+          <div class="msgs">
+            <div class="m you">Would you take $205?</div>
+            <div class="m agent">I can do $219 and ship it free. That's our best on this colourway.</div>
+            <div class="m you">Meet me at $214?</div>
+            <div class="m agent">Deal. $214.00 with free shipping, held for you for 15 minutes.</div>
+          </div>
+          <div class="deal-card"><div><small>Your price</small><span class="amt num">$214.00</span></div><span class="status held">Held 14:52</span></div>
+          <div class="pp-btn">PayPal</div>
+          <span class="badge"><svg width="14" height="14" aria-hidden="true"><use href="#mark"/></svg>Negotiated by Sweetspot</span>
+        </div>
+        <div class="widget shop-street" aria-label="Offer chat styled for a streetwear shop">
+          <p class="p-name" style="font-weight:700;letter-spacing:.02em;text-transform:uppercase">Archive Overshirt</p><p class="p-price" style="color:#B9BCC4">$180.00 · Northside Supply (demo shop)</p>
+          <div class="msgs">
+            <div class="m you">$120 and I'll take it today</div>
+            <div class="m agent">Can't go that low on this one. $158 and it's yours.</div>
+            <div class="typing" style="background:#24262B;color:#F1F1F1" aria-label="Agent is typing"><i></i><i></i><i></i></div>
+          </div>
+          <span class="badge"><svg width="14" height="14" viewBox="0 0 64 64" aria-hidden="true"><g transform="rotate(-35 32 32)"><use href="#tag" fill="#F1F1F1"/><circle cx="22" cy="32" r="7" fill="#111214"/></g></svg>Negotiated by Sweetspot</span>
+        </div>
+      </div>
+
+      <h3>Merchant dashboard</h3>
+      <p>Money won back is the headline act, in Jam. Leaf marks money and paid deals; berry marks live negotiations.</p>
+      <div class="dash">
+        <div class="won">
+          <div><div class="v" id="won-v">$3,480</div><div class="k"><span class="up"><svg width="12" height="12" aria-hidden="true"><use href="#up"/></svg>won back</span> this week from shoppers about to leave (demo data)</div></div>
+          <div class="mini"><div><b>23</b><span>deals closed</span></div><div><b>7.4%</b><span>average discount</span></div><div><b>0</b><span>below your floor</span></div></div>
+        </div>
+        <div class="panel flat" style="padding:8px 16px">
+          <table>
+            <caption class="sr">Recent negotiations (demo data)</caption>
+            <thead><tr><th>Product</th><th class="r">List</th><th class="r">Deal</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td>Burr Espresso Grinder</td><td class="r">$249.00</td><td class="r">$214.00</td><td><span class="status paid">Paid</span></td></tr>
+              <tr><td>Pour-over Kit</td><td class="r">$45.00</td><td class="r">$41.00</td><td><span class="status paid">Paid</span></td></tr>
+              <tr><td>Gooseneck Kettle</td><td class="r">$89.00</td><td class="r">$84.00</td><td><span class="status live">Live</span></td></tr>
+              <tr><td>Ceramic Dripper</td><td class="r">$32.00</td><td class="r">—</td><td><span class="status none">No deal</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <h3>Agent vs. agent</h3>
+      <p>When a shopper's own AI agent negotiates with the shop's agent, each gets an Agent Tag in its party colour, and the track sits between them.</p>
+      <div class="vs">
+        <div class="party buyer">
+          <header><svg class="agent" id="buyer-agent" viewBox="0 0 64 64" aria-hidden="true"><g transform="rotate(35 32 32) scale(-1 1) translate(-64 0)"><g class="body"><use href="#tag" fill="url(#g-coral)"/><g class="eye"><circle cx="22" cy="32" r="7" fill="#fff"/><circle class="pupil" cx="23" cy="32" r="3.4" fill="#1F0A24"/></g><path class="happy" d="M16.5 33.5 Q22 27 27.5 33.5" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/></g></g></svg><div><h4>Shopper's agent</h4><small>Budget $220 · wants free shipping</small></div></header>
+          <div class="lines" id="buyer-lines"></div>
+        </div>
+        <div class="vs-mid"><div class="track" id="vs-track"></div><p class="note" id="vs-note">Agents negotiating…</p></div>
+        <div class="party seller">
+          <header><svg class="agent" id="seller-agent" viewBox="0 0 64 64" aria-hidden="true"><g transform="rotate(-35 32 32)"><g class="body"><use href="#tag" fill="url(#g-plum)"/><g class="eye"><circle cx="22" cy="32" r="7" fill="#fff"/><circle class="pupil" cx="23" cy="32" r="3.4" fill="#1F0A24"/></g><path class="happy" d="M16.5 33.5 Q22 27 27.5 33.5" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/></g></g></svg><div><h4>Ground Control's agent</h4><small>Floor $204.18 · may add free shipping</small></div></header>
+          <div class="lines" id="seller-lines"></div>
+        </div>
+      </div>
+
+      <h3>Buttons, fields and status</h3>
+      <div class="panel flat" style="display:grid;gap:20px">
+        <div class="btnrow">
+          <button class="btn primary">Add Sweetspot to your shop</button>
+          <button class="btn ghost">See a negotiation</button>
+          <button class="btn deal">Accept $214.00</button>
+          <button class="btn primary" aria-busy="true"><span class="spin" aria-hidden="true"></span>Saving rules</button>
+          <button class="btn" disabled>Publish rules</button>
+        </div>
+        <div class="btnrow" style="align-items:flex-start;gap:24px">
+          <label class="field">Floor price<input value="$204.18" inputmode="decimal"></label>
+          <label class="field">Maximum discount<input value="45%" aria-invalid="true" aria-describedby="err1"><span class="err" id="err1">Maximum discount can't be more than 30%. Lower it, or raise the floor.</span></label>
+        </div>
+        <div class="btnrow"><span class="status paid">Paid</span><span class="status live">Live</span><span class="status held">Held for shopper</span><span class="status none">No deal</span></div>
+        <p class="muted" style="margin:0;font-size:14px">Primary actions are Jam. Berry is reserved for agreeing a deal. Status always pairs colour with a word, never colour alone.</p>
+      </div>
+    </section>
+
+    <!-- ================= MOTION ================= -->
+    <section id="motion">
+      <h2>Motion</h2>
+      <p class="lead">Motion tells the story of the negotiation: things travel toward agreement, bounce off limits, and melt when they meet. One authored moment per screen, never decoration for its own sake.</p>
+      <dl class="defs three big">
+        <div><dt>Toward agreement</dt><dd>Movement always means prices getting closer. Nothing drifts or loops without meaning.</dd></div>
+        <div><dt>Soft, like sugar</dt><dd>Springy, slightly elastic easing. Drops squish and settle; nothing snaps hard except a locked deal.</dd></div>
+        <div><dt>Locked means locked</dt><dd>An agreed deal gets one clear, final moment (melt, ripple, eye smiles), then stillness. Calm signals it's done.</dd></div>
+      </dl>
+
+      <h3>The living logo</h3>
+      <p>The Agent Tag's eye is the agent's presence, in the product and the brand. Try its states.</p>
+      <div class="panel flat lab">
+        <svg class="agent" id="lab-agent" viewBox="0 0 64 64" style="width:160px;overflow:visible" role="img" aria-label="Agent tag demonstrating its states">
+          <g transform="rotate(-35 32 32)"><g class="body"><use href="#tag" fill="url(#ss-g)"/><ellipse cx="45" cy="21.5" rx="8.5" ry="2.6" fill="#fff" opacity=".28"/><g class="eye"><circle cx="22" cy="32" r="7" fill="#fff"/><circle class="pupil" cx="23" cy="32" r="3.4" fill="#1F0A24"/></g><path class="happy" d="M16.5 33.5 Q22 27 27.5 33.5" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/></g></g>
+        </svg>
+        <div>
+          <div class="btnrow" role="group" aria-label="Agent states">
+            <button class="btn ghost" data-state="idle">Idle · blinks</button>
+            <button class="btn ghost" data-state="buyer">Looks at shopper</button>
+            <button class="btn ghost" data-state="shop">Looks at shop</button>
+            <button class="btn ghost" data-state="think">Thinking</button>
+            <button class="btn ghost" data-state="happy">Deal · smiles</button>
+          </div>
+          <p class="muted" style="font-size:14px;margin:12px 0 0">Idle blinks every 4–6 s. While waiting for an offer it glances at the shopper; while working out a counter it tilts gently (thinking); on a deal the eye closes into a smile and the tag gives one small hop.</p>
+        </div>
+      </div>
+
+      <h3>Easing and timing tokens</h3>
+      <div class="curves">
+        <div class="curve go" style="--e:cubic-bezier(.16,1,.3,1)"><b>ease-out</b><div class="lane"><span class="ball"></span></div><code>cubic-bezier(.16,1,.3,1)</code><p>UI entrances, bubbles, panels. 240–450 ms.</p></div>
+        <div class="curve go" style="--e:cubic-bezier(.34,1.4,.64,1)"><b>ease-spring</b><div class="lane"><span class="ball"></span></div><code>cubic-bezier(.34,1.4,.64,1)</code><p>Drops travelling on the track. 1,100 ms.</p></div>
+        <div class="curve go" style="--e:cubic-bezier(.34,1.56,.64,1)"><b>ease-pop</b><div class="lane"><span class="ball"></span></div><code>cubic-bezier(.34,1.56,.64,1)</code><p>The melt, the eye smile, the deal stamp. 500–600 ms.</p></div>
+      </div>
+
+      <h3>The deal moment, choreographed</h3>
+      <div class="panel flat timeline">
+        <div class="tl"><span class="t">0 ms</span><div>Shopper's accepting message appears <span>(bubble, ease-out 450 ms)</span></div></div>
+        <div class="tl"><span class="t">200 ms</span><div>Coral and plum drops slide to the deal price <span>(ease-spring 1,100 ms)</span></div></div>
+        <div class="tl"><span class="t">900 ms</span><div>Drops melt into one berry drop; one ripple <span>(ease-pop 600 ms, ripple 1,100 ms)</span></div></div>
+        <div class="tl"><span class="t">1,100 ms</span><div>Agent's eye closes into a smile and the tag hops <span>(ease-pop 600 ms)</span></div></div>
+        <div class="tl"><span class="t">1,300 ms</span><div>Deal card and PayPal button rise in <span>(ease-out 450 ms)</span>; screen readers hear "Deal agreed at $214.00"</div></div>
+      </div>
+
+      <h3>Animation backlog</h3>
+      <p>Moments to build as the product grows, in priority order for the demo video.</p>
+      <div class="backlog">
+        <div class="bl"><div class="demo"><svg class="d-melt" viewBox="0 0 44 30" aria-hidden="true"><g filter="url(#melt)"><circle cx="14" cy="15" r="9" fill="#F45D4F"><animate attributeName="cx" values="8;20;8" dur="2.4s" repeatCount="indefinite"/></circle><circle cx="30" cy="15" r="9" fill="#5A1E8C"><animate attributeName="cx" values="36;24;36" dur="2.4s" repeatCount="indefinite"/></circle></g></svg></div><div><b>Melt</b><span>Coral and plum drops merge into berry at the deal price.</span><br><span class="when">Now · signature</span></div></div>
+        <div class="bl"><div class="demo"><svg width="40" height="40" viewBox="0 0 64 64" aria-hidden="true"><use href="#mark"/></svg></div><div><b>Living logo</b><span>Eye watches, blinks, thinks and smiles; also the loading state.</span><br><span class="when">Now</span></div></div>
+        <div class="bl"><div class="demo"><span class="d-bounce"></span></div><div><b>Lowball nudge</b><span>An offer below the floor squishes and slides back, with the reason in the chat.</span><br><span class="when">Now</span></div></div>
+        <div class="bl"><div class="demo"><span class="d-dots"><i></i><i></i><i></i></span></div><div><b>Agent typing</b><span>Plum dots while the agent works out a counter (and the eye tilts).</span><br><span class="when">Now</span></div></div>
+        <div class="bl"><div class="demo"><span class="d-pay"></span></div><div><b>PayPal reveal</b><span>The PayPal button rises in only after agreement, never before.</span><br><span class="when">Now</span></div></div>
+        <div class="bl"><div class="demo"><span class="d-stamp">PAID</span></div><div><b>Deal paid stamp</b><span>A one-time stamp on the deal card when payment completes; irreversible, then still.</span><br><span class="when">Next</span></div></div>
+        <div class="bl"><div class="demo"><span class="d-count" id="d-count">$3,480</span></div><div><b>Won-back count-up</b><span>The dashboard headline counts up once on first view; no repeats.</span><br><span class="when">Next</span></div></div>
+        <div class="bl"><div class="demo"><span class="d-rally"><i></i><i></i></span></div><div><b>Agent rally</b><span>Agent-vs-agent offers trade back and forth on the track at a readable pace.</span><br><span class="when">Next</span></div></div>
+        <div class="bl"><div class="demo"><span class="d-scrub"></span></div><div><b>Replay scrubber</b><span>Merchants scrub through a past negotiation and watch the drops move.</span><br><span class="when">Later</span></div></div>
+        <div class="bl"><div class="demo"><svg width="40" height="40" viewBox="0 0 64 64" aria-hidden="true"><use href="#mark"/><animateTransform attributeName="transform" type="rotate" values="0 32 32;-8 32 32;0 32 32" dur="2s" repeatCount="indefinite"/></svg></div><div><b>Landing hero on scroll</b><span>The hero negotiation plays as the visitor scrolls into it, once.</span><br><span class="when">Later</span></div></div>
+      </div>
+      <p class="muted" style="font-size:14px">Reduced motion: drops jump straight to their positions, the melt becomes a cross-fade, the eye stops blinking, and nothing loops.</p>
+    </section>
+
+    <!-- ================= ACCESSIBILITY ================= -->
+    <section id="access">
+      <h2>Accessibility</h2>
+      <p class="lead">Fair means fair for everyone. These are requirements, not nice-to-haves.</p>
+      <dl class="defs two">
+        <div><dt>Contrast</dt><dd>Body text at least 4.5:1 and drops and UI shapes at least 3:1 (WCAG 2.2 AA). Coral never carries white text; berry and Jam do.</dd></div>
+        <div><dt>Never colour alone</dt><dd>Shopper and shop are always labelled; status chips pair colour with a word; the floor is drawn and named.</dd></div>
+        <div><dt>Chat for screen readers</dt><dd>The message list is a log live region that announces each new message once. The typing indicator is announced politely, not repeatedly.</dd></div>
+        <div><dt>Keyboard first</dt><dd>Offer input, send, accept and PayPal are reachable in order, with visible berry focus rings.</dd></div>
+        <div><dt>Reduced motion</dt><dd>All movement has a still equivalent; nothing essential depends on animation.</dd></div>
+        <div><dt>Plain language</dt><dd>Errors say what happened and how to fix it: "Maximum discount can't be more than 30%. Lower it, or raise the floor."</dd></div>
+      </dl>
+    </section>
+
+    <!-- ================= RESEARCH ================= -->
+    <section id="research">
+      <h2>Research behind the choices</h2>
+      <p class="lead">What shaped these guidelines. Most sources are secondary write-ups or vendor material, so treat them as direction, not proof.</p>
+      <ul class="sources">
+        <li>Colour fit matters more than universal meanings; saturation reads as excitement, depth as competence. <a href="https://colab.ws/articles/10.1007/s11747-010-0245-y">Labrecque &amp; Milne, JAMS 2012</a>; <a href="https://medium.com/@afroditi_arampatzi/brand-colors-what-science-says-vs-what-marketers-believe-0a3e7513ebf7">science vs. marketer beliefs</a></li>
+        <li>Purple or indigo in only 2 of 42 finance design systems sampled (directional). <a href="https://www.lazyweb.com/research/what-brand-colors-do-finance-apps-use">Lazyweb, 2026</a></li>
+        <li>Red prices lift perceived savings only on deep discounts and lower perceived value on small ones. <a href="https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2022.1019163/full">Frontiers in Psychology, 2022</a>; <a href="https://newsblog.drexel.edu/2013/04/24/study-reveals-men-are-seduced-by-red-price-tags/">Drexel / Journal of Retailing</a></li>
+        <li>PayPal button colours and styling options. <a href="https://developer.paypal.com/docs/multiparty/checkout/standard/customize/buttons-style-guide/">PayPal buttons style guide</a></li>
+        <li>Agentic UX: explicit confirmation for payments, a concise rationale for actions, clear records of what happened. <a href="https://www.smashingmagazine.com/2026/02/designing-agentic-ai-practical-ux-patterns/">Smashing Magazine, 2026</a></li>
+        <li>Faster responses and a clear explanation of a rejection raise satisfaction in price bidding. <a href="https://www.pon.harvard.edu/daily/negotiation-skills-daily/letting-them-down-easy/">Harvard Program on Negotiation</a></li>
+        <li>Suppliers negotiating with an AI agent: many preferred it, and liked making counteroffers (vendor-reported). <a href="https://www.pymnts.com/news/artificial-intelligence/2023/walmart-finds-75-percent-vendors-prefer-negotiating-with-chatbot/partial/">PYMNTS on Walmart and Pactum</a></li>
+        <li>Haggle chatbots in e-commerce issue a one-off code that expires within hours (Nibble at Industry West). <a href="https://www.digitalcommerce360.com/?p=1048359">Digital Commerce 360</a></li>
+        <li>Accessible chat: log role, announce new messages once, debounce streaming. <a href="https://dx-playbook-prev.toyota-europe.com/cds/components/chat-messages-pages/accessibility/">Toyota design system</a>; <a href="https://www.educative.io/courses/engineering-reliable-state-logic-for-ai-features/accessible-streaming-output-live-regions">streaming live regions</a></li>
+      </ul>
+      <footer><span>Sweetspot brand guidelines v1</span><span>Fonts: Funnel Display and Funnel Sans (SIL Open Font License). PayPal button shown for placement only.</span></footer>
+    </section>
+  </main>
+</div>
+
+<script>
+(() => {
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const wait = (ms) => new Promise((r) => setTimeout(r, reduce ? 0 : ms));
+  const NS = "http://www.w3.org/2000/svg";
+
+  /* ---------- living agent tag ---------- */
+  function agent(el) {
+    const pupil = el.querySelector(".pupil");
+    let blinkTimer;
+    const api = {
+      look(dx) { el.classList.remove("is-happy"); pupil.style.transform = `translate(${dx}px, 0)`; },
+      think(on) { el.classList.toggle("is-thinking", on); },
+      happy() { el.classList.remove("is-thinking"); el.classList.add("is-happy"); },
+      reset() { el.classList.remove("is-happy", "is-thinking"); pupil.style.transform = ""; },
+      idle() {
+        clearTimeout(blinkTimer);
+        if (reduce) return;
+        const loop = () => { blinkTimer = setTimeout(() => { el.classList.add("blink"); setTimeout(() => el.classList.remove("blink"), 140); loop(); }, 4000 + Math.random() * 2000); };
+        loop();
+      },
+    };
+    api.idle();
+    return api;
+  }
+
+  /* ---------- negotiation track ---------- */
+  // Price chips live in their own lane above the drops, so text never overlaps a drop.
+  function track(host, { list = 249, floor = 204.18, min = 150, max = 260, compact = false } = {}) {
+    // shortcut: viewBox matches the host width at creation so text renders at true size; re-create on large resizes if needed.
+    const W = Math.max(300, Math.round(host.getBoundingClientRect().width || 560)), L = 30, R = W - 30;
+    // lanes, top to bottom: price numerals, drops (sized for the largest deal drop), axis labels; nothing shares a lane
+    const RD = compact ? 30 : 42, NUM = compact ? 20 : 30, chipY = 0, TY = chipY + NUM + 22 + RD + 8, LY = TY + RD + 20, H = LY + 8;
+    const X = (p) => L + (p - min) * ((R - L) / (max - min));
+    const svg = document.createElementNS(NS, "svg");
+    svg.setAttribute("viewBox", `0 0 ${W} ${H}`); svg.setAttribute("aria-hidden", "true");
+    svg.innerHTML = `
+      <rect x="${L}" y="${TY - 3}" width="${R - L}" height="6" rx="3" fill="#F4D6DF"/>
+      <rect x="${X(floor)}" y="${TY - 3}" width="${X(list) - X(floor)}" height="6" rx="3" fill="#F1B9CC"/>
+      <line x1="${X(floor)}" y1="${TY - 16}" x2="${X(floor)}" y2="${TY + 16}" stroke="#1F0A24" stroke-width="2" stroke-dasharray="2 4"/>
+      <text class="axis" x="${X(floor)}" y="${LY}" text-anchor="middle">your floor $${floor.toFixed(0)}</text>
+      <text class="axis" x="${X(list)}" y="${LY}" text-anchor="middle">list $${list}</text>
+      <circle class="ripple" cx="0" cy="${TY}" r="${RD}"/>
+      <g filter="url(#melt)">
+        <circle class="drop d-buy" cx="${L}" cy="${TY}" r="0" fill="url(#g-coral)"/>
+        <circle class="drop d-shop" cx="${X(list)}" cy="${TY}" r="${compact ? 18 : 24}" fill="url(#g-plum)"/>
+        <circle class="drop d-deal" cx="${X(list)}" cy="${TY}" r="0" fill="url(#ss-g)"/>
+      </g>
+      <circle class="drop g-buy" cx="${L}" cy="${TY}" r="0" fill="url(#glaze)"/>
+      <circle class="drop g-shop" cx="${X(list)}" cy="${TY}" r="${compact ? 18 : 24}" fill="url(#glaze)"/>
+      <circle class="drop g-deal" cx="${X(list)}" cy="${TY}" r="0" fill="url(#glaze)"/>
+      <g class="chipg c-buy" opacity="0"><text class="who" x="0" y="12" text-anchor="middle">Shopper</text><text class="v" x="0" y="${14 + NUM}" text-anchor="middle" style="font-size:${NUM}px"></text></g>
+      <g class="chipg c-shop"><text class="who" x="0" y="12" text-anchor="middle">Shop agent</text><text class="v" x="0" y="${14 + NUM}" text-anchor="middle" style="font-size:${NUM}px">$${list}</text></g>`;
+    host.append(svg);
+    const q = (s) => svg.querySelector(s);
+    const setDrop = (name, cx, r) => { [q(`.d-${name}`), q(`.g-${name}`)].forEach((c) => { c.setAttribute("cx", cx); c.setAttribute("r", r); }); };
+    const half = compact ? 40 : 66; // half-width reserved for a numeral like "$214.00"
+    const place = (chip, x) => { q(chip).style.transform = `translate(${Math.min(R - half, Math.max(L + half, x))}px, ${chipY}px)`; };
+    function render(s) {
+      if (s.deal) {
+        const x = X(s.deal);
+        setDrop("buy", x, 0); setDrop("shop", x, 0); setDrop("deal", x, RD);
+        const rip = q(".ripple"); rip.setAttribute("cx", x); rip.classList.remove("on"); void rip.getBBox(); rip.classList.add("on");
+        q(".c-buy").setAttribute("opacity", 0);
+        q(".c-shop .who").textContent = "Deal"; q(".c-shop .v").textContent = `$${s.deal.toFixed(2)}`;
+        place(".c-shop", x); return;
+      }
+      setDrop("deal", X(s.shop), 0);
+      q(".c-shop .who").textContent = "Shop agent";
+      const xs = X(s.shop);
+      setDrop("shop", xs, compact ? 18 : 24); q(".c-shop .v").textContent = `$${s.shop}`;
+      if (s.buyer) {
+        const xb = X(s.buyer);
+        setDrop("buy", xb, compact ? 16 : 22); q(".c-buy .v").textContent = `$${s.buyer}`; q(".c-buy").setAttribute("opacity", 1);
+        // keep the two numerals apart even when the drops are close
+        const mid = (xb + xs) / 2, gap = Math.max(half * 2 + 12, xs - xb);
+        place(".c-buy", Math.min(xb, mid - gap / 2)); place(".c-shop", Math.max(xs, mid + gap / 2));
+      } else { setDrop("buy", L, 0); q(".c-buy").setAttribute("opacity", 0); place(".c-shop", xs); }
+    }
+    function nudge() { const d = q(".d-buy"); d.classList.remove("nudge"); void d.getBBox(); d.classList.add("nudge"); }
+    render({ shop: list });
+    return { render, nudge };
+  }
+
+  const script = [
+    { who: "you", buyer: 180, cap: "Shopper offers $180", look: -2 },
+    { who: "agent", shop: 232, reject: true, cap: "Below the floor: the offer is nudged back, the agent counters $232", look: 2 },
+    { who: "you", buyer: 205, cap: "Shopper offers $205", look: -2 },
+    { who: "agent", shop: 219, cap: "Agent counters $219 with free shipping", look: 2 },
+    { who: "you", buyer: 214, cap: "Shopper suggests $214", look: -2 },
+    { who: "agent", deal: 214, cap: "Deal agreed at $214.00", look: 0 },
+  ];
+
+  async function play(t, a, capEl, runRef) {
+    const run = ++runRef.n;
+    let s = { shop: 249 };
+    t.render(s); if (a) a.reset(); if (capEl) capEl.textContent = "Waiting for an offer";
+    for (const st of script) {
+      if (st.who === "agent" && a) { a.look(0); a.think(true); }
+      await wait(st.who === "agent" ? 1400 : 1000); if (run !== runRef.n) return;
+      if (a) { a.think(false); a.look(st.look); }
+      if (st.reject) t.nudge();
+      s = { ...s, ...("buyer" in st && { buyer: st.buyer }), ...("shop" in st && { shop: st.shop }), ...("deal" in st && { deal: st.deal }) };
+      t.render(s);
+      if (capEl) capEl.textContent = st.cap;
+      if (st.deal && a) setTimeout(() => a.happy(), reduce ? 0 : 400);
+    }
+  }
+
+  // hero
+  const heroAgent = agent(document.getElementById("hero-agent"));
+  const heroTrack = track(document.getElementById("hero-track"));
+  const heroRun = { n: 0 };
+  const loopHero = async () => { await play(heroTrack, heroAgent, document.getElementById("hero-cap"), heroRun); if (!reduce) { await wait(3200); loopHero(); } };
+  loopHero();
+
+  // component demo
+  const demoTrack = track(document.getElementById("demo-track"));
+  const demoRun = { n: 0 };
+  document.getElementById("replay-track").addEventListener("click", () => play(demoTrack, null, null, demoRun));
+  new IntersectionObserver((es, o) => { if (es[0].isIntersecting) { play(demoTrack, null, null, demoRun); o.disconnect(); } }, { threshold: .5 }).observe(document.getElementById("demo-track"));
+
+  // agent vs agent
+  const vsTrack = track(document.getElementById("vs-track"), { compact: true });
+  const buyerA = agent(document.getElementById("buyer-agent")), sellerA = agent(document.getElementById("seller-agent"));
+  const bl = document.getElementById("buyer-lines"), sl = document.getElementById("seller-lines"), note = document.getElementById("vs-note");
+  const rally = [
+    { side: "b", buyer: 190, text: "Offer $190, ship to a UK address." },
+    { side: "s", shop: 236, text: "Counter $236. Shipping included." },
+    { side: "b", buyer: 205, text: "Comparable listings average $221. Offer $205." },
+    { side: "s", shop: 219, text: "Counter $219 with free shipping." },
+    { side: "b", buyer: 214, text: "Accept at $214 with free shipping?" },
+    { side: "s", deal: 214, text: "Agreed. Deal held 15 minutes for payment." },
+  ];
+  let vsRun = 0;
+  async function playVs() {
+    const run = ++vsRun; let s = { shop: 249 };
+    bl.innerHTML = ""; sl.innerHTML = ""; vsTrack.render(s); buyerA.reset(); sellerA.reset(); note.textContent = "Agents negotiating…";
+    for (const r of rally) {
+      (r.side === "b" ? sellerA : buyerA).think(true);
+      await wait(1300); if (run !== vsRun) return;
+      buyerA.think(false); sellerA.think(false);
+      buyerA.look(r.side === "b" ? 0 : 2); sellerA.look(r.side === "s" ? 0 : 2);
+      const line = document.createElement("div"); line.className = "line"; line.textContent = r.text;
+      (r.side === "b" ? bl : sl).append(line);
+      s = { ...s, ...("buyer" in r && { buyer: r.buyer }), ...("shop" in r && { shop: r.shop }), ...("deal" in r && { deal: r.deal }) };
+      vsTrack.render(s);
+      if (r.deal) { note.textContent = "Deal agreed at $214.00 · paid with PayPal"; setTimeout(() => { buyerA.happy(); sellerA.happy(); }, reduce ? 0 : 400); }
+    }
+  }
+  new IntersectionObserver((es, o) => { if (es[0].isIntersecting) { playVs(); o.disconnect(); } }, { threshold: .4 }).observe(document.querySelector(".vs"));
+
+  // logo lab
+  const lab = agent(document.getElementById("lab-agent"));
+  document.querySelectorAll("[data-state]").forEach((b) => b.addEventListener("click", () => {
+    const st = b.dataset.state; lab.reset();
+    if (st === "buyer") lab.look(-2.4);
+    if (st === "shop") lab.look(2.4);
+    if (st === "think") lab.think(true);
+    if (st === "happy") lab.happy();
+    if (st === "idle") { const el = document.getElementById("lab-agent"); el.classList.add("blink"); setTimeout(() => el.classList.remove("blink"), 160); }
+  }));
+
+  // palette with live contrast
+  const lum = (h) => { const c = h.match(/\w\w/g).map((x) => parseInt(x, 16) / 255).map((v) => (v <= .03928 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4)); return .2126 * c[0] + .7152 * c[1] + .0722 * c[2]; };
+  const ratio = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((m, n) => n - m); return (x + .05) / (y + .05); };
+  const tag = (r, need, label) => `<span class="ratio ${r >= need ? "ok" : "no"}">${label} ${r.toFixed(1)}:1</span>`;
+  const colours = [
+    ["Blackberry ink", "#1F0A24", "Text, icons, dark UI", "text"],
+    ["Jam", "#7A0E3A", "Deep surfaces, headline numbers, primary buttons", "text"],
+    ["Berry", "#E0146F", "The deal: accept button, deal drop, large highlights", "large"],
+    ["Plum", "#5A1E8C", "The shop agent", "text"],
+    ["Coral", "#F45D4F", "The shopper. Shapes only, never white text", "shape"],
+    ["Leaf", "#7FAE34", "Money-won shapes and large figures on Jam", "dark"],
+    ["Leaf light", "#C5E88A", "Money-won text on Jam", "onjam"],
+    ["Leaf ink", "#4F7A16", "Money won and Paid, on light surfaces", "text"],
+    ["Blush", "#FFF7F6", "Page ground", "ground"],
+  ];
+  document.getElementById("palette").innerHTML = colours.map(([n, h, use, kind]) => {
+    const light = lum(h) > .3, fg = light ? "#1F0A24" : "#FFFFFF";
+    const checks = kind === "ground" ? tag(ratio(h, "#1F0A24"), 4.5, "ink text")
+      : kind === "dark" ? tag(ratio(h, "#7A0E3A"), 3, "shapes/large on Jam") + tag(ratio(h, "#7A0E3A"), 4.5, "small text on Jam")
+      : kind === "onjam" ? tag(ratio(h, "#7A0E3A"), 4.5, "text on Jam") + tag(ratio(h, "#1F0A24"), 4.5, "text on ink")
+      : kind === "large" ? tag(ratio(h, "#FFFFFF"), 4.5, "white text") + tag(ratio(h, "#FFF7F6"), 3, "large text on blush")
+      : kind === "shape" ? tag(ratio(h, "#FFF7F6"), 3, "shape on blush") + tag(ratio(h, "#1F0A24"), 4.5, "ink text") : tag(ratio(h, "#FFFFFF"), 4.5, "white text") + tag(ratio(h, "#FFF7F6"), 4.5, "as text on blush");
+    return `<div class="sw"><div class="c" style="background:${h};color:${fg}${h === "#FFF7F6" ? ";box-shadow:inset 0 0 0 1px #F1DFE3" : ""}">${n}<small>${h}</small></div><div class="m"><b>${use}</b><br>${checks}</div></div>`;
+  }).join("");
+
+  // backlog demos play once on view and rest on their final state
+  const dc = document.getElementById("d-count"), backlog = document.querySelector(".backlog");
+  new IntersectionObserver((es, o) => {
+    if (!es[0].isIntersecting) return; o.disconnect(); backlog.classList.add("play");
+    if (reduce) return;
+    let n = 0; const t = setInterval(() => { n = Math.min(3480, n + 290); dc.textContent = `$${n.toLocaleString()}`; if (n === 3480) clearInterval(t); }, 60);
+  }, { threshold: .3 }).observe(backlog);
+
+  // index highlight
+  const links = [...document.querySelectorAll(".index nav a")];
+  const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) links.forEach((l) => l.setAttribute("aria-current", l.getAttribute("href") === `#${e.target.id}`)); }), { rootMargin: "-40% 0px -55% 0px" });
+  document.querySelectorAll("main section[id]").forEach((s) => io.observe(s));
+})();
+</script>
+</body>
+</html>
