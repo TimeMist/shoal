@@ -33,6 +33,7 @@ export type Payout = { batchId: string; kind: "ship" | "holdback"; cents: number
 
 export type NegotiationTurn = {
   side: "shop" | "supplier";
+  provider: "claude" | "gemini";
   price: number;
   message: string;
   verdict: "ok" | "rejected";
