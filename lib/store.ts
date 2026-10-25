@@ -24,7 +24,7 @@ export type Claim = {
   kind: "missing" | "damaged" | "short";
   cartons: number;
   note: string;
-  photo?: string;
+  hasPhoto?: boolean;
   proposal?: { refund: number; reason: string };
   status: "open" | "approved" | "rejected";
 };
