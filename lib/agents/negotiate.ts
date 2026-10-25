@@ -53,7 +53,7 @@ export async function negotiate(
   for (let i = 0; i < maxTurns; i++) {
     const side: Side = i % 2 === 0 ? "shop" : "supplier";
     const d = await model(side, turns, s);
-    const turn: NegotiationTurn = { side, provider: d.provider, price: d.price ?? 0, message: d.message, verdict: "ok" };
+    const turn: NegotiationTurn = { side, provider: d.provider, move: d.tool, price: d.price ?? 0, message: d.message, verdict: "ok" };
     turns.push(turn);
     if (d.tool === "none") {
       Object.assign(turn, { verdict: "rejected", reason: "no tool call" });
@@ -94,23 +94,31 @@ function system(side: Side, s: RoundState): string {
     : `You are the sales agent for ${round.supplier}. Your floor is ${round.floor} cents per carton and you must never go below it. ${facts} The ${next?.min ?? 1500}-carton threshold is just ${next ? next.min - units : 0} cartons away, and ${units} prepaid cartons committed today is worth real value: guaranteed volume, no credit risk. Protect margin but close the deal rather than lose it. ${rules}`;
 }
 
-// Steps from one side's point of view. The other side's rejected tries never reached us, so they are skipped.
-type Step =
-  | { self: true; id: string; name: string; args: Record<string, unknown> }
-  | { self: false; result?: { id: string; name: string; error?: string }; texts: string[] };
+// Plain-text history from one side's point of view: its own moves as assistant text, everything else as user text.
+// No tool_use/functionCall replay (thinking blocks and thought signatures can't be rebuilt); tools are offered per call.
+// The other side's rejected tries never reached us, so they are skipped.
+const VERB = { propose: "I proposed", accept: "I tried to accept", walk_away: "I walked away", none: "I made no valid move" };
 
-function steps(side: Side, transcript: NegotiationTurn[]): Step[] {
-  const out: Step[] = [{ self: false, texts: [side === "shop" ? "The negotiation is open. Make your first move." : "The negotiation is open. The shop agent moves first."] }];
-  const last = () => out[out.length - 1] as Extract<Step, { self: false }>;
-  transcript.forEach((t, i) => {
+export function chat(side: Side, transcript: NegotiationTurn[]): { role: "user" | "assistant"; text: string }[] {
+  const out: { role: "user" | "assistant"; text: string }[] = [
+    { role: "user", text: side === "shop" ? "The negotiation is open. Make your first move." : "The negotiation is open. The shop agent moves first." },
+  ];
+  const add = (role: "user" | "assistant", text: string) => {
+    const last = out[out.length - 1];
+    if (last.role === role) last.text += `\n${text}`;
+    else out.push({ role, text });
+  };
+  for (const t of transcript) {
     if (t.side === side) {
-      const name = t.price ? "propose_price" : "walk_away";
-      out.push({ self: true, id: `turn_${i}`, name, args: { price_cents: t.price, message: t.message } });
-      out.push({ self: false, result: { id: `turn_${i}`, name, error: t.verdict === "rejected" ? t.reason : undefined }, texts: [] });
+      add("assistant", `${VERB[t.move]}${t.price ? ` ${t.price} cents` : ""}: ${t.message}`);
+      // The shop must not learn the supplier's floor from a rejection.
+      const reason = side === "shop" && /floor/.test(t.reason ?? "") ? "Price is below what the supplier can accept" : t.reason;
+      if (t.verdict === "rejected") add("user", `The guard rejected that move: ${reason}. Try again.`);
     } else if (t.verdict === "ok") {
-      last().texts.push(`The ${t.side} agent proposes ${t.price} cents per carton: ${t.message}`);
+      add("user", `The ${t.side} agent proposes ${t.price} cents per carton: ${t.message}`);
     }
-  });
+  }
+  if (out[out.length - 1].role === "assistant") add("user", "Your turn.");
   return out;
 }
 
@@ -127,20 +135,7 @@ function decision(name: string | undefined, input: unknown, provider: Provider):
 }
 
 export const claudeNegotiator: Model = async (side, transcript, s) => {
-  const messages: Anthropic.Beta.BetaMessageParam[] = [];
-  for (const st of steps(side, transcript)) {
-    if (st.self) {
-      messages.push({ role: "assistant", content: [{ type: "tool_use", id: st.id, name: st.name, input: st.args }] });
-      continue;
-    }
-    const content: Anthropic.Beta.BetaContentBlockParam[] = [];
-    if (st.result) {
-      const { id, error } = st.result;
-      content.push({ type: "tool_result", tool_use_id: id, content: error ?? "Delivered.", is_error: !!error });
-    }
-    st.texts.forEach((text) => content.push({ type: "text", text }));
-    if (content.length) messages.push({ role: "user", content });
-  }
+  const messages: Anthropic.Beta.BetaMessageParam[] = chat(side, transcript).map((m) => ({ role: m.role, content: m.text }));
   const res = await ask({
     system: system(side, s),
     messages,
@@ -152,17 +147,7 @@ export const claudeNegotiator: Model = async (side, transcript, s) => {
 };
 
 export const geminiNegotiator: Model = async (side, transcript, s) => {
-  const contents: Content[] = [];
-  for (const st of steps(side, transcript)) {
-    if (st.self) {
-      contents.push({ role: "model", parts: [{ functionCall: { name: st.name, args: st.args } }] });
-      continue;
-    }
-    const parts: NonNullable<Content["parts"]> = [];
-    if (st.result) parts.push({ functionResponse: { name: st.result.name, response: st.result.error ? { error: st.result.error } : { output: "Delivered." } } });
-    st.texts.forEach((text) => parts.push({ text }));
-    if (parts.length) contents.push({ role: "user", parts });
-  }
+  const contents: Content[] = chat(side, transcript).map((m) => ({ role: m.role === "user" ? "user" : "model", parts: [{ text: m.text }] }));
   const res = await askGemini({
     system: system(side, s),
     contents,

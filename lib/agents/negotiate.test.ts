@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { negotiate, negotiatorFor, claudeNegotiator, geminiNegotiator } from "./negotiate.ts";
+import { chat, negotiate, negotiatorFor, claudeNegotiator, geminiNegotiator } from "./negotiate.ts";
 import type { Decision } from "./negotiate.ts";
 import { seedRound, simulateShops } from "../seed.ts";
 
@@ -49,4 +49,25 @@ test("negotiatorFor picks the adapter and throws on unknown providers", () => {
   assert.equal(negotiatorFor("claude"), claudeNegotiator);
   assert.equal(negotiatorFor("gemini"), geminiNegotiator);
   assert.throws(() => negotiatorFor("gpt"), /gpt/);
+});
+
+test("the shop's history never reveals the supplier floor, the stored turn keeps the reason", async () => {
+  const r = await negotiate(full(), script([d("propose", 170), d("walk_away", undefined)]));
+  assert.match(r.turns[0].reason!, /floor/);
+  const text = chat("shop", r.turns).map((m) => m.text).join("\n");
+  assert.doesNotMatch(text, /floor|180/);
+  assert.match(text, /below what the supplier can accept/);
+  assert.equal(r.turns[0].move, "propose");
+});
+
+test("history alternates roles and starts and ends with user", () => {
+  const turns = [
+    { side: "shop", provider: "claude", move: "propose", price: 170, message: "a", verdict: "rejected", reason: "x" },
+    { side: "supplier", provider: "claude", move: "propose", price: 170, message: "b", verdict: "rejected", reason: "x" },
+    { side: "shop", provider: "claude", move: "accept", price: 185, message: "c", verdict: "rejected", reason: "y" },
+  ] as const;
+  const m = chat("shop", [...turns]);
+  assert.equal(m[0].role, "user");
+  assert.equal(m.at(-1)!.role, "user");
+  assert.ok(m.every((x, i) => i === 0 || x.role !== m[i - 1].role));
 });

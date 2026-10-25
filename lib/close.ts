@@ -25,7 +25,9 @@ export async function closeRound(s: RoundState, pay: Pay): Promise<RoundState> {
       }
       round.status = "failed";
     } else {
-      const price = s.agreedPrice ?? tierAt(round.tiers, units).price;
+      const tierPrice = tierAt(round.tiers, units).price;
+      // A deal struck at an earlier headcount never beats the tier price now.
+      const price = s.agreedPrice === undefined ? tierPrice : Math.min(s.agreedPrice, tierPrice);
       for (const c of s.commitments) {
         const cents = captureCents(c.qty, price, c.reserved);
         try {

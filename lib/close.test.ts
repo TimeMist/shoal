@@ -44,7 +44,7 @@ test("closeRound captures qty x final price for real shops", async () => {
   const s = seedRound();
   real(s, "A", 100);
   real(s, "B", 200);
-  simulateShops(s, 8); // 1440 + 300 = 1740 units
+  simulateShops(s, 6); // 1080 + 300 = 1380 units: tier price 192
   s.agreedPrice = 185;
   s.closing = true;
   const pay = fakePay();
@@ -56,6 +56,16 @@ test("closeRound captures qty x final price for real shops", async () => {
   const sim = s.commitments.find((c) => c.simulated)!;
   assert.equal(sim.captured, sim.qty * 185);
   assert.equal(s.closing, false);
+});
+
+test("closeRound never charges an agreed price above the current tier price", async () => {
+  const s = seedRound();
+  real(s, "A", 100);
+  simulateShops(s, 8); // 1540 units: tier price 180
+  s.agreedPrice = 192;
+  s.closing = true;
+  await closeRound(s, fakePay());
+  assert.equal(s.round.finalPrice, 180);
 });
 
 test("closeRound defaults to the tier price", async () => {
