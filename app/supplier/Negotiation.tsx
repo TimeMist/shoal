@@ -48,7 +48,9 @@ export default function Negotiation({ state, pending, animate }: Props) {
   const seen = turns.slice(0, visible);
   const lastPrice = seen.findLast((t) => t.verdict === "ok" && t.price > 0)?.price;
   const end = replaying || pending ? null : outcome(state);
-  const price = end?.deal && state.agreedPrice !== undefined ? state.agreedPrice : (lastPrice ?? round.finalPrice ?? tier.price);
+  const standing = round.finalPrice ?? tier.price;
+  // While replaying, follow the offers; once it ends, show the deal or the price that actually stands.
+  const price = !end ? (lastPrice ?? standing) : end.deal && state.agreedPrice !== undefined ? state.agreedPrice : standing;
   const speaking = replaying ? turns[visible].side : null;
   const mood = (side: NegotiationTurn["side"]): AgentState => (pending || speaking === side ? "thinking" : end?.deal ? "happy" : "idle");
   const provider = (side: NegotiationTurn["side"]) => turns.find((t) => t.side === side)?.provider;
@@ -61,7 +63,7 @@ export default function Negotiation({ state, pending, animate }: Props) {
           sub={`For ${commitments.length} ${commitments.length === 1 ? "shop" : "shops"} · ${units.toLocaleString("en-US")} cartons`}
           provider={provider("shop")}
           tint="bg-live-tint"
-          lines={seen.filter((t) => t.side === "shop")}
+          lines={seen.map((t, i) => ({ ...t, n: i + 1 })).filter((t) => t.side === "shop")}
           fish={<Swimmy size={52} state={mood("shop")} />}
         />
         <div className="flex flex-col justify-center gap-2.5 rounded-lg bg-blush p-[18px] text-center">
@@ -81,7 +83,7 @@ export default function Negotiation({ state, pending, animate }: Props) {
           sub={`Tiers ${round.tiers.slice(1).map((t) => t.min.toLocaleString("en-US")).join(" / ")} · min ${round.minPerShop} per drop`}
           provider={provider("supplier")}
           tint="bg-[#EFE7F8]"
-          lines={seen.filter((t) => t.side === "supplier")}
+          lines={seen.map((t, i) => ({ ...t, n: i + 1 })).filter((t) => t.side === "supplier")}
           // The supplier is a one-colour Plum Swimmy, mirrored to face the Shoal agent (DESIGN.md: Swimmy).
           fish={<span className="block -scale-x-100"><Swimmy size={52} mono="#5A1E8C" state={mood("supplier")} /></span>}
         />
@@ -93,7 +95,7 @@ export default function Negotiation({ state, pending, animate }: Props) {
 
 const MOVE = { propose: "Offers", accept: "Accepts", walk_away: "Walks away", none: "No move" } as const;
 
-type PartyProps = { name: string; sub: string; provider?: NegotiationTurn["provider"]; tint: string; lines: NegotiationTurn[]; fish: React.ReactNode };
+type PartyProps = { name: string; sub: string; provider?: NegotiationTurn["provider"]; tint: string; lines: (NegotiationTurn & { n: number })[]; fish: React.ReactNode };
 
 function Party({ name, sub, provider, tint, lines, fish }: PartyProps) {
   return (
@@ -109,10 +111,11 @@ function Party({ name, sub, provider, tint, lines, fish }: PartyProps) {
         </div>
       </header>
       <ol className="flex flex-col gap-1.5 text-[13px]">
-        {lines.map((t, i) => (
-          <li key={i} className={`nego-line grid gap-1 rounded-field px-2.5 py-2 ${tint}`}>
+        {lines.map((t) => (
+          <li key={t.n} className={`nego-line grid gap-1 rounded-field px-2.5 py-2 ${tint}`}>
             <span className="font-semibold tabular-nums">
-              {MOVE[t.move]}
+              {/* Numbered by position in the whole transcript, so the two cards read in order. */}
+              {t.n} · {MOVE[t.move]}
               {t.price > 0 && t.move !== "walk_away" ? ` ${formatUSD(t.price)}` : ""}
             </span>
             <span>{t.message}</span>

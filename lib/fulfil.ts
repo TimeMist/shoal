@@ -61,6 +61,9 @@ export async function releaseRound(s: RoundState, email: string, payout: Payer):
     ...s.commitments.filter((c) => c.status === "claim").map((c) => c.id),
   ]).size;
   if (open) return err(409, `${open} open claim${open > 1 ? "s" : ""} to resolve first`);
+  // The holdback is released after confirmations: every shipped order must be delivered or resolved first.
+  const out = s.commitments.filter((c) => c.status === "captured").length;
+  if (out) return err(409, `${out} ${out > 1 ? "shops" : "shop"} still out for delivery`);
   const cents = releaseHoldback(s.holdbackLeft, 0); // claim refunds are already netted out of holdbackLeft
   if (cents === 0 || paid(s, "holdback") || busy.has(key)) return { ok: true };
   busy.add(key);

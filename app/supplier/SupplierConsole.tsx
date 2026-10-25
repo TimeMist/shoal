@@ -66,6 +66,7 @@ export default function SupplierConsole({ id, initial }: { id: string; initial: 
   const awaiting = claims.filter((k) => k.status === "open");
   const sold = commitments.filter((c) => c.captured !== undefined);
   const deliverable = sold.filter((c) => c.status === "captured" && c.tracking).length;
+  const outForDelivery = commitments.filter((c) => c.status === "captured").length; // lib/fulfil.ts releaseRound gate
   const notOpen = round.status === "closed" ? "The round is closed" : round.status === "failed" ? "The round ended without reaching a tier" : "The round is closing";
 
   const steps: Step[] = [
@@ -112,10 +113,17 @@ export default function SupplierConsole({ id, initial }: { id: string; initial: 
     },
     {
       key: "deliver",
-      label: "Mark delivered",
-      busyLabel: "",
+      label: "Mark all delivered",
+      busyLabel: "Marking delivered",
       why: !shipped ? "Ship first" : !deliverable ? "Every order has arrived or has a claim" : undefined,
-      note: shipped && deliverable ? `Per shop, in the allocation grid. ${deliverable} still out for delivery.` : undefined,
+      note: shipped && deliverable ? `Or one shop at a time in the allocation grid. ${deliverable} still out for delivery.` : undefined,
+      run: () =>
+        act("deliver", async () => {
+          let s = state;
+          // One request per shop through the same route the grid uses; stops at the first error.
+          for (const c of commitments.filter((x) => x.status === "captured" && x.tracking)) s = await post("deliver", { commitmentId: c.id })();
+          return s;
+        }, () => "Every shipped order is marked delivered."),
     },
     {
       key: "claims",
@@ -135,9 +143,11 @@ export default function SupplierConsole({ id, initial }: { id: string; initial: 
           ? "Holdback released"
           : pendingClaims
             ? `${pendingClaims} open ${pendingClaims === 1 ? "claim" : "claims"} to resolve first`
-            : state.holdbackLeft <= 0
-              ? "Nothing left to release"
-              : undefined,
+            : outForDelivery
+              ? `${outForDelivery} ${outForDelivery === 1 ? "shop" : "shops"} still out for delivery`
+              : state.holdbackLeft <= 0
+                ? "Nothing left to release"
+                : undefined,
       note: shipped && !settled ? `${formatUSD(state.holdbackLeft)} held for claims.` : undefined,
       run: () => act("release", post("release"), (s) => `Holdback released: ${formatUSD(s.payouts.find((p) => p.kind === "holdback")?.cents ?? 0)}.`),
     },

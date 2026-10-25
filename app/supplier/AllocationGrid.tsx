@@ -144,6 +144,7 @@ export default function AllocationGrid({ state, busyId, disabled, onDeliver }: P
         getRowId={(p) => p.data.id}
         domLayout="autoHeight"
         suppressCellFocus
+        suppressColumnVirtualisation // keep every Action button in the DOM so it stays tabbable on narrow screens
         overlayNoRowsTemplate="No shops have joined yet."
       />
     </div>

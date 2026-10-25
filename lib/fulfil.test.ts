@@ -19,6 +19,7 @@ const stubs = () => {
   return { pay, tr, payout: async (...a: unknown[]) => (pay.push(a), `B${pay.length}`), track: async (...a: unknown[]) => void tr.push(a) };
 };
 const E = "sup@example.com";
+const deliverAll = (s: RoundState) => s.commitments.forEach((c) => c.status === "captured" && deliver(s, c.id));
 
 test("ship pays 90% of all captured, tracks real shops only, holds 10%", async () => {
   const s = setup(), f = stubs();
@@ -78,6 +79,7 @@ test("deliver only works on a captured commitment", () => {
 test("release pays holdbackLeft once; the second call is a no-op", async () => {
   const s = setup(), f = stubs();
   await shipRound(s, E, f);
+  deliverAll(s);
   s.holdbackLeft = 2500; // after claim refunds
   assert.deepEqual(await releaseRound(s, E, f.payout), { ok: true });
   assert.equal(f.pay[1][1], 2500);
@@ -99,6 +101,7 @@ test("release with an open claim is 409 with the count; before shipping is 409",
 test("release with nothing held records nothing; payout failure leaves holdback", async () => {
   const s = setup(), f = stubs();
   await shipRound(s, E, f);
+  deliverAll(s);
   s.holdbackLeft = 0;
   assert.equal((await releaseRound(s, E, f.payout)).ok, true);
   assert.equal(s.payouts.length, 1);
@@ -120,7 +123,7 @@ test("release with a commitment in status claim (no claim filed yet) is 409", as
 test("a claim approved during an in-flight release is 409 and the release pays the full holdback", async () => {
   const s = setup(), f = stubs();
   await shipRound(s, E, f);
-  s.commitments[0].status = "delivered";
+  deliverAll(s);
   let done!: () => void;
   const rel = releaseRound(s, E, (...a) => (f.pay.push(a), new Promise((r) => (done = () => r("B2")))));
   s.commitments[0].status = "claim";
@@ -136,6 +139,24 @@ test("a claim approved during an in-flight release is 409 and the release pays t
 test("a failed release restores holdbackLeft", async () => {
   const s = setup(), f = stubs();
   await shipRound(s, E, f);
+  deliverAll(s);
   const out = await releaseRound(s, E, async () => { throw new Error("x"); });
   assert.deepEqual([out.ok, s.holdbackLeft], [false, 3000]);
+});
+
+test("release is 409 while a shipped order is still out for delivery; allowed once all are delivered or resolved", async () => {
+  const s = setup(), f = stubs();
+  await shipRound(s, E, f);
+  deliver(s, "a");
+  assert.deepEqual(await releaseRound(s, E, f.payout), { ok: false, status: 409, error: "1 shop still out for delivery" });
+  s.commitments[1].status = "resolved";
+  assert.deepEqual(await releaseRound(s, E, f.payout), { ok: true });
+  assert.deepEqual(s.payouts[1], { batchId: "B2", kind: "holdback", cents: 3000 });
+});
+
+test("senderBatchId differs between round instances (a demo reset gets a new close time)", () => {
+  const a = seedRound(), b = seedRound();
+  b.round.closesAt = new Date(Date.parse(a.round.closesAt) + 1000).toISOString();
+  assert.notEqual(senderBatchId(a, "ship"), senderBatchId(b, "ship"));
+  assert.equal(senderBatchId(a, "ship"), senderBatchId(a, "ship"));
 });
