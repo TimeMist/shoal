@@ -43,10 +43,12 @@ const TOOLS = [
   },
 ];
 
+export const MAX_TURNS = 8;
+
 export async function negotiate(
   s: RoundState,
   model: Model,
-  maxTurns = 6,
+  maxTurns = MAX_TURNS,
 ): Promise<{ turns: NegotiationTurn[]; agreed?: number }> {
   const turns: NegotiationTurn[] = [];
   const units = unitsCommitted(s);
@@ -88,10 +90,13 @@ function system(side: Side, s: RoundState): string {
     `${s.commitments.length} independent shops have committed ${units} cartons and prepaid-authorised them. Tier price list: ${tiers}. ` +
     `At ${units} cartons the current tier price is ${now.price}.` +
     (next ? ` The next tier is ${next.min} cartons at ${next.price}.` : "");
-  const rules = `A code guard checks every price you propose or accept: it must be a whole number of cents, at least the supplier floor and at most ${now.price}. Rejected prices come back as an error and you must try again. Each turn call exactly one tool.`;
+  const rules =
+    `A code guard checks every price you propose or accept: a whole number of cents, within the supplier's limits and at most ${now.price}; a rejected price comes back so you can retry. ` +
+    `The negotiation has ${MAX_TURNS} turns in total, shared by both sides, and each turn you call exactly one tool. ` +
+    `With no deal the round closes at the current tier price of ${now.price}, so both sides are better off agreeing before the last turn.`;
   return side === "shop"
-    ? `You are the buying agent for a group of ${s.commitments.length} small shops. Get the lowest price per carton you can. ${facts} The supplier will not go below its own floor, which you do not know. Aim below the current tier price, concede in small steps and accept a good price rather than walk away. ${rules}`
-    : `You are the sales agent for ${round.supplier}. Your floor is ${round.floor} cents per carton and you must never go below it. ${facts} The ${next?.min ?? 1500}-carton threshold is just ${next ? next.min - units : 0} cartons away, and ${units} prepaid cartons committed today is worth real value: guaranteed volume, no credit risk. Protect margin but close the deal rather than lose it. ${rules}`;
+    ? `You are the buying agent for a group of ${s.commitments.length} small shops. Get a lower price per carton than ${now.price}. ${facts} Open with a credible offer, not a lowball; the supplier has a floor you do not know. Each counter should move toward the supplier's last price, and accept a supplier price within a few cents of your own last offer. ${rules}`
+    : `You are the sales agent for ${round.supplier}. Your floor is ${round.floor} cents per carton and you must never go below it. ${facts} ${units} committed, prepaid cartons${next ? ` are close to the ${next.min}-carton tier` : ""} and are worth real value: guaranteed volume, no credit risk. Settle somewhere between your floor and ${now.price}, and close the deal rather than lose it. ${rules}`;
 }
 
 // Plain-text history from one side's point of view: its own moves as assistant text, everything else as user text.

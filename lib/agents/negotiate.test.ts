@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { chat, negotiate, negotiatorFor, claudeNegotiator, geminiNegotiator } from "./negotiate.ts";
+import { MAX_TURNS, chat, negotiate, negotiatorFor, claudeNegotiator, geminiNegotiator } from "./negotiate.ts";
 import type { Decision } from "./negotiate.ts";
 import { seedRound, simulateShops } from "../seed.ts";
 
@@ -22,7 +22,7 @@ const script = (moves: Decision[]) => {
 
 test("negotiation rejects below-floor offers and stops at turn limit", async () => {
   const r = await negotiate(full(), async () => d("propose", 170));
-  assert.equal(r.turns.length, 6);
+  assert.equal(r.turns.length, MAX_TURNS);
   assert.ok(r.turns.every((t) => t.verdict === "rejected"));
   assert.equal(r.agreed, undefined);
 });
