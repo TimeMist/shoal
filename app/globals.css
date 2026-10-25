@@ -1,26 +1,109 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* Shoal design tokens (DESIGN.md). Tailwind's default palette is cleared so only Berry colours exist. */
+@theme {
+  --color-*: initial;
+  --color-blush: #FFF7F6;
+  --color-white: #FFFFFF;
+  --color-ink: #1F0A24;
+  --color-muted: #6E5670;
+  --color-rule: #F1DFE3;
+  --color-tint: #F9E6EC;
+  --color-pool: #FFF1F4;
+  --color-slot: #E8C3CE;
+  --color-field: #E3C9D1;
+  --color-disabled: #EEDDE2;
+  --color-jam: #7A0E3A;
+  --color-jam-deep: #5E0A2C;
+  --color-on-jam: #F6D9E3;
+  --color-berry: #E0146F;
+  --color-berry-deep: #C2105F;
+  --color-coral: #F45D4F;
+  --color-shop-tint: #FFE7E3;
+  --color-plum: #5A1E8C;
+  --color-supplier-tint: #EEE6F7;
+  --color-leaf: #7FAE34;
+  --color-leaf-light: #C5E88A;
+  --color-leaf-ink: #4F7A16;
+  /* status chips */
+  --color-live: #B0105A;
+  --color-live-tint: #FCE3EE;
+  --color-settled-tint: #EEF5E2;
+  --color-released-tint: #F2EAEE;
+  --color-claim-tint: #FBE1E9;
+
+  --font-display: var(--font-funnel-display), system-ui, sans-serif;
+  --font-sans: var(--font-funnel-sans), system-ui, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
+
+  --radius-hairline: 4px;
+  --radius-xs: 6px;
+  --radius-bar: 8px;
+  --radius-sm: 10px;
+  --radius-field: 12px;
+  --radius-rung: 14px;
+  --radius-md: 16px;
+  --radius-pool: 22px;
+  --radius-lg: 24px;
+  --radius-xl: 28px;
+  --radius-stage: 32px;
+  --radius-pill: 999px;
+
+  --shadow-lift: 0 1px 0 #F1DFE3, 0 24px 60px -36px rgba(31, 10, 36, 0.32);
+  --shadow-base: 0 1px 0 #F1DFE3;
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+  --ease-pop: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  body {
+    background: var(--color-blush);
+    color: var(--color-ink);
+    font: 16px/1.55 var(--font-sans);
+    -webkit-font-smoothing: antialiased;
   }
+  ::selection { background: var(--color-berry); color: #fff; }
+  :focus-visible { outline: 2px solid var(--color-berry); outline-offset: 3px; border-radius: 6px; }
+  a { color: var(--color-jam); text-underline-offset: 3px; text-decoration-thickness: 1px; }
+  a:hover { color: var(--color-berry); }
+  code { font: 500 0.88em/1 var(--font-mono); background: var(--color-tint); padding: 2px 6px; border-radius: 6px; }
+  ::-webkit-scrollbar { width: 12px; height: 12px; }
+  ::-webkit-scrollbar-thumb { background: #E9CBD4; border-radius: 999px; border: 3px solid var(--color-blush); }
+  ::-webkit-scrollbar-track { background: transparent; }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ---------- living Swimmy ---------- */
+.agent .pupil { transition: transform 0.45s var(--ease-out); }
+.agent .eye { transform-box: fill-box; transform-origin: center; transition: transform 0.14s ease-in, opacity 0.2s; }
+.agent.blink .eye { transform: scaleY(0.08); }
+.agent .happy { opacity: 0; transition: opacity 0.2s; }
+.agent.is-happy .eye { opacity: 0; }
+.agent.is-happy .happy { opacity: 1; }
+.agent .body { transform-box: fill-box; transform-origin: 30% 50%; }
+.agent.is-thinking .body { animation: sw-think 1.6s ease-in-out infinite; }
+@keyframes sw-think { 50% { transform: rotate(2.5deg); } }
+
+/* ---------- round pool: dots fly in, then one pulse, one ripple, one smile ---------- */
+.dot { transform-box: fill-box; transform-origin: center; transition: fill 0.4s; }
+.dot.fly { animation: sw-fly 0.9s var(--ease-spring) both; }
+@keyframes sw-fly { from { transform: translate(var(--fx), var(--fy)) scale(0.6); } }
+.agent.closed .body { animation: sw-pulse 0.7s var(--ease-pop) 0.9s; }
+@keyframes sw-pulse { 40% { transform: scale(1.06); } }
+.agent.closed .eye { opacity: 0; transition-delay: 1.1s; }
+.agent.closed .happy { opacity: 1; transition: opacity 0.6s var(--ease-pop) 1.1s; }
+.ripple { fill: none; stroke: var(--color-berry); stroke-width: 2.5; opacity: 0; transform-box: fill-box; transform-origin: center; }
+.ripple.on { animation: sw-ripple 1.1s var(--ease-out) 0.9s; }
+@keyframes sw-ripple { from { opacity: 0.85; transform: scale(0.5); } to { opacity: 0; transform: scale(2.1); } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-delay: 0s !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    transition-delay: 0s !important;
+    scroll-behavior: auto !important;
+  }
 }
