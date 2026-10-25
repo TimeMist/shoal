@@ -41,7 +41,7 @@ export default function RoundPool({ units, shops, closed, tiers }: Props) {
         cartons committed
       </p>
       <svg viewBox="0 0 260 210" aria-hidden="true" className="absolute inset-0 block size-full">
-        <circle className={closed ? "ripple on" : "ripple"} cx={TX + 32 * K} cy={TY + 32 * K} r={96} />
+        <circle className={closed ? "sw-ripple sw-on" : "sw-ripple"} cx={TX + 32 * K} cy={TY + 32 * K} r={96} />
         <g transform={`translate(${TX} ${TY}) scale(${K})`}>
           <Fish delays={delays} look={look} closed={closed} />
         </g>

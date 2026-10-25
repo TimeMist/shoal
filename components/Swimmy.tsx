@@ -55,25 +55,25 @@ type FishProps = {
 export function Fish({ delays, tone = "light", mono, state = "idle", look = [0, 0], closed = false }: FishProps) {
   const reduce = useReducedMotion();
   const blink = useBlink(!reduce && state === "idle" && !closed);
-  const cls = ["agent", blink && "blink", state === "thinking" && "is-thinking", state === "happy" && "is-happy", closed && "closed"]
+  const cls = ["sw-agent", blink && "sw-blink", state === "thinking" && "sw-thinking", state === "happy" && "sw-smiling", closed && "sw-closed"]
     .filter(Boolean)
     .join(" ");
   return (
     <g className={cls}>
-      <g className="body">
+      <g className="sw-body">
         {DOTS.map((d, k) => {
           const delay = delays?.[k];
-          if (delays && delay == null) return <circle key={k} className="dot" cx={d.x} cy={d.y} r={SLOT_R} fill={SLOT} />;
+          if (delays && delay == null) return <circle key={k} className="sw-dot" cx={d.x} cy={d.y} r={SLOT_R} fill={SLOT} />;
           const style = delays
             ? ({ "--fx": `${16 + (k % 5) * 4}px`, "--fy": `${((k * 7) % 11) - 5}px`, animationDelay: `${delay}ms` } as CSSProperties)
             : undefined;
-          return <circle key={k} className={delays ? "dot fly" : "dot"} style={style} cx={d.x} cy={d.y} r={R} fill={mono ?? (tone === "dark" ? d.dark : d.c)} />;
+          return <circle key={k} className={delays ? "sw-dot sw-fly" : "sw-dot"} style={style} cx={d.x} cy={d.y} r={R} fill={mono ?? (tone === "dark" ? d.dark : d.c)} />;
         })}
-        <g className="eye">
+        <g className="sw-eye">
           <circle cx={EYE.x} cy={EYE.y} r={EYE.r} fill="#fff" stroke={INK} strokeWidth={EYE.stroke} />
-          <circle className="pupil" style={{ transform: `translate(${look[0]}px, ${look[1]}px)` }} cx={EYE.x + 0.4} cy={EYE.y} r={EYE.pupil} fill={INK} />
+          <circle className="sw-pupil" style={{ transform: `translate(${look[0]}px, ${look[1]}px)` }} cx={EYE.x + 0.4} cy={EYE.y} r={EYE.pupil} fill={INK} />
         </g>
-        <path className="happy" d={`M${EYE.x - 3} ${EYE.y + 0.6} Q${EYE.x} ${EYE.y - 2.8} ${EYE.x + 3} ${EYE.y + 0.6}`} fill="none" stroke={INK} strokeWidth={1.3} strokeLinecap="round" />
+        <path className="sw-happy" d={`M${EYE.x - 3} ${EYE.y + 0.6} Q${EYE.x} ${EYE.y - 2.8} ${EYE.x + 3} ${EYE.y + 0.6}`} fill="none" stroke={INK} strokeWidth={1.3} strokeLinecap="round" />
       </g>
     </g>
   );
