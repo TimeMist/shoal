@@ -16,3 +16,9 @@ export class ConfigError extends Error {
     this.status = status;
   }
 }
+
+export function supplierEmail(): string {
+  const e = process.env.SUPPLIER_PAYPAL_EMAIL?.trim();
+  if (!e) throw new ConfigError("SUPPLIER_PAYPAL_EMAIL is not set");
+  return e;
+}
