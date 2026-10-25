@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "node --test lib/*.test.ts"
+    "test": "node --test lib/*.test.ts",
+    "smoke:paypal": "node --env-file=.env.local scripts/smoke-paypal.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.3.0",
