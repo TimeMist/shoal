@@ -15,6 +15,7 @@ export type Commitment = {
   refunded: number;
   status: "reserved" | "captured" | "released" | "delivered" | "claim" | "resolved";
   tracking?: string;
+  error?: string;
 };
 
 export type Claim = {

@@ -1,23 +1,22 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { createDealToken, verifyDealToken } from "./deal.ts";
+import { createQuoteToken, verifyQuoteToken } from "./deal.ts";
 
 const secret = "test-secret";
+const q = { roundId: "demo", shop: "Rye & Co", qty: 120, reserved: 28800 };
 
-test("round-trips a valid deal", () => {
-  const deal = verifyDealToken(createDealToken("mug", 1800, secret), secret);
-  assert.equal(deal?.productId, "mug");
-  assert.equal(deal?.price, 1800);
+test("round-trips a valid quote", () => {
+  const got = verifyQuoteToken(createQuoteToken(q, secret), secret);
+  assert.deepEqual({ ...got, exp: 0 }, { ...q, exp: 0 });
 });
 
-test("rejects a tampered price", () => {
-  const [, sig] = createDealToken("mug", 1800, secret).split(".");
-  const forged = Buffer.from(JSON.stringify({ productId: "mug", price: 1, exp: Date.now() + 60000 })).toString("base64url");
-  assert.equal(verifyDealToken(`${forged}.${sig}`, secret), null);
+test("rejects a tampered reserved amount", () => {
+  const [, sig] = createQuoteToken(q, secret).split(".");
+  const forged = Buffer.from(JSON.stringify({ ...q, reserved: 1, exp: Date.now() + 60000 })).toString("base64url");
+  assert.equal(verifyQuoteToken(`${forged}.${sig}`, secret), null);
 });
 
-test("rejects an expired deal and a wrong secret", () => {
-  const token = createDealToken("mug", 1800, secret, 0);
-  assert.equal(verifyDealToken(token, secret), null);
-  assert.equal(verifyDealToken(createDealToken("mug", 1800, secret), "other"), null);
+test("rejects an expired quote and a wrong secret", () => {
+  assert.equal(verifyQuoteToken(createQuoteToken(q, secret, 0), secret), null);
+  assert.equal(verifyQuoteToken(createQuoteToken(q, secret), "other"), null);
 });
