@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { ReactNode, Ref } from "react";
 import StatusChip from "@/components/StatusChip";
 import { formatUSD } from "@/lib/money";
 import { aloneCents, savingsCents } from "@/lib/round";
@@ -45,11 +45,15 @@ export default function Receipt({ state, mine }: { state: RoundState; mine: Comm
   );
 }
 
-export function Panel({ title, status, children }: { title: string; status?: Commitment["status"]; children: ReactNode }) {
+type PanelProps = { title: string; status?: Commitment["status"]; children: ReactNode; /** Focus target after an action; makes the heading focusable. */ titleRef?: Ref<HTMLHeadingElement> };
+
+export function Panel({ title, status, children, titleRef }: PanelProps) {
   return (
     <section className="grid gap-3 rounded-lg bg-white p-6 shadow-lift max-[900px]:p-5">
       <div className="flex flex-wrap items-baseline justify-between gap-2.5">
-        <h2 className="font-display text-lg font-bold tracking-[-0.01em]">{title}</h2>
+        <h2 ref={titleRef} tabIndex={titleRef ? -1 : undefined} className="font-display text-lg font-bold tracking-[-0.01em]">
+          {title}
+        </h2>
         {status && <StatusChip status={status} />}
       </div>
       {children}

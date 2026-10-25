@@ -54,42 +54,52 @@ export default function RoundScreen({ id, initial }: { id: string; initial: Roun
   const [state, setState] = useState(initial);
   const [joined, setJoined] = useState<string | null>(null); // fallback when sessionStorage is blocked
   const [reporting, setReporting] = useState(false);
+  const [joinMsg, setJoinMsg] = useState("");
   const claimRef = useRef<HTMLDivElement>(null);
+  const inRef = useRef<HTMLHeadingElement>(null);
   const stored = useSyncExternalStore(onMine, () => readMine(id), () => null);
   const minute = useMinute();
 
   const refresh = useCallback(async () => {
     try {
       setState(await api<RoundState>(`/api/rounds/${id}`));
-    } catch {} // a missed poll is retried in 3 s
+    } catch {} // a missed poll is retried on the next tick
   }, [id]);
 
   const { round, commitments } = state;
-  const live = round.status === "open" || state.claims.some((c) => c.status === "open");
-  useEffect(() => {
-    if (!live) return;
-    // shortcut: polling every 3 s; SSE if the demo needs instant updates.
-    const t = setInterval(refresh, 3000);
-    return () => clearInterval(t);
-  }, [live, refresh]);
-
   const mineId = joined ?? stored;
   const mine = commitments.find((c) => c.id === mineId);
+  // R12: after close, keep watching while this shop's order can still ship, deliver or resolve a claim.
+  const settled = state.payouts.some((p) => p.kind === "holdback");
+  const watching = round.status === "closed" && !!mine && ["captured", "delivered", "claim"].includes(mine.status) && !settled;
+  const every = round.status === "open" ? 3000 : watching ? 5000 : 0;
+  useEffect(() => {
+    if (!every) return;
+    // shortcut: polling; SSE if the demo needs instant updates.
+    const t = setInterval(refresh, every);
+    return () => clearInterval(t);
+  }, [every, refresh]);
+
   const units = commitments.reduce((n, c) => n + c.qty, 0);
   const myClaim = mine && state.claims.findLast((c) => c.commitmentId === mine.id);
   const price = round.finalPrice ?? tierAt(round.tiers, units).price;
+  // Only a deal that set the final price earns the Agreed rung (a dropped deal leaves agreedPrice unset).
+  const deal = round.status === "closed" && state.agreedPrice !== undefined && state.agreedPrice === round.finalPrice ? round.finalPrice : undefined;
+  const canReport = !!mine && (mine.status === "delivered" || (mine.status === "captured" && !!mine.tracking)); // R13: claims only after shipping
 
   const outcome =
     round.status === "failed"
       ? mine ? "Round didn't reach its first tier. Your reservation was released." : "Round didn't reach its first tier. Nothing was charged."
       : round.status === "closed"
         ? `Round closed at ${formatUSD(price)} a carton.${mine?.captured !== undefined ? ` You paid ${formatUSD(mine.captured)}.` : ""}`
-        : "";
+        : joinMsg;
 
   function joinedWith(c: Commitment) {
     setJoined(c.id);
     saveMine(id, c.id);
     setState((s) => (s.commitments.some((x) => x.id === c.id) ? s : { ...s, commitments: [...s.commitments, c] }));
+    setJoinMsg(`You're in. ${formatUSD(c.reserved)} reserved on PayPal, not charged.`);
+    requestAnimationFrame(() => inRef.current?.focus()); // the join panel (and the PayPal button) just unmounted
     refresh();
   }
 
@@ -123,7 +133,7 @@ export default function RoundScreen({ id, initial }: { id: string; initial: Roun
 
         <div className="grid grid-cols-[minmax(0,1fr)_190px] items-stretch gap-[18px] max-[900px]:grid-cols-[minmax(0,1fr)]">
           <RoundPool units={units} shops={commitments.map((c) => ({ name: c.shop, qty: c.qty }))} closed={round.status === "closed"} tiers={round.tiers} />
-          <TierLadder tiers={round.tiers} units={units} agreed={round.status === "closed" ? round.finalPrice : undefined} />
+          <TierLadder tiers={round.tiers} units={units} agreed={deal} closed={round.status !== "open"} />
         </div>
 
         <div className="grid gap-2.5">
@@ -149,7 +159,7 @@ export default function RoundScreen({ id, initial }: { id: string; initial: Roun
         {round.status === "open" && !mine && <JoinPanel round={round} units={units} onJoined={joinedWith} />}
 
         {round.status === "open" && mine && (
-          <Panel title={`${mine.shop}, you're in`} status={mine.status}>
+          <Panel title={`${mine.shop}, you're in`} status={mine.status} titleRef={inRef}>
             <p className="font-display text-[34px] leading-none font-[750] tracking-[-0.03em] tabular-nums">{formatUSD(mine.reserved)}</p>
             <p className="text-sm text-muted">
               Reserved on PayPal for {mine.qty} cartons, not charged. You&apos;ll pay the group price when the round closes, never more. If it doesn&apos;t reach its first tier, nothing is charged.
@@ -183,7 +193,7 @@ export default function RoundScreen({ id, initial }: { id: string; initial: Roun
           </div>
         )}
 
-        {mine && (mine.status === "captured" || mine.status === "delivered") &&
+        {mine && canReport &&
           (reporting ? (
             <ClaimForm roundId={id} mine={mine} onFiled={filed} onCancel={() => setReporting(false)} />
           ) : (

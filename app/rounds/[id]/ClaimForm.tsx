@@ -114,7 +114,7 @@ export default function ClaimForm({ roundId, mine, onFiled, onCancel }: Props) {
 
 const KIND_WORD: Record<Claim["kind"], string> = { damaged: "damaged", missing: "missing", short: "short" };
 
-/** A filed claim: the agent's proposal and where it stands. Approval happens on the supplier console. */
+/** A filed claim as the shop sees it: what it reported, the proposed refund and where it stands. Approval happens on the supplier console. */
 export function ClaimStatus({ claim, mine, supplier }: { claim: Claim; mine: Commitment; supplier: string }) {
   const p = claim.proposal;
   return (
@@ -122,25 +122,22 @@ export function ClaimStatus({ claim, mine, supplier }: { claim: Claim; mine: Com
       <p className="font-display text-lg font-bold tracking-[-0.01em]">
         {claim.cartons} {claim.cartons === 1 ? "carton" : "cartons"} {KIND_WORD[claim.kind]}
       </p>
-      {claim.note && <p className="text-sm text-muted">&ldquo;{claim.note}&rdquo;</p>}
+      {claim.note && <p className="text-sm text-muted">You wrote: &ldquo;{claim.note}&rdquo;</p>}
       {p && (
-        <div className="grid gap-1 border-t border-rule pt-3 text-sm">
-          <b>Agent proposal</b>
-          <p>{p.reason}</p>
-          <p className="tabular-nums">
-            {p.refund > 0 ? (
-              <>
-                Refund <b>{formatUSD(p.refund)}</b> to you, paid from {supplier}&apos;s holdback. Other shops are unaffected.
-              </>
-            ) : (
-              "No refund proposed."
-            )}
-          </p>
-        </div>
+        <p className="border-t border-rule pt-3 text-sm tabular-nums">
+          {/* R13: the agent's reason is written for the approver; the shop sees only the proposed amount. */}
+          {p.refund > 0 ? (
+            <>
+              Proposed refund: <b>{formatUSD(p.refund)}</b>, paid from {supplier}&apos;s holdback. Other shops are unaffected.
+            </>
+          ) : (
+            "No refund proposed."
+          )}
+        </p>
       )}
       <p className="text-sm text-muted">
         {claim.status === "open"
-          ? `This is a proposal awaiting ${supplier}'s approval. Nothing has been refunded yet.`
+          ? `Waiting for ${supplier} to approve. Nothing has been refunded yet.`
           : claim.status === "approved"
             ? mine.refunded > 0 ? `Approved by ${supplier}. ${formatUSD(mine.refunded)} refunded to your PayPal.` : `Approved by ${supplier}, with no refund.`
             : `${supplier} declined this claim. You can report the problem again with more detail.`}
