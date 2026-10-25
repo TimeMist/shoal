@@ -7,8 +7,8 @@ export type Role = "shop" | "supplier";
 const ROLES: [Role, string][] = [["shop", "Shop"], ["supplier", "Supplier"]];
 
 /** Switches the demo between the shop page and the supplier console (remembered in the `shoal-role` cookie). */
-export default function RoleSwitch({ role }: { role: Role }) {
-  const [current, setCurrent] = useOptimistic(role);
+export default function RoleSwitch({ role }: { role: Role | null }) {
+  const [current, setCurrent] = useOptimistic<Role | null>(role);
   const [, startTransition] = useTransition();
   const pick = (r: Role) =>
     startTransition(async () => {

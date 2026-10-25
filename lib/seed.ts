@@ -3,7 +3,7 @@ import { addCommitment } from "./store.ts";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-const DEMO_SHOPS = [
+export const DEMO_SHOPS = [
   { shop: "Hilltop Bakery", qty: 240 },
   { shop: "Little Fern Coffee", qty: 180 },
   { shop: "Northside Deli", qty: 96 },
@@ -14,18 +14,24 @@ const DEMO_SHOPS = [
   { shop: "The Daily Grind", qty: 240 },
 ];
 
+// Shared with the landing page's hero round.
+export const DEMO_ROUND = {
+  supplier: "Meadow Oat Co.",
+  product: "Barista oat milk, 1 L carton",
+  tiers: [
+    { min: 0, price: 240 },
+    { min: 500, price: 216 },
+    { min: 1000, price: 192 },
+    { min: 1500, price: 180 },
+  ],
+};
+
 export function seedRound(): RoundState {
   return {
     round: {
       id: "demo",
-      supplier: "Meadow Oat Co.",
-      product: "Barista oat milk, 1 L carton",
-      tiers: [
-        { min: 0, price: 240 },
-        { min: 500, price: 216 },
-        { min: 1000, price: 192 },
-        { min: 1500, price: 180 },
-      ],
+      ...DEMO_ROUND,
+      tiers: DEMO_ROUND.tiers.map((t) => ({ ...t })),
       floor: 180,
       minPerShop: 96,
       holdbackPct: 10,

@@ -8,8 +8,10 @@ import TierLadder from "@/components/TierLadder";
 import { formatUSD } from "@/lib/money";
 import { tierAt } from "@/lib/round";
 import type { Commitment, RoundState } from "@/lib/store";
+import { RESET_EVENT } from "../../DemoBar";
 import { api } from "./api";
-import ClaimForm, { ClaimStatus, GHOST } from "./ClaimForm";
+import { GHOST } from "../../ui";
+import ClaimForm, { ClaimStatus } from "./ClaimForm";
 import JoinPanel from "./JoinPanel";
 import Receipt, { Panel } from "./Receipt";
 
@@ -65,6 +67,10 @@ export default function RoundScreen({ id, initial }: { id: string; initial: Roun
       setState(await api<RoundState>(`/api/rounds/${id}`));
     } catch {} // a missed poll is retried on the next tick
   }, [id]);
+  useEffect(() => {
+    addEventListener(RESET_EVENT, refresh);
+    return () => removeEventListener(RESET_EVENT, refresh);
+  }, [refresh]);
 
   const { round, commitments } = state;
   const mineId = joined ?? stored;

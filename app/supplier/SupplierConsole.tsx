@@ -6,12 +6,13 @@ import StatusChip from "@/components/StatusChip";
 import { formatUSD } from "@/lib/money";
 import { tierAt } from "@/lib/round";
 import type { Claim, RoundState } from "@/lib/store";
+import { RESET_EVENT } from "../DemoBar";
 import { api, errorText } from "../rounds/[id]/api";
 import { KIND_WORD } from "../rounds/[id]/ClaimForm";
 import AllocationGrid from "./AllocationGrid";
 import Negotiation from "./Negotiation";
 import Timeline from "./Timeline";
-import { DEAL, GHOST, GHOST_SM, PRIMARY, SPINNER } from "./ui";
+import { DEAL, GHOST, PRIMARY, SPINNER } from "./ui";
 
 const DEMO_SHOPS = 8; // lib/seed.ts DEMO_SHOPS
 
@@ -30,6 +31,11 @@ export default function SupplierConsole({ id, initial }: { id: string; initial: 
       setState(await api<RoundState>(`/api/rounds/${id}`));
     } catch {} // a missed poll is retried on the next tick
   }, [id]);
+  useEffect(() => {
+    const onReset = () => (setReplay(0), setErrors({}), refresh());
+    addEventListener(RESET_EVENT, onReset);
+    return () => removeEventListener(RESET_EVENT, onReset);
+  }, [refresh]);
 
   const shipped = payouts.some((p) => p.kind === "ship");
   const settled = payouts.some((p) => p.kind === "holdback");
@@ -239,12 +245,6 @@ export default function SupplierConsole({ id, initial }: { id: string; initial: 
               </li>
             ))}
           </ol>
-          <div className="grid justify-items-start gap-1.5 border-t border-rule pt-3">
-            <button type="button" className={GHOST_SM} disabled={!!busy} onClick={() => act("reset", () => api<RoundState>("/api/demo/reset", {}), () => "Demo round reset.").then(() => setReplay(0))}>
-              {busy === "reset" ? "Resetting" : "Reset demo round"}
-            </button>
-            {errors.reset && <p role="alert" className="text-[13px] text-jam">{errors.reset}</p>}
-          </div>
         </section>
 
         {claims.length > 0 && (

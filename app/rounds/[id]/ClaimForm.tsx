@@ -3,11 +3,9 @@
 import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { formatUSD } from "@/lib/money";
 import type { Claim, Commitment } from "@/lib/store";
+import { GHOST, PRIMARY } from "../../ui";
 import { api, errorText } from "./api";
 
-export const BTN = "inline-flex items-center gap-2 rounded-pill px-5 py-3 text-[15px] font-semibold transition-[transform,background-color,box-shadow] duration-120 ease-out active:scale-[0.97] disabled:cursor-not-allowed disabled:bg-disabled disabled:text-muted disabled:shadow-none";
-export const PRIMARY = `${BTN} bg-jam text-white hover:bg-jam-deep`;
-export const GHOST = `${BTN} bg-white text-ink shadow-[inset_0_0_0_1px_var(--color-rule)] hover:shadow-[inset_0_0_0_1px_var(--color-ink)]`;
 const FIELD = "rounded-field border border-field bg-white px-3.5 py-[11px] text-base font-medium text-ink outline-none focus:border-berry focus:shadow-[0_0_0_3px_rgba(224,20,111,0.18)] aria-invalid:border-jam";
 
 const KINDS: [Claim["kind"], string][] = [["damaged", "Damaged cartons"], ["missing", "Missing cartons"], ["short", "Short delivery"]];
