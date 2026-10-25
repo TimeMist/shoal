@@ -6,14 +6,14 @@ import { setRole } from "./role-action";
 export type Role = "shop" | "supplier";
 const ROLES: [Role, string][] = [["shop", "Shop"], ["supplier", "Supplier"]];
 
-/** Switches the demo between the shop and supplier views via the `shoal-role` cookie. */
+/** Switches the demo between the shop page and the supplier console (remembered in the `shoal-role` cookie). */
 export default function RoleSwitch({ role }: { role: Role }) {
   const [current, setCurrent] = useOptimistic(role);
   const [, startTransition] = useTransition();
   const pick = (r: Role) =>
     startTransition(async () => {
       setCurrent(r);
-      await setRole(r); // setting a cookie in a server action re-renders the page with the new role
+      await setRole(r); // sets the cookie and redirects to that role's view of the demo round
     });
   return (
     <div role="group" aria-label="View as" className="inline-flex gap-0.5 rounded-pill bg-white p-1 shadow-[inset_0_0_0_1px_var(--color-rule)]">

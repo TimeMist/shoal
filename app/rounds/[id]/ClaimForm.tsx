@@ -112,7 +112,7 @@ export default function ClaimForm({ roundId, mine, onFiled, onCancel }: Props) {
   );
 }
 
-const KIND_WORD: Record<Claim["kind"], string> = { damaged: "damaged", missing: "missing", short: "short" };
+export const KIND_WORD: Record<Claim["kind"], string> = { damaged: "damaged", missing: "missing", short: "short" };
 
 /** A filed claim as the shop sees it: what it reported, the proposed refund and where it stands. Approval happens on the supplier console. */
 export function ClaimStatus({ claim, mine, supplier }: { claim: Claim; mine: Commitment; supplier: string }) {

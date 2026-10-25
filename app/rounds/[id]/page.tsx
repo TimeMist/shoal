@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import DemoBadge from "@/components/DemoBadge";
+import RoleSwitch from "@/components/RoleSwitch";
 import Swimmy from "@/components/Swimmy";
 import { getState } from "@/lib/store";
 import RoundScreen from "./RoundScreen";
@@ -13,7 +14,10 @@ export default function RoundPage({ params }: PageProps<"/rounds/[id]">) {
           <Swimmy size={28} />
           shoal
         </span>
-        <DemoBadge />
+        <div className="flex items-center gap-3">
+          <RoleSwitch role="shop" />
+          <DemoBadge />
+        </div>
       </header>
       <Suspense fallback={<p className="text-muted">Loading the round…</p>}>
         <Round params={params} />

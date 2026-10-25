@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { approveClaim } from "./claims.ts";
-import { deliver, releaseRound, shipRound } from "./fulfil.ts";
+import { deliver, releaseRound, senderBatchId, shipRound } from "./fulfil.ts";
 import { seedRound } from "./seed.ts";
 import type { Commitment, RoundState } from "./store.ts";
 
@@ -23,7 +23,8 @@ const E = "sup@example.com";
 test("ship pays 90% of all captured, tracks real shops only, holds 10%", async () => {
   const s = setup(), f = stubs();
   assert.deepEqual(await shipRound(s, E, f), { ok: true });
-  assert.deepEqual(f.pay, [[E, 27000, "Shoal " + s.round.product + ": shipment payout", "demo-ship"]]);
+  assert.deepEqual(f.pay, [[E, 27000, "Shoal " + s.round.product + ": shipment payout", senderBatchId(s, "ship")]]);
+  assert.match(senderBatchId(s, "ship"), /^demo-ship-\d+$/);
   assert.equal(f.tr.length, 1);
   assert.deepEqual(f.tr[0], ["oa", "capa", "SHOAL-demo-1", "Demo Courier"]);
   assert.equal(s.commitments[1].tracking, "SHOAL-demo-2");
@@ -80,7 +81,7 @@ test("release pays holdbackLeft once; the second call is a no-op", async () => {
   s.holdbackLeft = 2500; // after claim refunds
   assert.deepEqual(await releaseRound(s, E, f.payout), { ok: true });
   assert.equal(f.pay[1][1], 2500);
-  assert.equal(f.pay[1][3], "demo-holdback");
+  assert.equal(f.pay[1][3], senderBatchId(s, "holdback"));
   assert.deepEqual(s.payouts[1], { batchId: "B2", kind: "holdback", cents: 2500 });
   assert.equal((await releaseRound(s, E, f.payout)).ok, true);
   assert.equal(f.pay.length, 2);

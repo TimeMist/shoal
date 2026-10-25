@@ -9,6 +9,8 @@ const busy = new Set<string>(); // shortcut: in-process guard, single instance o
 const err = (status: number, error: string): Outcome => ({ ok: false, status, error });
 export const releasing = (roundId: string) => busy.has(`${roundId}-holdback`);
 const paid = (s: RoundState, kind: "ship" | "holdback") => s.payouts.some((p) => p.kind === kind);
+// PayPal refuses a reused sender_batch_id for 30 days, and a demo reset reuses the round id, so add the round's seeded close time.
+export const senderBatchId = (s: RoundState, kind: "ship" | "holdback") => `${s.round.id}-${kind}-${Date.parse(s.round.closesAt)}`;
 
 export async function shipRound(s: RoundState, email: string, fns: { payout: Payer; track: Tracker }): Promise<Outcome> {
   // A stable sender_batch_id makes PayPal reject a duplicate retry, so a lost response needs a manual lookup.
@@ -29,7 +31,7 @@ export async function shipRound(s: RoundState, email: string, fns: { payout: Pay
     const { now, held } = splitPayout(sold.reduce((n, c) => n + (c.captured ?? 0), 0), s.round.holdbackPct);
     let batchId: string;
     try {
-      batchId = await fns.payout(email, now, `Shoal ${s.round.product}: shipment payout`, key);
+      batchId = await fns.payout(email, now, `Shoal ${s.round.product}: shipment payout`, senderBatchId(s, "ship"));
     } catch (e) {
       return err(502, e instanceof Error ? e.message : "PayPal error");
     }
@@ -66,7 +68,7 @@ export async function releaseRound(s: RoundState, email: string, payout: Payer):
   try {
     let batchId: string;
     try {
-      batchId = await payout(email, cents, `Shoal ${s.round.product}: holdback release`, key);
+      batchId = await payout(email, cents, `Shoal ${s.round.product}: holdback release`, senderBatchId(s, "holdback"));
     } catch (e) {
       s.holdbackLeft = cents;
       return err(502, e instanceof Error ? e.message : "PayPal error");

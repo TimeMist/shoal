@@ -32,7 +32,8 @@ To pay, log in with a **sandbox personal (buyer) account** from developer.paypal
 - [ ] Buying rounds: tiers, authorize at join, partial capture at close, void on failure
 - [ ] Supplier tier negotiation and shipping split (AI, inside supplier rules)
 - [ ] Per-shop deliveries, claims and supplier holdback; payouts via PayPal Payouts
-- [ ] Allocation grid (AG Grid) and round timeline (Bryntum)
+- [x] Supplier console: allocation grid (AG Grid), AI negotiation replay, round actions and payouts
+- [x] Bryntum Scheduler (trial) for the round timeline
 - [ ] Hosted demo on Render
 
 ## License
