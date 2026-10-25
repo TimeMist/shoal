@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Sweetspot",
-  description: "A negotiation agent for online shops, paid with PayPal",
+  title: "Shoal",
+  description: "Buying power for independent shops, settled with PayPal",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

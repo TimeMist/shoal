@@ -1,14 +1,15 @@
-# Sweetspot
+# Shoal
 
-A negotiation agent for online shops. Shoppers make an offer, the shop's AI agent negotiates within rules the merchant sets, and the agreed deal is paid through PayPal.
+Buying power for independent shops. Shops join short buying rounds for the supplies they all need; the more shops join, the lower everyone's price. Each shop's money is reserved with PayPal, never taken until the round succeeds, and only the group price is charged.
 
 Built for the [PayPal AI Hackathon](https://paypalaihackathon.devpost.com/).
 
 ## How it works
 
-- **The AI never sets a price on its own.** The agent proposes moves (counter-offer, accept, add a sweetener such as free shipping). `lib/rules.ts` checks every move against the merchant's floor price and maximum discount.
-- **The agreed price can't be tampered with.** An accepted deal becomes a signed token that expires after 15 minutes (`lib/deal.ts`). The PayPal order is created on the server from that token, never from a price sent by the browser.
-- **Payment:** PayPal Orders v2 (server SDK) and the PayPal JS SDK v6 button, in the sandbox.
+- **Reserve, don't take.** Joining a round creates a PayPal authorization at the price showing at that moment. When the round closes, Shoal captures each shop's share at the price the group reached (never more), or voids the authorization if the round fails.
+- **Rules decide, AI coordinates.** Prices, tiers and payouts are checked in code (`lib/rules.ts`); the AI suggests quantities, negotiates the tier with the supplier inside the supplier's rules, splits shipping and triages delivery claims.
+- **One shop's problem stays one shop's problem.** Each shop's part of a round is its own sub-order with its own payment and tracking; delivery claims are refunded from a supplier holdback.
+- **Brand and design:** see `design/brand/index.html`, `DESIGN.md` and `PRODUCT.md`.
 
 ## Run it locally
 
@@ -17,7 +18,7 @@ Requirements: Node 24+ and a PayPal developer account with a sandbox app.
 ```bash
 npm install
 cp .env.example .env.local   # then fill in the values
-npm test                     # pricing guardrail and deal signing tests
+npm test                     # guardrail and signed-token tests
 npm run dev                  # http://localhost:3000
 ```
 
@@ -25,11 +26,13 @@ To pay, log in with a **sandbox personal (buyer) account** from developer.paypal
 
 ## Status
 
-- [x] Pricing guardrail and signed deals, with tests
-- [x] PayPal sandbox checkout at the negotiated price
-- [ ] Seller agent chat (Claude, tool use)
-- [ ] Merchant dashboard (AG Grid) and rules editor
-- [ ] Buyer agent haggling agent-to-agent (Channel3 price comparisons)
+- [x] Price guardrail and signed tokens, with tests (from the earlier scaffold; being adapted to rounds)
+- [x] PayPal sandbox order create and capture
+- [x] Brand and design guidelines
+- [ ] Buying rounds: tiers, authorize at join, partial capture at close, void on failure
+- [ ] Supplier tier negotiation and shipping split (AI, inside supplier rules)
+- [ ] Per-shop deliveries, claims and supplier holdback; payouts via PayPal Payouts
+- [ ] Allocation grid (AG Grid) and round timeline (Bryntum)
 - [ ] Hosted demo on Render
 
 ## License
