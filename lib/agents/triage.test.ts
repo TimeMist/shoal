@@ -13,8 +13,13 @@ test("12 damaged cartons at 185 propose 2220", async () => {
   assert.equal(p.refund, 2220);
 });
 
-test("500 cartons clamp to what the shop paid and the reason explains it", async () => {
-  const p = await triage(claim, c, 185, 100000, says(500));
+test("500 cartons on a 120-carton claim are capped at 120, equal to the shop's capture", async () => {
+  const p = await triage({ ...claim, cartons: 120 }, c, 185, 100000, says(500));
+  assert.equal(p.refund, 22200);
+});
+
+test("a price change that exceeds what the shop paid is clamped with a reason", async () => {
+  const p = await triage({ ...claim, cartons: 120 }, c, 200, 100000, says(120));
   assert.equal(p.refund, 22200);
   assert.match(p.reason, /paid only \$222\.00/);
 });

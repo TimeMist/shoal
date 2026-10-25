@@ -25,6 +25,7 @@ export type Claim = {
   cartons: number;
   note: string;
   hasPhoto?: boolean;
+  priorStatus?: "captured" | "delivered";
   proposal?: { refund: number; reason: string };
   status: "open" | "approved" | "rejected";
 };

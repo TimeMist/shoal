@@ -36,6 +36,7 @@ export async function POST(request: Request, ctx: RouteContext<"/api/rounds/[id]
     cartons: b.cartons as number,
     note: typeof b.note === "string" ? b.note.slice(0, 1000) : "",
     hasPhoto: !!photo,
+    priorStatus: c.status,
     status: "open",
   };
   // Claim the slot before the slow model call so a second filing gets a 409.

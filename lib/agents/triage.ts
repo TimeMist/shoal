@@ -33,7 +33,8 @@ export async function triage(
 ): Promise<{ refund: number; reason: string }> {
   const p = await model(claim, c, photo);
   if (typeof p.cartons !== "number" || !Number.isInteger(p.cartons) || p.cartons < 0) throw new Error("Triage returned invalid cartons");
-  const requested = p.cartons * finalPrice;
+  // The shop's note could talk the model into a bigger number: never refund more cartons than were claimed.
+  const requested = Math.min(p.cartons, claim.cartons) * finalPrice;
   const paid = (c.captured ?? 0) - c.refunded;
   const { refund, shortfall } = clampRefund(requested, c.captured ?? 0, c.refunded, holdbackLeft);
   if (!shortfall) return { refund, reason: p.reason };

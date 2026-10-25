@@ -1,0 +1,46 @@
+import { clampRefund } from "./settle.ts";
+import type { RoundState } from "./store.ts";
+
+export type Refunder = (captureId: string, cents: number, note: string) => Promise<string>;
+export type Outcome = { ok: true; refunded: number } | { ok: false; status: number; error: string };
+
+const busy = new Set<string>(); // shortcut: in-process guard, single instance only
+
+function find(s: RoundState, claimId: string) {
+  const claim = s.claims.find((x) => x.id === claimId);
+  const c = s.commitments.find((x) => x.id === claim?.commitmentId);
+  return claim && c ? { claim, c } : null;
+}
+
+export async function approveClaim(s: RoundState, claimId: string, refund: Refunder): Promise<Outcome> {
+  const f = find(s, claimId);
+  if (!f) return { ok: false, status: 404, error: "Claim not found" };
+  const { claim, c } = f;
+  if (claim.status !== "open" || busy.has(claimId)) return { ok: false, status: 409, error: "Claim is not open" };
+  // Re-clamp: the holdback or earlier refunds may have changed since the proposal.
+  const { refund: cents } = clampRefund(claim.proposal?.refund ?? 0, c.captured ?? 0, c.refunded, s.holdbackLeft);
+  if (cents > 0 && !c.simulated) {
+    busy.add(claimId);
+    try {
+      await refund(c.captureId!, cents, `Shoal claim ${claim.kind}: ${claim.cartons} cartons`);
+    } catch (e) {
+      return { ok: false, status: 502, error: e instanceof Error ? e.message : "PayPal error" };
+    } finally {
+      busy.delete(claimId);
+    }
+  }
+  c.refunded += cents;
+  s.holdbackLeft -= cents;
+  claim.status = "approved";
+  c.status = "resolved";
+  return { ok: true, refunded: cents };
+}
+
+export function rejectClaim(s: RoundState, claimId: string): Outcome {
+  const f = find(s, claimId);
+  if (!f) return { ok: false, status: 404, error: "Claim not found" };
+  if (f.claim.status !== "open" || busy.has(claimId)) return { ok: false, status: 409, error: "Claim is not open" };
+  f.claim.status = "rejected";
+  f.c.status = f.claim.priorStatus ?? "delivered";
+  return { ok: true, refunded: 0 };
+}
