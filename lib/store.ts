@@ -71,7 +71,7 @@ export function addCommitment(
   s: RoundState,
   input: { shop: string; qty: number; simulated: boolean; orderId?: string; reserved?: number },
 ): Commitment {
-  if (s.round.status !== "open") throw new Error("Round is not open");
+  if (s.round.status !== "open" || s.closing) throw new Error("Round is not open");
   const err = validateQty(s.round, input.qty);
   if (err) throw new Error(err);
   const c: Commitment = {

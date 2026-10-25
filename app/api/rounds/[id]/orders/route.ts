@@ -7,7 +7,7 @@ export async function POST(request: Request, ctx: RouteContext<"/api/rounds/[id]
   const { id } = await ctx.params;
   const s = getState(id);
   if (!s) return fail("Round not found", 404);
-  if (s.round.status !== "open") return fail("Round is not open", 409);
+  if (s.round.status !== "open" || s.closing) return fail("Round is not open", 409);
   const { token } = await body(request);
   const q = typeof token === "string" ? verifyQuoteToken(token, dealSecret()) : null;
   if (!q || q.roundId !== id) return fail("Invalid or expired quote", 400);

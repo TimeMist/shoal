@@ -55,6 +55,12 @@ test("close twice captures once", () => {
   assert.equal(beginClose(s), false);
 });
 
+test("addCommitment throws while a close is running", () => {
+  const s = fresh();
+  beginClose(s);
+  assert.throws(() => addCommitment(s, { shop: "A", qty: 100, simulated: false }), /not open/);
+});
+
 test("addCommitment rejects a closed round and bad quantities", () => {
   const s = fresh();
   assert.throws(() => addCommitment(s, { shop: "A", qty: 10, simulated: false }));

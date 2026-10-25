@@ -1,6 +1,7 @@
 import { verifyQuoteToken } from "@/lib/deal";
 import { body, fail, paypalFail } from "@/lib/http";
-import { authorizeOrder, dealSecret, voidAuthorization } from "@/lib/paypal";
+import { authorizationMatches } from "@/lib/join";
+import { authorizeOrder, type Authorization, dealSecret, voidAuthorization } from "@/lib/paypal";
 import { addCommitment, findByOrder, getState, markAuthorized } from "@/lib/store";
 
 export async function POST(request: Request, ctx: RouteContext<"/api/rounds/[id]/orders/[orderId]/authorize">) {
@@ -12,20 +13,24 @@ export async function POST(request: Request, ctx: RouteContext<"/api/rounds/[id]
   if (!q || q.roundId !== id) return fail("Invalid or expired quote", 400);
   const existing = findByOrder(s, orderId);
   if (existing) return Response.json({ commitment: existing });
-  if (s.round.status !== "open") return fail("Round is not open", 409);
-  let authorizationId: string;
+  if (s.round.status !== "open" || s.closing) return fail("Round is not open", 409);
+  let auth: Authorization;
   try {
-    authorizationId = await authorizeOrder(orderId);
+    auth = await authorizeOrder(orderId);
   } catch (e) {
     return paypalFail(e);
+  }
+  if (!authorizationMatches(auth, q)) {
+    await voidAuthorization(auth.authorizationId).catch(() => {});
+    return fail("Authorization does not match the quote", 400);
   }
   const again = findByOrder(s, orderId); // a double submit may have finished while PayPal was answering
   if (again) return Response.json({ commitment: again });
   try {
     addCommitment(s, { shop: q.shop, qty: q.qty, simulated: false, orderId, reserved: q.reserved });
   } catch (e) {
-    await voidAuthorization(authorizationId).catch(() => {}); // round closed mid-flight: release the hold
+    await voidAuthorization(auth.authorizationId).catch(() => {}); // round closed mid-flight: release the hold
     return fail(e instanceof Error ? e.message : "Could not join", 409);
   }
-  return Response.json({ commitment: markAuthorized(s, orderId, authorizationId) });
+  return Response.json({ commitment: markAuthorized(s, orderId, auth.authorizationId) });
 }

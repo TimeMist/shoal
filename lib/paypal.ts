@@ -49,11 +49,14 @@ export async function createAuthorizeOrder(cents: number, description: string, r
   return result.id;
 }
 
-export async function authorizeOrder(orderId: string): Promise<string> {
+export type Authorization = { authorizationId: string; amount: string; referenceId: string };
+
+export async function authorizeOrder(orderId: string): Promise<Authorization> {
   const { result } = await orders().authorizeOrder({ id: orderId });
-  const id = result.purchaseUnits?.[0]?.payments?.authorizations?.[0]?.id;
-  if (!id) throw new Error("PayPal authorizeOrder returned no authorization id");
-  return id;
+  const unit = result.purchaseUnits?.[0];
+  const auth = unit?.payments?.authorizations?.[0];
+  if (!auth?.id) throw new Error("PayPal authorizeOrder returned no authorization id");
+  return { authorizationId: auth.id, amount: auth.amount?.value ?? "", referenceId: unit?.referenceId ?? "" };
 }
 
 export async function captureAuthorization(authorizationId: string, cents: number): Promise<string> {

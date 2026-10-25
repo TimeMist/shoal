@@ -22,7 +22,7 @@ async function newApprovedOrder(label: string, cents: number): Promise<string> {
 }
 
 const orderA = await newApprovedOrder("A", 1000);
-const authA = await authorizeOrder(orderA);
+const { authorizationId: authA } = await authorizeOrder(orderA);
 console.log("authorization A:", authA);
 const captureId = await captureAuthorization(authA, 500);
 console.log("capture (5.00):", captureId);
@@ -35,7 +35,7 @@ try {
 }
 
 const orderB = await newApprovedOrder("B", 1000);
-const authB = await authorizeOrder(orderB);
+const { authorizationId: authB } = await authorizeOrder(orderB);
 await voidAuthorization(authB);
 console.log("voided authorization B:", authB);
 
