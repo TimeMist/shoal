@@ -1,5 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { approveClaim } from "./claims.ts";
 import { deliver, releaseRound, shipRound } from "./fulfil.ts";
 import { seedRound } from "./seed.ts";
 import type { Commitment, RoundState } from "./store.ts";
@@ -103,4 +104,37 @@ test("release with nothing held records nothing; payout failure leaves holdback"
   s.holdbackLeft = 3000;
   const out = await releaseRound(s, E, async () => { throw new Error("x"); });
   assert.deepEqual([out.ok, s.holdbackLeft, s.payouts.length], [false, 3000, 1]);
+});
+
+test("release with a commitment in status claim (no claim filed yet) is 409", async () => {
+  const s = setup(), f = stubs();
+  await shipRound(s, E, f);
+  s.commitments[0].status = "claim";
+  assert.deepEqual(await releaseRound(s, E, f.payout), { ok: false, status: 409, error: "1 open claim to resolve first" });
+  s.claims.push({ id: "k", commitmentId: "a", kind: "missing", cartons: 1, note: "", status: "open" });
+  assert.equal((await releaseRound(s, E, f.payout)).ok, false); // same commitment, counted once
+  assert.equal(f.pay.length, 1);
+});
+
+test("a claim approved during an in-flight release is 409 and the release pays the full holdback", async () => {
+  const s = setup(), f = stubs();
+  await shipRound(s, E, f);
+  s.commitments[0].status = "delivered";
+  let done!: () => void;
+  const rel = releaseRound(s, E, (...a) => (f.pay.push(a), new Promise((r) => (done = () => r("B2")))));
+  s.commitments[0].status = "claim";
+  s.claims.push({ id: "k", commitmentId: "a", kind: "damaged", cartons: 5, note: "", priorStatus: "delivered", proposal: { refund: 500, reason: "r" }, status: "open" });
+  assert.equal(s.holdbackLeft, 0);
+  const a = await approveClaim(s, "k", async () => "r");
+  assert.deepEqual(a, { ok: false, status: 409, error: "Holdback release in progress" });
+  done();
+  assert.equal((await rel).ok, true);
+  assert.deepEqual(s.payouts[1], { batchId: "B2", kind: "holdback", cents: 3000 });
+});
+
+test("a failed release restores holdbackLeft", async () => {
+  const s = setup(), f = stubs();
+  await shipRound(s, E, f);
+  const out = await releaseRound(s, E, async () => { throw new Error("x"); });
+  assert.deepEqual([out.ok, s.holdbackLeft], [false, 3000]);
 });
