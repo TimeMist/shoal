@@ -59,17 +59,21 @@ export default function RoundScreen({ id, initial }: { id: string; initial: Roun
   const [joinMsg, setJoinMsg] = useState("");
   const claimRef = useRef<HTMLDivElement>(null);
   const inRef = useRef<HTMLHeadingElement>(null);
+  const gen = useRef(0); // bumped on demo reset; polls started before it are dropped
   const stored = useSyncExternalStore(onMine, () => readMine(id), () => null);
   const minute = useMinute();
 
   const refresh = useCallback(async () => {
+    const g = gen.current;
     try {
-      setState(await api<RoundState>(`/api/rounds/${id}`));
+      const s = await api<RoundState>(`/api/rounds/${id}`);
+      if (g === gen.current) setState(s);
     } catch {} // a missed poll is retried on the next tick
   }, [id]);
   useEffect(() => {
-    addEventListener(RESET_EVENT, refresh);
-    return () => removeEventListener(RESET_EVENT, refresh);
+    const onReset = () => (gen.current++, setJoined(null), setJoinMsg(""), setReporting(false), refresh());
+    addEventListener(RESET_EVENT, onReset);
+    return () => removeEventListener(RESET_EVENT, onReset);
   }, [refresh]);
 
   const { round, commitments } = state;

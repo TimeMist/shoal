@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import LiveRegion from "@/components/LiveRegion";
 import StatusChip from "@/components/StatusChip";
 import { formatUSD } from "@/lib/money";
@@ -24,15 +24,18 @@ export default function SupplierConsole({ id, initial }: { id: string; initial: 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [replay, setReplay] = useState(0); // bumps per fresh negotiation, remounting the replay
   const [said, setSaid] = useState("");
+  const gen = useRef(0); // bumped on demo reset; results of requests started before it are dropped
 
   const { round, commitments, claims, payouts } = state;
   const refresh = useCallback(async () => {
+    const g = gen.current;
     try {
-      setState(await api<RoundState>(`/api/rounds/${id}`));
+      const s = await api<RoundState>(`/api/rounds/${id}`);
+      if (g === gen.current) setState(s);
     } catch {} // a missed poll is retried on the next tick
   }, [id]);
   useEffect(() => {
-    const onReset = () => (setReplay(0), setErrors({}), refresh());
+    const onReset = () => (gen.current++, setReplay(0), setErrors({}), setSaid(""), refresh());
     addEventListener(RESET_EVENT, onReset);
     return () => removeEventListener(RESET_EVENT, onReset);
   }, [refresh]);
@@ -51,12 +54,14 @@ export default function SupplierConsole({ id, initial }: { id: string; initial: 
   async function act(key: string, fn: () => Promise<RoundState>, done?: (s: RoundState) => string) {
     setBusy(key);
     setErrors((x) => ({ ...x, [key]: "" }));
+    const g = gen.current;
     try {
       const s = await fn();
+      if (g !== gen.current) return;
       setState(s);
       if (done) setSaid(done(s));
     } catch (e) {
-      setErrors((x) => ({ ...x, [key]: errorText(e) }));
+      if (g === gen.current) setErrors((x) => ({ ...x, [key]: errorText(e) }));
     } finally {
       setBusy(null);
     }
@@ -90,11 +95,7 @@ export default function SupplierConsole({ id, initial }: { id: string; initial: 
       why: !open ? notOpen : !commitments.length ? "No shops have joined yet" : undefined,
       note: open && commitments.length ? `Agents negotiate below the ${formatUSD(tier.price)} tier price, never under the ${formatUSD(round.floor)} floor.` : undefined,
       run: () =>
-        act("negotiate", async () => {
-          const s = await post("negotiate")();
-          setReplay((n) => n + 1);
-          return s;
-        }),
+        act("negotiate", post("negotiate"), () => (setReplay((n) => n + 1), "")),
     },
     {
       key: "close",
@@ -171,9 +172,10 @@ export default function SupplierConsole({ id, initial }: { id: string; initial: 
     (c: { id: string; shop: string }) => {
       setBusy(c.id);
       setErrors((x) => ({ ...x, deliver: "" }));
+      const g = gen.current;
       api<RoundState>(`/api/rounds/${id}/deliver`, { commitmentId: c.id })
-        .then((s) => (setState(s), setSaid(`${c.shop} marked delivered.`)))
-        .catch((e) => setErrors((x) => ({ ...x, deliver: `Couldn't mark ${c.shop} delivered: ${errorText(e)}` })))
+        .then((s) => g === gen.current && (setState(s), setSaid(`${c.shop} marked delivered.`)))
+        .catch((e) => g === gen.current && setErrors((x) => ({ ...x, deliver: `Couldn't mark ${c.shop} delivered: ${errorText(e)}` })))
         .finally(() => setBusy(null));
     },
     [id],

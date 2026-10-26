@@ -11,8 +11,9 @@ import { GHOST_SM } from "./ui";
 
 type Props = { product: string; supplier: string; tiers: Tier[]; shops: { shop: string; qty: number }[] };
 
-// One shop every 650 ms, then the close beat; all client-side, nothing is written.
-const START = 500, STEP = 650, CLOSE = 900;
+// One shop every 350 ms, then the close beat; the whole play, choreography included, ends inside 5 s (WCAG 2.2.2).
+// All client-side, nothing is written.
+const START = 250, STEP = 350, CLOSE = 500;
 
 /** The landing hero: the demo round's eight shops join, the price steps down, the fish completes. */
 export default function HeroRound({ product, supplier, tiers, shops }: Props) {
@@ -28,7 +29,7 @@ export default function HeroRound({ product, supplier, tiers, shops }: Props) {
       return () => clearTimeout(t);
     }
     const ts = shops.map((_, i) => setTimeout(() => setN(i + 1), START + i * STEP));
-    ts.push(setTimeout(() => setClosed(true), START + shops.length * STEP + CLOSE));
+    ts.push(setTimeout(() => setClosed(true), START + (shops.length - 1) * STEP + CLOSE));
     return () => ts.forEach(clearTimeout);
   }, [run, shops]);
 
@@ -42,6 +43,8 @@ export default function HeroRound({ product, supplier, tiers, shops }: Props) {
   const units = joined.reduce((u, s) => u + s.qty, 0);
   const price = tierAt(tiers, units).price;
   const last = joined.at(-1);
+  const total = shops.reduce((u, s) => u + s.qty, 0);
+  const summary = `Demo round: ${shops.length} shops commit ${total.toLocaleString("en-US")} cartons and the price drops from ${formatUSD(tiers[0].price)} to ${formatUSD(tierAt(tiers, total).price)} a carton.`;
   const caption = closed
     ? `Round closed at ${formatUSD(price)} a carton, down from ${formatUSD(tiers[0].price)} alone. Each shop pays only that.`
     : last
@@ -55,27 +58,29 @@ export default function HeroRound({ product, supplier, tiers, shops }: Props) {
           <p className="font-display text-[17px] font-bold">{product}</p>
           <p className="text-[13px] text-muted">Round by {supplier} · demo</p>
         </div>
-        {closed ? <span className="text-sm font-semibold">Round closed</span> : <StatusChip status="open" />}
+        <div className="flex items-center gap-3">
+          {closed && !reduce && (
+            <button type="button" className={GHOST_SM} onClick={replay}>
+              Replay
+            </button>
+          )}
+          {closed ? <span className="text-sm font-semibold">Round closed</span> : <StatusChip status="open" />}
+        </div>
       </header>
-      <div className="grid grid-cols-[minmax(0,1fr)_170px] items-stretch gap-4 max-[900px]:grid-cols-[minmax(0,1fr)]">
+      {/* The pool and ladder announce every step; on an auto-playing hero that floods screen readers, so they read the summary instead. */}
+      <p className="sr-only">{summary}</p>
+      <div aria-hidden="true" className="grid grid-cols-[minmax(0,1fr)_170px] items-stretch gap-4 max-[900px]:grid-cols-[minmax(0,1fr)]">
         <RoundPool units={units} shops={joined.map((s) => ({ name: s.shop, qty: s.qty }))} closed={closed} tiers={tiers} />
         <TierLadder tiers={tiers} units={units} closed={closed} />
       </div>
-      <ul aria-label="Shops in this round" className="flex min-h-[100px] flex-wrap content-start gap-1.5 max-[900px]:min-h-[29px]">
+      <ul aria-label="Shops in this round" className="flex min-h-[108px] flex-wrap content-start gap-1.5 max-[900px]:min-h-[29px]">
         {joined.map((s) => (
           <li key={s.shop} className="nego-line rounded-pill bg-shop-tint px-2.5 py-[5px] text-[13px] tabular-nums">
             {s.shop} · {s.qty}
           </li>
         ))}
       </ul>
-      <div className="flex min-h-[29px] flex-wrap items-center justify-between gap-3">
-        <p className="text-sm text-muted tabular-nums">{caption}</p>
-        {closed && !reduce && (
-          <button type="button" className={GHOST_SM} onClick={replay}>
-            Replay
-          </button>
-        )}
-      </div>
+      <p aria-hidden="true" className="text-sm text-muted tabular-nums">{caption}</p>
     </section>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import RoleSwitch, { type Role } from "@/components/RoleSwitch";
 import { GHOST_SM } from "./ui";
 
@@ -11,13 +11,19 @@ export const RESET_EVENT = "shoal-reset";
 /** The bar with the role read from the URL (needs a Suspense boundary under Cache Components). */
 export default function RouteDemoBar() {
   const path = usePathname();
-  return <DemoBar role={path.startsWith("/supplier") ? "supplier" : path.startsWith("/rounds") ? "shop" : null} />;
+  return <DemoBar key={path} role={path.startsWith("/supplier") ? "supplier" : path.startsWith("/rounds") ? "shop" : null} />;
 }
 
 /** One bar on every page: what's demo, which side you're viewing, and a way to start over. */
 export function DemoBar({ role }: { role: Role | null }) {
   const [busy, setBusy] = useState(false);
   const [said, setSaid] = useState<{ text: string; failed?: boolean } | null>(null);
+
+  useEffect(() => {
+    if (!said || said.failed) return;
+    const t = setTimeout(() => setSaid(null), 4000);
+    return () => clearTimeout(t);
+  }, [said]);
 
   async function reset() {
     setBusy(true);
