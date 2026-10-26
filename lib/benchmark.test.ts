@@ -169,6 +169,11 @@ test("a short refresh keeps the cached benchmark", async () => {
   assert.equal(r.benchmark?.perUnit, 399);
   const again = await getBenchmark("p-keep", item, { now: 6 * 60_000, search: good, classify: async () => verdicts });
   assert.equal(again.benchmark?.perUnit, 399);
+  let calls = 0;
+  const counted = async () => (calls++, offers.slice(0, 2));
+  const soon = await getBenchmark("p-keep", item, { now: 5 * 60_000 + 10_000, refresh: true, search: counted, classify: classifyShort });
+  assert.equal(calls, 0);
+  assert.equal(soon.reason, "Refreshed less than a minute ago");
 });
 
 test("refreshing a no-benchmark entry is throttled too", async () => {

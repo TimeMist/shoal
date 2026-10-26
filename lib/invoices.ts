@@ -22,7 +22,7 @@ export type InvoiceApi = {
   recordRefund(id: string, cents: number): Promise<void>;
 };
 
-export const invoiceNumber = (s: RoundState, index: number) => `SHOAL-${s.round.id}-${index + 1}-${Date.parse(s.round.closesAt).toString(36)}`;
+export const invoiceNumber = (s: RoundState, index: number) => `SH-${s.round.id}-${index + 1}-${Date.parse(s.round.closesAt).toString(36)}`;
 
 export function buildInvoice(s: RoundState, c: Commitment, number: string): InvoiceDraft | { error: string } {
   const { supplier, product, finalPrice = 0 } = s.round;
