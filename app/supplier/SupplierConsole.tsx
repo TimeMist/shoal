@@ -7,12 +7,12 @@ import { formatUSD } from "@/lib/money";
 import { capitalise, tierAt, unitLabel } from "@/lib/round";
 import type { Claim, RoundState } from "@/lib/store";
 import { RESET_EVENT } from "../DemoBar";
-import { api, errorText } from "../rounds/[id]/api";
+import { api, errorText, retailFor, retailSource, type Retail } from "../rounds/[id]/api";
 import { KIND_WORD } from "../rounds/[id]/ClaimForm";
 import AllocationGrid, { exportPurchaseOrder, type GridHandle } from "./AllocationGrid";
 import Negotiation from "./Negotiation";
 import Timeline from "./Timeline";
-import { DEAL, GHOST, PRIMARY, SPINNER } from "./ui";
+import { DEAL, GHOST, GHOST_SM, PRIMARY, SPINNER } from "./ui";
 
 const DEMO_SHOPS = 8; // lib/seed.ts DEMO_SHOPS
 
@@ -25,6 +25,20 @@ export default function SupplierConsole({ id, initial }: { id: string; initial: 
   const [replay, setReplay] = useState(0); // bumps per fresh negotiation, remounting the replay
   const [said, setSaid] = useState("");
   const grid = useRef<GridHandle>(null);
+  const [retail, setRetail] = useState<Retail>();
+  const [retailBusy, setRetailBusy] = useState(true); // the first GET starts on mount
+  const loadRetail = useCallback(
+    (refresh: boolean) => {
+      setRetailBusy(true);
+      return retailFor(id, refresh)
+        .then(setRetail, (e) => setRetail({ benchmark: null, reason: errorText(e) }))
+        .finally(() => setRetailBusy(false));
+    },
+    [id],
+  );
+  useEffect(() => {
+    loadRetail(false);
+  }, [loadRetail]);
   const gen = useRef(0); // bumped on demo reset; results of requests started before it are dropped
 
   const { round, commitments, claims, payouts } = state;
@@ -235,6 +249,22 @@ export default function SupplierConsole({ id, initial }: { id: string; initial: 
             <Stat term={round.finalPrice !== undefined ? "Final price" : "Tier price now"} value={formatUSD(price)} />
             <Stat term="Holdback held" value={formatUSD(state.holdbackLeft)} />
           </dl>
+          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-t border-rule pt-3 text-sm">
+            <p className="min-w-0 tabular-nums" aria-live="polite">
+              <b>Retail benchmark</b>{" "}
+              <span className="text-muted">
+                {retailBusy
+                  ? "Looking up retail prices on Channel3…"
+                  : retail?.benchmark
+                    ? `≈ ${formatUSD(retail.benchmark.perUnit)} a ${round.unit.one} ${retailSource(retail.benchmark)}${retail.reason ? `. ${retail.reason}.` : ""}`
+                    : (retail?.reason ?? "No retail benchmark")}
+              </span>
+            </p>
+            <button type="button" className={GHOST_SM} disabled={retailBusy} aria-busy={retailBusy || undefined} onClick={() => loadRetail(true)}>
+              {retailBusy && <span aria-hidden="true" className={`${SPINNER} mr-1.5`} />}
+              {retailBusy ? "Checking retail" : "Refresh retail"}
+            </button>
+          </div>
           <div className="grid gap-3">
             <h2 className="font-display text-lg font-bold tracking-[-0.01em]">Negotiating the tier</h2>
             <Negotiation key={replay} state={state} pending={busy === "negotiate"} animate={replay > 0} />

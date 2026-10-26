@@ -3,10 +3,11 @@ import StatusChip from "@/components/StatusChip";
 import { formatUSD } from "@/lib/money";
 import { aloneCents, goodsCents, savingsCents, unitLabel } from "@/lib/round";
 import type { Commitment, RoundState } from "@/lib/store";
-import { api } from "./api";
+import type { Benchmark } from "@/lib/benchmark";
+import { api, retailSource } from "./api";
 
 /** The shop's receipt after a successful close: what was captured, what was never taken, what it saved. */
-export default function Receipt({ state, mine }: { state: RoundState; mine: Commitment }) {
+export default function Receipt({ state, mine, retail }: { state: RoundState; mine: Commitment; retail?: Benchmark | null }) {
   const { round } = state;
   const price = round.finalPrice ?? 0;
   // Only call it a deal when the negotiated price is the one that was charged (a dropped deal leaves agreedPrice unset).
@@ -44,6 +45,11 @@ export default function Receipt({ state, mine }: { state: RoundState; mine: Comm
       <p className="text-[13px] text-muted">
         {unitLabel(round, mine.qty)} at {agreed ? `the price agreed with ${round.supplier}` : "the group price"} of {formatUSD(price)}. {delivery}
       </p>
+      {retail && (
+        <p className="text-[13px] text-muted tabular-nums">
+          Retail elsewhere ≈ {formatUSD(retail.perUnit)} a {round.unit.one} {retailSource(retail)}
+        </p>
+      )}
       {!mine.simulated && <Invoice roundId={round.id} c={mine} supplier={round.supplier} />}
     </Panel>
   );

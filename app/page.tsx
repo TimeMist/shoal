@@ -91,10 +91,11 @@ const LINK = "font-semibold text-ink underline underline-offset-2 hover:text-jam
 async function OpenRounds() {
   await connection(); // live in-memory state: render per request
   const rounds = ROUND_IDS.map((id) => publicState(getState(id)!));
+  const anyOver = rounds.some((s) => s.round.status !== "open");
   return (
     <section aria-labelledby="open-rounds" className="mt-10 max-w-[560px]">
       <h2 id="open-rounds" className="mb-3 font-display text-lg font-bold tracking-[-0.01em]">
-        Open rounds
+        {anyOver ? "Rounds" : "Open rounds"}
       </h2>
       <ul className="grid gap-3">
         {rounds.map((s) => {
@@ -110,7 +111,8 @@ async function OpenRounds() {
               </p>
               <p className="flex flex-wrap gap-x-4 text-sm">
                 <Link href={`/rounds/${round.id}`} className={LINK}>
-                  Join<span className="sr-only"> the {round.product} round</span>
+                  {round.status === "open" ? "Join" : "View"}
+                  <span className="sr-only"> the {round.product} round</span>
                 </Link>
                 <Link href={`/supplier/${round.id}`} className={LINK}>
                   Supplier view<span className="sr-only"> for {round.product}</span>

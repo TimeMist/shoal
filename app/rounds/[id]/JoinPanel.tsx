@@ -92,7 +92,7 @@ export default function JoinPanel({ round, units, onJoined }: Props) {
             +
           </button>
         </div>
-        <span className="text-sm text-muted">Minimum {minPerShop} per delivery, in packs of {step}</span>
+        <span className="text-sm text-muted">Minimum {unitLabel(round, minPerShop)} per delivery, in packs of {step}</span>
       </div>
 
       <p className="border-t border-rule pt-3 text-sm text-muted">

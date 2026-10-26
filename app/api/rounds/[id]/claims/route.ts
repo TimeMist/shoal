@@ -3,6 +3,7 @@ import type { Photo } from "@/lib/agents/triage";
 import { ConfigError, body, fail } from "@/lib/http";
 import type { Claim } from "@/lib/store";
 import { getState } from "@/lib/store";
+import { capitalise } from "@/lib/round";
 
 const MAX_PHOTO = 5 * 1024 * 1024;
 
@@ -20,13 +21,13 @@ export async function POST(request: Request, ctx: RouteContext<"/api/rounds/[id]
   const b = await body(request);
   const c = s.commitments.find((x) => x.id === b.commitmentId);
   if (!c) return fail("Commitment not found", 404);
-  if (!["missing", "damaged", "short"].includes(b.kind as string)) return fail("kind must be missing, damaged or short", 400);
+  if (!["missing", "damaged", "short"].includes(b.kind as string)) return fail("Kind must be missing, damaged or short", 400);
   if (!Number.isInteger(b.units) || (b.units as number) < 1 || (b.units as number) > c.qty)
-    return fail(`${s.round.unit.many} must be a whole number between 1 and the shop's order (${c.qty})`, 400);
+    return fail(`${capitalise(s.round.unit.many)} must be a whole number between 1 and the shop's order (${c.qty})`, 400);
   let photo: Photo | undefined;
   if (b.photo !== undefined) {
     photo = parsePhoto(b.photo) ?? undefined;
-    if (!photo) return fail("photo must be a JPEG or PNG data URL, 5 MB or less", 400);
+    if (!photo) return fail("Photo must be a JPEG or PNG data URL, 5 MB or less", 400);
   }
   if (c.status !== "captured" && c.status !== "delivered") return fail("Claims can only be filed on a captured or delivered order", 409);
 

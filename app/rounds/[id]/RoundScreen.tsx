@@ -9,7 +9,8 @@ import { formatUSD } from "@/lib/money";
 import { tierAt, unitLabel } from "@/lib/round";
 import type { Commitment, RoundState } from "@/lib/store";
 import { RESET_EVENT } from "../../DemoBar";
-import { api } from "./api";
+import type { Benchmark } from "@/lib/benchmark";
+import { api, retailFor } from "./api";
 import { GHOST } from "../../ui";
 import ClaimForm, { ClaimStatus } from "./ClaimForm";
 import JoinPanel from "./JoinPanel";
@@ -62,6 +63,15 @@ export default function RoundScreen({ id, initial }: { id: string; initial: Roun
   const gen = useRef(0); // bumped on demo reset; polls started before it are dropped
   const stored = useSyncExternalStore(onMine, () => readMine(id), () => null);
   const minute = useMinute();
+  const [retail, setRetail] = useState<Benchmark | null>(null);
+  useEffect(() => {
+    // Once per page load; shop pages never refresh retail.
+    let live = true;
+    retailFor(id).then((r) => live && setRetail(r.benchmark)).catch(() => {}); // no line on failure
+    return () => {
+      live = false;
+    };
+  }, [id]);
 
   const refresh = useCallback(async () => {
     const g = gen.current;
@@ -143,7 +153,7 @@ export default function RoundScreen({ id, initial }: { id: string; initial: Roun
 
         <div className="grid grid-cols-[minmax(0,1fr)_190px] items-stretch gap-[18px] max-[900px]:grid-cols-[minmax(0,1fr)]">
           <RoundPool units={units} shops={commitments.map((c) => ({ name: c.shop, qty: c.qty }))} closed={round.status === "closed"} tiers={round.tiers} unit={round.unit} />
-          <TierLadder tiers={round.tiers} units={units} unit={round.unit} agreed={deal} closed={round.status !== "open"} />
+          <TierLadder tiers={round.tiers} units={units} unit={round.unit} agreed={deal} closed={round.status !== "open"} retail={retail} />
         </div>
 
         <div className="grid gap-2.5">
@@ -186,7 +196,7 @@ export default function RoundScreen({ id, initial }: { id: string; initial: Roun
           </Panel>
         )}
 
-        {round.status === "closed" && mine && <Receipt state={state} mine={mine} />}
+        {round.status === "closed" && mine && <Receipt state={state} mine={mine} retail={retail} />}
         {round.status === "closed" && !mine && (
           <Panel title="Round summary">
             <p className="text-[15px] tabular-nums">
