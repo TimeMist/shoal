@@ -8,6 +8,7 @@ import { BryntumScheduler } from "@bryntum/scheduler-react";
 import { StringHelper } from "@bryntum/scheduler";
 import { useMemo } from "react";
 import { formatUSD } from "@/lib/money";
+import { unitLabel } from "@/lib/round";
 import type { Commitment, RoundState } from "@/lib/store";
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -57,7 +58,7 @@ export default function TimelineScheduler({ state }: { state: RoundState }) {
     const units = commitments.reduce((n, c) => n + c.qty, 0);
     const n = commitments.length;
     const roundName =
-      round.status === "open" ? `Round open · ${n} ${n === 1 ? "shop" : "shops"} joining` : round.status === "closed" ? `Closed · ${units.toLocaleString("en-US")} cartons` : "Ended · first tier not reached";
+      round.status === "open" ? `Round open · ${n} ${n === 1 ? "shop" : "shops"} joining` : round.status === "closed" ? `Closed · ${unitLabel(round, units)}` : "Ended · first tier not reached";
     const bars: Bar[] = [{ id: "round-open", resourceId: "round", name: roundName, startDate: at(-3), endDate: at(0), cls: "shoal-round" }];
     if (round.status === "closed" && round.finalPrice !== undefined) {
       bars.push({ id: "sup-confirm", resourceId: "supplier", name: `At ${formatUSD(round.finalPrice)}`, startDate: at(0), endDate: at(1), cls: "shoal-supplier" });

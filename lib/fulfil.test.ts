@@ -93,7 +93,7 @@ test("release with an open claim is 409 with the count; before shipping is 409",
   const s = setup(), f = stubs();
   assert.equal((await releaseRound(s, E, f.payout)).ok, false);
   await shipRound(s, E, f);
-  s.claims.push({ id: "k", commitmentId: "a", kind: "missing", cartons: 1, note: "", status: "open" });
+  s.claims.push({ id: "k", commitmentId: "a", kind: "missing", units: 1, note: "", status: "open" });
   assert.deepEqual(await releaseRound(s, E, f.payout), { ok: false, status: 409, error: "1 open claim to resolve first" });
   assert.equal(f.pay.length, 1);
 });
@@ -115,7 +115,7 @@ test("release with a commitment in status claim (no claim filed yet) is 409", as
   await shipRound(s, E, f);
   s.commitments[0].status = "claim";
   assert.deepEqual(await releaseRound(s, E, f.payout), { ok: false, status: 409, error: "1 open claim to resolve first" });
-  s.claims.push({ id: "k", commitmentId: "a", kind: "missing", cartons: 1, note: "", status: "open" });
+  s.claims.push({ id: "k", commitmentId: "a", kind: "missing", units: 1, note: "", status: "open" });
   assert.equal((await releaseRound(s, E, f.payout)).ok, false); // same commitment, counted once
   assert.equal(f.pay.length, 1);
 });
@@ -127,7 +127,7 @@ test("a claim approved during an in-flight release is 409 and the release pays t
   let done!: () => void;
   const rel = releaseRound(s, E, (...a) => (f.pay.push(a), new Promise((r) => (done = () => r("B2")))));
   s.commitments[0].status = "claim";
-  s.claims.push({ id: "k", commitmentId: "a", kind: "damaged", cartons: 5, note: "", priorStatus: "delivered", proposal: { refund: 500, reason: "r" }, status: "open" });
+  s.claims.push({ id: "k", commitmentId: "a", kind: "damaged", units: 5, note: "", priorStatus: "delivered", proposal: { refund: 500, reason: "r" }, status: "open" });
   assert.equal(s.holdbackLeft, 0);
   const a = await approveClaim(s, "k", async () => "r");
   assert.deepEqual(a, { ok: false, status: 409, error: "Holdback release in progress" });

@@ -1,10 +1,11 @@
 import { formatUSD } from "@/lib/money";
-import { tierAt, type Tier } from "@/lib/round";
+import { tierAt, type Round, type Tier } from "@/lib/round";
 import LiveRegion from "./LiveRegion";
 
 type Props = {
   tiers: Tier[];
   units: number;
+  unit: Round["unit"];
   /** Negotiated price in cents, only when the round closed on that deal. */
   agreed?: number;
   /** The round is over: stay quiet unless announcing a deal. */
@@ -15,10 +16,10 @@ const RUNG = "flex items-baseline justify-between gap-2 rounded-rung px-3 py-2.5
 const PRICE = "font-display text-xl font-[750] tracking-[-0.02em] tabular-nums";
 
 /** Price per tier; the current tier is Jam, passed tiers struck through, and an Agreed rung appears at close. */
-export default function TierLadder({ tiers, units, agreed, closed = false }: Props) {
+export default function TierLadder({ tiers, units, unit, agreed, closed = false }: Props) {
   const idx = tiers.indexOf(tierAt(tiers, units));
   // Tiers only step down, so any tier past the first is a drop.
-  const message = agreed != null ? `Agreed at ${formatUSD(agreed)} a carton.` : idx > 0 && !closed ? `Price dropped to ${formatUSD(tiers[idx].price)} a carton.` : "";
+  const message = agreed != null ? `Agreed at ${formatUSD(agreed)} a ${unit.one}.` : idx > 0 && !closed ? `Price dropped to ${formatUSD(tiers[idx].price)} a ${unit.one}.` : "";
   return (
     <div className="flex flex-col gap-1.5 max-[900px]:flex-row max-[900px]:flex-wrap">
       <ol className="contents">

@@ -30,7 +30,7 @@ export async function approveClaim(
   if (cents > 0 && !c.simulated) {
     busy.add(claimId);
     try {
-      await refund(c.captureId!, cents, `Shoal claim ${claim.kind}: ${claim.cartons} ${claim.cartons === 1 ? s.round.unit.one : s.round.unit.many}`);
+      await refund(c.captureId!, cents, `Shoal claim ${claim.kind}: ${claim.units} ${claim.units === 1 ? s.round.unit.one : s.round.unit.many}`);
     } catch (e) {
       return { ok: false, status: 502, error: e instanceof Error ? e.message : "PayPal error" };
     } finally {

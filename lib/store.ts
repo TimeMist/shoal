@@ -32,7 +32,7 @@ export type Claim = {
   id: string;
   commitmentId: string;
   kind: "missing" | "damaged" | "short";
-  cartons: number;
+  units: number;
   note: string;
   hasPhoto?: boolean;
   priorStatus?: "captured" | "delivered";

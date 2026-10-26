@@ -35,7 +35,7 @@ export async function triage(
   const p = await model(claim, c, round, photo);
   if (typeof p.units !== "number" || !Number.isInteger(p.units) || p.units < 0) throw new Error(`Triage returned invalid ${round.unit.many}`);
   // The shop's note could talk the model into a bigger number: never refund more units than were claimed.
-  const requested = Math.min(p.units, claim.cartons) * (round.finalPrice ?? 0);
+  const requested = Math.min(p.units, claim.units) * (round.finalPrice ?? 0);
   // Delivery is never refunded, so the shop's cap is the goods it paid for.
   const goods = (c.captured ?? 0) - c.delivery;
   const paid = goods - c.refunded;
@@ -51,7 +51,7 @@ export async function triage(
 export const claudeTriage: Model = async (claim, c, round, photo) => {
   const { many } = round.unit;
   const text =
-    `Shop ${c.shop} ordered ${c.qty} ${many}. Claim: ${claim.kind}, ${claim.cartons} ${many}. Note from the shop: ${claim.note || "(none)"}.` +
+    `Shop ${c.shop} ordered ${c.qty} ${many}. Claim: ${claim.kind}, ${claim.units} ${many}. Note from the shop: ${claim.note || "(none)"}.` +
     (photo ? " A photo is attached." : " No photo was attached.");
   const content: Anthropic.Beta.BetaContentBlockParam[] = [{ type: "text", text }];
   if (photo) content.unshift({ type: "image", source: { type: "base64", media_type: photo.media_type, data: photo.data } });

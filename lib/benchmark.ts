@@ -43,6 +43,11 @@ type Opts = {
   classify?: (item: Item, offers: Offer[]) => Promise<PackVerdict[]>;
 };
 
+// What the benchmark route calls: a round's benchmark is keyed by that round's own search query.
+export function roundBenchmark(round: Item & Pick<Round, "searchQuery">, opts: Opts = {}): Promise<Result> {
+  return getBenchmark(round.searchQuery, round, opts);
+}
+
 // The cache key is the query only: rounds sharing a query share a benchmark.
 export async function getBenchmark(query: string, item: Item, opts: Opts = {}): Promise<Result> {
   const now = opts.now ?? Date.now();

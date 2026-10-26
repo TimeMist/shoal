@@ -2,21 +2,23 @@
 
 import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { formatUSD } from "@/lib/money";
+import { capitalise, unitLabel, type Round } from "@/lib/round";
 import type { Claim, Commitment } from "@/lib/store";
 import { GHOST, PRIMARY } from "../../ui";
 import { api, errorText } from "./api";
 
 const FIELD = "rounded-field border border-field bg-white px-3.5 py-[11px] text-base font-medium text-ink outline-none focus:border-berry focus:shadow-[0_0_0_3px_rgba(224,20,111,0.18)] aria-invalid:border-jam";
 
-const KINDS: [Claim["kind"], string][] = [["damaged", "Damaged cartons"], ["missing", "Missing cartons"], ["short", "Short delivery"]];
+const kinds = (many: string): [Claim["kind"], string][] => [["damaged", `Damaged ${many}`], ["missing", `Missing ${many}`], ["short", "Short delivery"]];
 const MAX_PHOTO = 5 * 1024 * 1024;
 
-type Props = { roundId: string; mine: Commitment; onFiled: () => void; onCancel: () => void };
+type Props = { round: Round; mine: Commitment; onFiled: () => void; onCancel: () => void };
 
 /** Report a delivery problem; the agent proposes a fix the supplier approves. */
-export default function ClaimForm({ roundId, mine, onFiled, onCancel }: Props) {
+export default function ClaimForm({ round, mine, onFiled, onCancel }: Props) {
+  const { many } = round.unit;
   const [kind, setKind] = useState<Claim["kind"]>("damaged");
-  const [cartons, setCartons] = useState("");
+  const [units, setUnits] = useState("");
   const [note, setNote] = useState("");
   const [photo, setPhoto] = useState<string>();
   const [error, setError] = useState("");
@@ -38,12 +40,12 @@ export default function ClaimForm({ roundId, mine, onFiled, onCancel }: Props) {
 
   async function submit(e: FormEvent) {
     e.preventDefault();
-    const n = Number(cartons);
-    if (!Number.isInteger(n) || n < 1 || n > mine.qty) return setError(`Enter a number of cartons from 1 to ${mine.qty}.`);
+    const n = Number(units);
+    if (!Number.isInteger(n) || n < 1 || n > mine.qty) return setError(`Enter a number of ${many} from 1 to ${mine.qty}.`);
     setBusy(true);
     setError("");
     try {
-      await api(`/api/rounds/${roundId}/claims`, { commitmentId: mine.id, kind, cartons: n, note, ...(photo && { photo }) });
+      await api(`/api/rounds/${round.id}/claims`, { commitmentId: mine.id, kind, units: n, note, ...(photo && { photo }) });
       onFiled();
     } catch (err) {
       setError(`${errorText(err)}. Your report wasn't sent; try again.`);
@@ -58,7 +60,7 @@ export default function ClaimForm({ roundId, mine, onFiled, onCancel }: Props) {
       </h2>
       <fieldset className="grid gap-2">
         <legend className="mb-1.5 text-sm">What went wrong?</legend>
-        {KINDS.map(([k, label]) => (
+        {kinds(many).map(([k, label]) => (
           <label key={k} className="flex items-center gap-2.5 text-[15px]">
             <input type="radio" name="kind" value={k} checked={kind === k} onChange={() => setKind(k)} className="size-4 accent-berry" />
             {label}
@@ -66,11 +68,11 @@ export default function ClaimForm({ roundId, mine, onFiled, onCancel }: Props) {
         ))}
       </fieldset>
       <label className="grid gap-1.5 text-sm">
-        Cartons affected
+        {capitalise(many)} affected
         <input
           inputMode="numeric"
-          value={cartons}
-          onChange={(e) => setCartons(e.target.value.replace(/\D/g, ""))}
+          value={units}
+          onChange={(e) => setUnits(e.target.value.replace(/\D/g, ""))}
           aria-describedby={`${id}-c`}
           className={`${FIELD} max-w-40 tabular-nums`}
         />
@@ -113,12 +115,13 @@ export default function ClaimForm({ roundId, mine, onFiled, onCancel }: Props) {
 export const KIND_WORD: Record<Claim["kind"], string> = { damaged: "damaged", missing: "missing", short: "short" };
 
 /** A filed claim as the shop sees it: what it reported, the proposed refund and where it stands. Approval happens on the supplier console. */
-export function ClaimStatus({ claim, mine, supplier }: { claim: Claim; mine: Commitment; supplier: string }) {
+export function ClaimStatus({ claim, mine, round }: { claim: Claim; mine: Commitment; round: Round }) {
   const p = claim.proposal;
+  const { supplier } = round;
   return (
     <div className="grid gap-3">
       <p className="font-display text-lg font-bold tracking-[-0.01em]">
-        {claim.cartons} {claim.cartons === 1 ? "carton" : "cartons"} {KIND_WORD[claim.kind]}
+        {unitLabel(round, claim.units)} {KIND_WORD[claim.kind]}
       </p>
       {claim.note && <p className="text-sm text-muted">You wrote: &ldquo;{claim.note}&rdquo;</p>}
       {p && (

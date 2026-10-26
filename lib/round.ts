@@ -58,3 +58,10 @@ export function validateQty(round: Round, qty: number): string | null {
   if (qty % round.step) return `Quantity must be a multiple of ${round.step} ${many}`;
   return null;
 }
+
+// "1 roll", "1,100 rolls": unit.one for exactly 1, unit.many otherwise.
+export function unitLabel(round: Pick<Round, "unit">, n: number): string {
+  return `${n.toLocaleString("en-US")} ${n === 1 ? round.unit.one : round.unit.many}`;
+}
+
+export const capitalise = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);

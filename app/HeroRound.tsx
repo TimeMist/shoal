@@ -6,17 +6,17 @@ import StatusChip from "@/components/StatusChip";
 import { useReducedMotion } from "@/components/Swimmy";
 import TierLadder from "@/components/TierLadder";
 import { formatUSD } from "@/lib/money";
-import { tierAt, type Tier } from "@/lib/round";
+import { tierAt, type Round, type Tier } from "@/lib/round";
 import { GHOST_SM } from "./ui";
 
-type Props = { product: string; supplier: string; tiers: Tier[]; shops: { shop: string; qty: number }[] };
+type Props = { product: string; supplier: string; unit: Round["unit"]; tiers: Tier[]; shops: { shop: string; qty: number }[] };
 
 // One shop every 350 ms, then the close beat; the whole play, choreography included, ends inside 5 s (WCAG 2.2.2).
 // All client-side, nothing is written.
 const START = 250, STEP = 350, CLOSE = 500;
 
 /** The landing hero: the demo round's eight shops join, the price steps down, the fish completes. */
-export default function HeroRound({ product, supplier, tiers, shops }: Props) {
+export default function HeroRound({ product, supplier, unit, tiers, shops }: Props) {
   const reduce = useReducedMotion();
   const [run, setRun] = useState(0);
   const [n, setN] = useState(0);
@@ -70,8 +70,8 @@ export default function HeroRound({ product, supplier, tiers, shops }: Props) {
       {/* The pool and ladder announce every step; on an auto-playing hero that floods screen readers, so they read the summary instead. */}
       <p className="sr-only">{summary}</p>
       <div aria-hidden="true" className="grid grid-cols-[minmax(0,1fr)_170px] items-stretch gap-4 max-[900px]:grid-cols-[minmax(0,1fr)]">
-        <RoundPool units={units} shops={joined.map((s) => ({ name: s.shop, qty: s.qty }))} closed={closed} tiers={tiers} />
-        <TierLadder tiers={tiers} units={units} closed={closed} />
+        <RoundPool units={units} shops={joined.map((s) => ({ name: s.shop, qty: s.qty }))} closed={closed} tiers={tiers} unit={unit} />
+        <TierLadder tiers={tiers} units={units} unit={unit} closed={closed} />
       </div>
       <ul aria-label="Shops in this round" className="flex min-h-[108px] flex-wrap content-start gap-1.5 max-[900px]:min-h-[29px]">
         {joined.map((s) => (

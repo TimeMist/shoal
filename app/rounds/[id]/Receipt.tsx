@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode, type Ref } from "react";
 import StatusChip from "@/components/StatusChip";
 import { formatUSD } from "@/lib/money";
-import { aloneCents, goodsCents, savingsCents } from "@/lib/round";
+import { aloneCents, goodsCents, savingsCents, unitLabel } from "@/lib/round";
 import type { Commitment, RoundState } from "@/lib/store";
 import { api } from "./api";
 
@@ -42,7 +42,7 @@ export default function Receipt({ state, mine }: { state: RoundState; mine: Comm
         {mine.refunded > 0 && <Def term="Refunded" value={formatUSD(mine.refunded)} leaf />}
       </dl>
       <p className="text-[13px] text-muted">
-        {mine.qty} cartons at {agreed ? `the price agreed with ${round.supplier}` : "the group price"} of {formatUSD(price)}. {delivery}
+        {unitLabel(round, mine.qty)} at {agreed ? `the price agreed with ${round.supplier}` : "the group price"} of {formatUSD(price)}. {delivery}
       </p>
       {!mine.simulated && <Invoice roundId={round.id} c={mine} supplier={round.supplier} />}
     </Panel>

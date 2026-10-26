@@ -5,7 +5,7 @@ import { CellStyleModule, ClientSideRowModelModule, CsvExportModule, ModuleRegis
 import { useMemo, type Ref } from "react";
 import StatusChip, { type ChipStatus } from "@/components/StatusChip";
 import { formatUSD, toMoney } from "@/lib/money";
-import { savingsCents } from "@/lib/round";
+import { capitalise, savingsCents, type Round } from "@/lib/round";
 import type { Commitment, RoundState } from "@/lib/store";
 import { GHOST_SM } from "./ui";
 
@@ -76,7 +76,7 @@ type Props = { state: RoundState; busyId: string | null; disabled: boolean; onDe
 const PO: [keyof Row, string][] = [
   ["shop", "Shop"],
   ["address", "Delivery address"],
-  ["qty", "Cartons"],
+  ["qty", ""], // the round's unit, e.g. "Rolls"
   ["unit", "Unit price"],
   ["goods", "Goods"],
   ["delivery", "Delivery"],
@@ -91,13 +91,13 @@ const PO_MONEY = new Set(["unit", "goods", "delivery", "captured"]);
 const safe = (v: string) => (/^[=+\-@\t\r]/.test(v) ? `'${v}` : v);
 
 /** Addresses never reach the browser's round state, so they come from the supplier-only purchase-order route. */
-export function exportPurchaseOrder(grid: GridHandle | null, roundId: string, addresses: Record<string, string | undefined>) {
+export function exportPurchaseOrder(grid: GridHandle | null, round: Round, addresses: Record<string, string | undefined>) {
   grid?.api.exportDataAsCsv({
-    fileName: `shoal-${roundId}-purchase-order.csv`,
+    fileName: `shoal-${round.id}-purchase-order.csv`,
     columnKeys: PO.map(([k]) => k),
     skipPinnedBottom: true,
     shouldRowBeSkipped: ({ node }) => node.data?.captured === undefined,
-    processHeaderCallback: ({ column }) => PO.find(([k]) => k === column.getColId())?.[1] ?? column.getColId(),
+    processHeaderCallback: ({ column }) => (column.getColId() === "qty" ? capitalise(round.unit.many) : (PO.find(([k]) => k === column.getColId())?.[1] ?? column.getColId())),
     processCellCallback: ({ column, value, node }) => {
       const key = column.getColId();
       const v = key === "address" ? addresses[node?.data?.id ?? ""] : value;
@@ -157,7 +157,7 @@ export default function AllocationGrid({ state, busyId, disabled, onDeliver, ref
   const columns = useMemo<ColDef<Row>[]>(
     () => [
       { field: "shop", headerName: "Shop", flex: 2, minWidth: 186, cellRenderer: Shop },
-      { field: "qty", headerName: "Cartons", type: "rightAligned", minWidth: 92, flex: 0.5, valueFormatter: ({ value }) => value.toLocaleString("en-US") },
+      { field: "qty", headerName: capitalise(round.unit.many), type: "rightAligned", minWidth: 92, flex: 0.5, valueFormatter: ({ value }) => value.toLocaleString("en-US") },
       { field: "reserved", headerName: "Reserved", type: "rightAligned", minWidth: 92, flex: 0.6, valueFormatter: money },
       { field: "delivery", headerName: "Delivery cost", type: "rightAligned", minWidth: 118, flex: 0.5, valueFormatter: money },
       { field: "captured", headerName: "Captured", type: "rightAligned", minWidth: 92, flex: 0.6, valueFormatter: money },
@@ -193,7 +193,7 @@ export default function AllocationGrid({ state, busyId, disabled, onDeliver, ref
         },
       },
     ],
-    [busyId, disabled, onDeliver],
+    [busyId, disabled, onDeliver, round.unit.many],
   );
 
   return (

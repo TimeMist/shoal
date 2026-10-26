@@ -8,7 +8,7 @@ import { seedRound } from "../seed.ts";
 const at = (finalPrice: number) => ({ ...seedRound().round, finalPrice });
 
 const c = { id: "c1", shop: "Corner Books Café", qty: 120, reserved: 24600, delivery: 1800, captured: 24000, refunded: 0, simulated: true, status: "claim" } as Commitment;
-const claim: Claim = { id: "k1", commitmentId: "c1", kind: "damaged", cartons: 12, note: "wet boxes", status: "open" };
+const claim: Claim = { id: "k1", commitmentId: "c1", kind: "damaged", units: 12, note: "wet boxes", status: "open" };
 const says = (cartons: unknown, reason = "Looks damaged."): Model => async () => ({ units: cartons, reason });
 
 test("12 damaged cartons at 185 propose 2220", async () => {
@@ -17,12 +17,12 @@ test("12 damaged cartons at 185 propose 2220", async () => {
 });
 
 test("500 cartons on a 120-carton claim are capped at 120: goods, not the delivery charge", async () => {
-  const p = await triage({ ...claim, cartons: 120 }, c, at(185), 100000, says(500));
+  const p = await triage({ ...claim, units: 120 }, c, at(185), 100000, says(500));
   assert.equal(p.refund, 22200);
 });
 
 test("a price change that exceeds the goods the shop paid for is clamped with a reason", async () => {
-  const p = await triage({ ...claim, cartons: 120 }, c, at(200), 100000, says(120));
+  const p = await triage({ ...claim, units: 120 }, c, at(200), 100000, says(120));
   assert.equal(p.refund, 22200);
   assert.match(p.reason, /paid only \$222\.00 for the goods/);
 });

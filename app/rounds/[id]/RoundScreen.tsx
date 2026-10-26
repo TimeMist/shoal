@@ -6,7 +6,7 @@ import RoundPool from "@/components/RoundPool";
 import StatusChip from "@/components/StatusChip";
 import TierLadder from "@/components/TierLadder";
 import { formatUSD } from "@/lib/money";
-import { tierAt } from "@/lib/round";
+import { tierAt, unitLabel } from "@/lib/round";
 import type { Commitment, RoundState } from "@/lib/store";
 import { RESET_EVENT } from "../../DemoBar";
 import { api } from "./api";
@@ -101,7 +101,7 @@ export default function RoundScreen({ id, initial }: { id: string; initial: Roun
     round.status === "failed"
       ? mine ? "Round didn't reach its first tier. Your reservation was released." : "Round didn't reach its first tier. Nothing was charged."
       : round.status === "closed"
-        ? `Round closed at ${formatUSD(price)} a carton.${mine?.captured !== undefined ? ` You paid ${formatUSD(mine.captured)}.` : ""}`
+        ? `Round closed at ${formatUSD(price)} a ${round.unit.one}.${mine?.captured !== undefined ? ` You paid ${formatUSD(mine.captured)}.` : ""}`
         : joinMsg;
 
   function joinedWith(c: Commitment) {
@@ -142,8 +142,8 @@ export default function RoundScreen({ id, initial }: { id: string; initial: Roun
         </header>
 
         <div className="grid grid-cols-[minmax(0,1fr)_190px] items-stretch gap-[18px] max-[900px]:grid-cols-[minmax(0,1fr)]">
-          <RoundPool units={units} shops={commitments.map((c) => ({ name: c.shop, qty: c.qty }))} closed={round.status === "closed"} tiers={round.tiers} />
-          <TierLadder tiers={round.tiers} units={units} agreed={deal} closed={round.status !== "open"} />
+          <RoundPool units={units} shops={commitments.map((c) => ({ name: c.shop, qty: c.qty }))} closed={round.status === "closed"} tiers={round.tiers} unit={round.unit} />
+          <TierLadder tiers={round.tiers} units={units} unit={round.unit} agreed={deal} closed={round.status !== "open"} />
         </div>
 
         <div className="grid gap-2.5">
@@ -160,7 +160,7 @@ export default function RoundScreen({ id, initial }: { id: string; initial: Roun
               ))}
             </ul>
           ) : (
-            <p className="text-sm text-muted">Be the first shop in. Every carton you commit brings the price down for everyone.</p>
+            <p className="text-sm text-muted">Be the first shop in. Every {round.unit.one} you commit brings the price down for everyone.</p>
           )}
         </div>
       </section>
@@ -172,7 +172,7 @@ export default function RoundScreen({ id, initial }: { id: string; initial: Roun
           <Panel title={`${mine.shop}, you're in`} status={mine.status} titleRef={inRef}>
             <p className="font-display text-[34px] leading-none font-[750] tracking-[-0.03em] tabular-nums">{formatUSD(mine.reserved)}</p>
             <p className="text-sm text-muted">
-              Reserved on PayPal for {mine.qty} cartons, not charged. You&apos;ll pay the group price when the round closes, never more. If it doesn&apos;t reach its first tier, nothing is charged.
+              Reserved on PayPal for {unitLabel(round, mine.qty)}, not charged. You&apos;ll pay the group price when the round closes, never more. If it doesn&apos;t reach its first tier, nothing is charged.
             </p>
             {mine.qty * price < mine.reserved && (
               <p className="text-sm text-leaf-ink tabular-nums">At today&apos;s price of {formatUSD(price)} you&apos;d pay {formatUSD(mine.qty * price)}.</p>
@@ -190,7 +190,7 @@ export default function RoundScreen({ id, initial }: { id: string; initial: Roun
         {round.status === "closed" && !mine && (
           <Panel title="Round summary">
             <p className="text-[15px] tabular-nums">
-              {units.toLocaleString("en-US")} cartons from {commitments.length} shops at {formatUSD(price)} a carton. You didn&apos;t join this round.
+              {unitLabel(round, units)} from {commitments.length} shops at {formatUSD(price)} a {round.unit.one}. You didn&apos;t join this round.
             </p>
           </Panel>
         )}
@@ -198,14 +198,14 @@ export default function RoundScreen({ id, initial }: { id: string; initial: Roun
         {mine && myClaim && !reporting && (
           <div ref={claimRef} tabIndex={-1} className="rounded-lg outline-offset-4">
             <Panel title="Your report" status={mine.status}>
-              <ClaimStatus claim={myClaim} mine={mine} supplier={round.supplier} />
+              <ClaimStatus claim={myClaim} mine={mine} round={round} />
             </Panel>
           </div>
         )}
 
         {mine && canReport &&
           (reporting ? (
-            <ClaimForm roundId={id} mine={mine} onFiled={filed} onCancel={() => setReporting(false)} />
+            <ClaimForm round={round} mine={mine} onFiled={filed} onCancel={() => setReporting(false)} />
           ) : (
             <div>
               <button type="button" onClick={() => setReporting(true)} className={GHOST}>

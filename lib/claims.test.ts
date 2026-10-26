@@ -7,7 +7,7 @@ import type { Claim, Commitment, RoundState } from "./store.ts";
 function setup(over: Partial<Commitment> = {}, refund = 2220, holdback = 100000) {
   const s: RoundState = seedRound();
   const c = { id: "c1", shop: "Corner Books Café", qty: 120, reserved: 22800, delivery: 1800, captured: 22200, captureId: "cap1", refunded: 0, simulated: false, status: "claim", ...over } as Commitment;
-  const claim: Claim = { id: "k1", commitmentId: "c1", kind: "damaged", cartons: 12, note: "", priorStatus: "captured", proposal: { refund, reason: "r" }, status: "open" };
+  const claim: Claim = { id: "k1", commitmentId: "c1", kind: "damaged", units: 12, note: "", priorStatus: "captured", proposal: { refund, reason: "r" }, status: "open" };
   s.commitments.push(c);
   s.claims.push(claim);
   s.holdbackLeft = holdback;
@@ -82,7 +82,7 @@ test("reject restores the status the commitment had before the claim", () => {
 test("refunds are capped at goods, never the delivery charge", async () => {
   // 120 cartons at 185 plus 1800 delivery captured; a 120-carton claim refunds 22200.
   const { s, c, claim } = setup({ captured: 24000, reserved: 24600 }, 24000);
-  claim.cartons = 120;
+  claim.units = 120;
   s.round.finalPrice = 185;
   const r = calls();
   assert.deepEqual(await approveClaim(s, "k1", r.fn), { ok: true, refunded: 22200 });
@@ -107,7 +107,7 @@ test("an invoice not yet paid is left for the invoice retry to refund", async ()
 
 test("the goods cap uses the delivery stored at join, not today's rates", async () => {
   const { s, claim } = setup({ captured: 24000, reserved: 24600 }, 24000);
-  claim.cartons = 120;
+  claim.units = 120;
   s.round.delivery = { perDrop: 0, perUnit: 0 };
   assert.deepEqual(await approveClaim(s, "k1", calls().fn), { ok: true, refunded: 22200 });
 });

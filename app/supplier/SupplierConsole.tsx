@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import LiveRegion from "@/components/LiveRegion";
 import StatusChip from "@/components/StatusChip";
 import { formatUSD } from "@/lib/money";
-import { tierAt } from "@/lib/round";
+import { capitalise, tierAt, unitLabel } from "@/lib/round";
 import type { Claim, RoundState } from "@/lib/store";
 import { RESET_EVENT } from "../DemoBar";
 import { api, errorText } from "../rounds/[id]/api";
@@ -107,10 +107,10 @@ export default function SupplierConsole({ id, initial }: { id: string; initial: 
       busyLabel: "Closing round",
       primary: true,
       why: !open ? notOpen : !commitments.length ? "No shops have joined yet" : undefined,
-      note: open && commitments.length && units < first ? `Below ${first.toLocaleString("en-US")} cartons the round fails and every reservation is released.` : undefined,
+      note: open && commitments.length && units < first ? `Below ${unitLabel(round, first)} the round fails and every reservation is released.` : undefined,
       run: () =>
         act("close", post("close"), (s) =>
-          s.round.status === "closed" ? `Round closed at ${formatUSD(s.round.finalPrice ?? 0)} a carton.` : "Round didn't reach its first tier. Every reservation was released.",
+          s.round.status === "closed" ? `Round closed at ${formatUSD(s.round.finalPrice ?? 0)} a ${round.unit.one}.` : "Round didn't reach its first tier. Every reservation was released.",
         ),
     },
     {
@@ -148,7 +148,7 @@ export default function SupplierConsole({ id, initial }: { id: string; initial: 
       primary: true,
       why: round.status === "failed" ? "The round ended without reaching a tier" : round.status !== "closed" ? "Close the round first" : shipped ? "Shipped; payout sent" : !sold.length ? "Nothing was captured" : undefined,
       note: round.status === "closed" && !shipped ? `Pays ${100 - round.holdbackPct}% of what was captured now and holds ${round.holdbackPct}% for claims.` : undefined,
-      run: () => act("ship", post("ship"), () => "Shipped. Payout sent to Meadow Oat Co."),
+      run: () => act("ship", post("ship"), () => `Shipped. Payout sent to ${round.supplier}.`),
     },
     {
       key: "deliver",
@@ -230,7 +230,7 @@ export default function SupplierConsole({ id, initial }: { id: string; initial: 
             {status}
           </header>
           <dl className="grid grid-cols-4 gap-x-5 gap-y-3 max-[700px]:grid-cols-2">
-            <Stat term="Cartons committed" value={units.toLocaleString("en-US")} />
+            <Stat term={`${capitalise(round.unit.many)} committed`} value={units.toLocaleString("en-US")} />
             <Stat term="Shops" value={String(commitments.length)} />
             <Stat term={round.finalPrice !== undefined ? "Final price" : "Tier price now"} value={formatUSD(price)} />
             <Stat term="Holdback held" value={formatUSD(state.holdbackLeft)} />
@@ -323,7 +323,7 @@ export default function SupplierConsole({ id, initial }: { id: string; initial: 
               onClick={() =>
                 act("export", async () => {
                   const { rows } = await api<{ rows: { id: string; address?: string }[] }>(`/api/rounds/${id}/purchase-order`);
-                  exportPurchaseOrder(grid.current, round.id, Object.fromEntries(rows.map((r) => [r.id, r.address])));
+                  exportPurchaseOrder(grid.current, round, Object.fromEntries(rows.map((r) => [r.id, r.address])));
                   return state;
                 })
               }
@@ -362,7 +362,7 @@ function ClaimCard({ claim, state, busy, error, onDecide }: ClaimProps) {
     <article className="grid gap-2.5 border-t border-rule pt-3 first-of-type:border-0 first-of-type:pt-0">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h3 className="font-display text-base font-bold tracking-[-0.01em]">
-          {claim.cartons} {claim.cartons === 1 ? "carton" : "cartons"} {KIND_WORD[claim.kind]}
+          {unitLabel(state.round, claim.units)} {KIND_WORD[claim.kind]}
         </h3>
         {claim.status !== "rejected" && <StatusChip status={claim.status === "open" ? "claim" : "resolved"} />}
       </div>

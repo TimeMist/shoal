@@ -3,18 +3,19 @@
 import { PayPalOneTimePaymentButton, PayPalProvider, type OnApproveDataOneTimePayments } from "@paypal/react-paypal-js/sdk-v6";
 import { useId, useRef, useState } from "react";
 import { formatUSD } from "@/lib/money";
-import { deliveryCents, reserveCents, tierAt, type Round } from "@/lib/round";
+import { capitalise, deliveryCents, reserveCents, tierAt, unitLabel, type Round } from "@/lib/round";
 import type { Commitment } from "@/lib/store";
 import { api, ApiError, errorText } from "./api";
 
-const STEP = 12; // one case of 12 cartons
 const CLIENT_ID = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID;
 
 type Props = { round: Round; units: number; onJoined: (c: Commitment) => void };
 
 /** Quantity stepper, the reservation sentence, then PayPal's own button. */
 export default function JoinPanel({ round, units, onJoined }: Props) {
-  const [qty, setQty] = useState(Math.max(120, round.minPerShop));
+  const { step, minPerShop, unit } = round;
+  // Start a little above the minimum: 120 cartons, 150 rolls (always a whole pack).
+  const [qty, setQty] = useState(Math.ceil(Math.max(120, minPerShop) / step) * step);
   const [shop, setShop] = useState("Your shop");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -60,11 +61,11 @@ export default function JoinPanel({ round, units, onJoined }: Props) {
       <h2 id="join-title" className="font-display text-lg font-bold tracking-[-0.01em]">Join this round</h2>
       <p className="font-display text-[34px] leading-none font-[750] tracking-[-0.03em] tabular-nums">
         {formatUSD(now)}
-        <span className="font-sans text-[15px] font-normal tracking-normal text-muted"> / carton now{now < alone && ` · ${formatUSD(alone)} alone`}</span>
+        <span className="font-sans text-[15px] font-normal tracking-normal text-muted"> / {unit.one} now{now < alone && ` · ${formatUSD(alone)} alone`}</span>
       </p>
       {next && (
         <p className="-mt-2 text-sm text-muted tabular-nums">
-          {(next.min - units).toLocaleString("en-US")} more cartons across the group drops it to {formatUSD(next.price)}.
+          {(next.min - units).toLocaleString("en-US")} more {next.min - units === 1 ? unit.one : unit.many} across the group drops it to {formatUSD(next.price)}.
         </p>
       )}
 
@@ -80,18 +81,18 @@ export default function JoinPanel({ round, units, onJoined }: Props) {
       </label>
 
       <div className="flex flex-wrap items-center gap-3">
-        <div role="group" aria-label="Cartons" className="inline-flex items-center rounded-pill shadow-[inset_0_0_0_1px_var(--color-rule)]">
-          <button type="button" aria-label="Fewer cartons" disabled={qty <= round.minPerShop} onClick={() => setQty((q) => Math.max(round.minPerShop, q - STEP))} className={STEPPER}>
+        <div role="group" aria-label={capitalise(unit.many)} className="inline-flex items-center rounded-pill shadow-[inset_0_0_0_1px_var(--color-rule)]">
+          <button type="button" aria-label={`Fewer ${unit.many}`} disabled={qty <= minPerShop} onClick={() => setQty((q) => Math.max(minPerShop, q - step))} className={STEPPER}>
             −
           </button>
           <output aria-live="polite" className="min-w-[110px] text-center font-display text-[17px] font-bold tabular-nums">
-            {qty} cartons
+            {unitLabel(round, qty)}
           </output>
-          <button type="button" aria-label="More cartons" onClick={() => setQty((q) => q + STEP)} className={STEPPER}>
+          <button type="button" aria-label={`More ${unit.many}`} onClick={() => setQty((q) => q + step)} className={STEPPER}>
             +
           </button>
         </div>
-        <span className="text-sm text-muted">Minimum {round.minPerShop} per delivery, in cases of {STEP}</span>
+        <span className="text-sm text-muted">Minimum {minPerShop} per delivery, in packs of {step}</span>
       </div>
 
       <p className="border-t border-rule pt-3 text-sm text-muted">

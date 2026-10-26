@@ -1,12 +1,16 @@
 import Link from "next/link";
+import { connection } from "next/server";
+import { Suspense } from "react";
 import Wordmark from "@/components/Wordmark";
 import { formatUSD } from "@/lib/money";
-import { tierAt } from "@/lib/round";
-import { DEMO_ROUND, shopsFor } from "@/lib/seed";
+import { tierAt, unitLabel } from "@/lib/round";
+import { DEMO_ROUND, ROUND_IDS, shopsFor } from "@/lib/seed";
+import { publicState } from "@/lib/privacy";
+import { getState, unitsCommitted } from "@/lib/store";
 import HeroRound from "./HeroRound";
 import { GHOST, PRIMARY } from "./ui";
 
-const { tiers, product, supplier } = DEMO_ROUND;
+const { tiers, product, supplier, unit } = DEMO_ROUND;
 const DEMO_SHOPS = shopsFor("demo");
 const units = DEMO_SHOPS.reduce((u, s) => u + s.qty, 0);
 const alone = formatUSD(tiers[0].price), group = formatUSD(tierAt(tiers, units).price);
@@ -18,7 +22,7 @@ const STEPS = [
   },
   {
     title: "The group price drops",
-    body: `Every carton counts toward the supplier's tiers. In the demo round, ${DEMO_SHOPS.length} shops commit ${units.toLocaleString("en-US")} cartons and oat milk drops from ${alone} to ${group}. An AI agent negotiates the tier with the supplier; code holds it to the supplier's floor.`,
+    body: `Every order counts toward the supplier's tiers. In the demo round, ${DEMO_SHOPS.length} shops commit ${units.toLocaleString("en-US")} cartons and oat milk drops from ${alone} to ${group}. An AI agent negotiates the tier with the supplier; code holds it to the supplier's floor.`,
   },
   {
     title: "Only the group price is charged",
@@ -49,12 +53,15 @@ export default function Home() {
             <Link href="/rounds/demo" className={`${PRIMARY} no-underline hover:text-white`}>
               Open the demo round
             </Link>
-            <Link href="/supplier" className={`${GHOST} no-underline hover:text-ink`}>
+            <Link href="/supplier/demo" className={`${GHOST} no-underline hover:text-ink`}>
               Supplier view
             </Link>
           </div>
+          <Suspense fallback={<p className="mt-8 text-sm text-muted">Loading open rounds…</p>}>
+            <OpenRounds />
+          </Suspense>
         </div>
-        <HeroRound product={product} supplier={supplier} tiers={tiers} shops={DEMO_SHOPS} />
+        <HeroRound product={product} supplier={supplier} unit={unit} tiers={tiers} shops={DEMO_SHOPS} />
       </div>
 
       <section aria-labelledby="how" className="border-t border-rule pt-[72px] pb-14 max-[900px]:pt-12">
@@ -75,5 +82,44 @@ export default function Home() {
         Built with PayPal (Orders, Payments, Payouts), Claude and Gemini agents, AG Grid, Bryntum and Render.
       </footer>
     </main>
+  );
+}
+
+const LINK = "font-semibold text-ink underline underline-offset-2 hover:text-jam";
+
+/** Both demo rounds as they stand right now, each with its shop page and supplier console. */
+async function OpenRounds() {
+  await connection(); // live in-memory state: render per request
+  const rounds = ROUND_IDS.map((id) => publicState(getState(id)!));
+  return (
+    <section aria-labelledby="open-rounds" className="mt-10 max-w-[560px]">
+      <h2 id="open-rounds" className="mb-3 font-display text-lg font-bold tracking-[-0.01em]">
+        Open rounds
+      </h2>
+      <ul className="grid gap-3">
+        {rounds.map((s) => {
+          const { round } = s;
+          const units = unitsCommitted(s);
+          const price = round.finalPrice ?? tierAt(round.tiers, units).price;
+          return (
+            <li key={round.id} className="grid gap-1 border-t border-rule pt-3">
+              <p className="font-display text-[17px] font-bold text-balance">{round.product}</p>
+              <p className="text-sm text-muted tabular-nums">
+                {round.supplier} · {unitLabel(round, units)} committed · {formatUSD(price)} a {round.unit.one}
+                {round.status !== "open" && ` · ${round.status === "closed" ? "closed" : "ended"}`}
+              </p>
+              <p className="flex flex-wrap gap-x-4 text-sm">
+                <Link href={`/rounds/${round.id}`} className={LINK}>
+                  Join<span className="sr-only"> the {round.product} round</span>
+                </Link>
+                <Link href={`/supplier/${round.id}`} className={LINK}>
+                  Supplier view<span className="sr-only"> for {round.product}</span>
+                </Link>
+              </p>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
   );
 }

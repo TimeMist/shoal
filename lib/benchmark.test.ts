@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { getBenchmark, median, normalise } from "./benchmark.ts";
+import { getBenchmark, median, normalise, roundBenchmark } from "./benchmark.ts";
+import { seedRound } from "./seed.ts";
 import { classifyPacks, offerList } from "./agents/packs.ts";
 import type { Offer } from "./channel3.ts";
 import { ConfigError } from "./http.ts";
@@ -130,4 +131,11 @@ test("offers far from the first median are dropped before the final median", asy
   const few = [o("a", 1), o("b", 1.1), o("e", 4), o("f", 10)];
   const r2 = await getBenchmark("p-out-few", item, { search: async () => few, classify: async () => vs.slice(0, 4) });
   assert.deepEqual(r2, { benchmark: null, reason: "Not enough comparable offers" });
+});
+
+test("the route's helper keys the benchmark by the round's search query", async () => {
+  const { round } = seedRound("receipts");
+  const asked: string[] = [];
+  await roundBenchmark(round, { search: async (q) => (asked.push(q), []), classify: async () => [] });
+  assert.deepEqual(asked, [round.searchQuery]);
 });

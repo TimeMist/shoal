@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import RoleSwitch, { type Role } from "@/components/RoleSwitch";
 import { GHOST_SM } from "./ui";
@@ -11,11 +11,14 @@ export const RESET_EVENT = "shoal-reset";
 /** The bar with the role read from the URL (needs a Suspense boundary under Cache Components). */
 export default function RouteDemoBar() {
   const path = usePathname();
-  return <DemoBar key={path} role={path.startsWith("/supplier") ? "supplier" : path.startsWith("/rounds") ? "shop" : null} />;
+  const [, section, roundId] = path.split("/"); // "/rounds/{id}" or "/supplier/{id}"
+  const role = section === "supplier" ? "supplier" : section === "rounds" ? "shop" : null;
+  return <DemoBar key={path} role={role} roundId={role ? roundId : undefined} />;
 }
 
 /** One bar on every page: what's demo, which side you're viewing, and a way to start over. */
-export function DemoBar({ role }: { role: Role | null }) {
+export function DemoBar({ role, roundId }: { role: Role | null; roundId?: string }) {
+  const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [said, setSaid] = useState<{ text: string; failed?: boolean } | null>(null);
 
@@ -32,6 +35,7 @@ export function DemoBar({ role }: { role: Role | null }) {
       const r = await fetch("/api/demo/reset", { method: "POST" });
       if (!r.ok) throw new Error();
       dispatchEvent(new Event(RESET_EVENT));
+      router.refresh(); // server-rendered round data, like the landing page's open rounds
       setSaid({ text: "Demo reset." });
     } catch {
       setSaid({ text: "Couldn't reset the demo. Try again.", failed: true });
@@ -50,7 +54,7 @@ export function DemoBar({ role }: { role: Role | null }) {
           <p role="status" className={`text-[13px] ${said?.failed ? "text-jam" : "text-muted"}`}>
             {said?.text}
           </p>
-          <RoleSwitch role={role} />
+          <RoleSwitch role={role} roundId={roundId} />
           <button type="button" className={GHOST_SM} disabled={busy} aria-busy={busy || undefined} onClick={reset}>
             {busy ? "Resetting" : "Reset demo"}
           </button>

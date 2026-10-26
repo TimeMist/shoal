@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import LiveRegion from "@/components/LiveRegion";
 import Swimmy, { useReducedMotion, type AgentState } from "@/components/Swimmy";
 import { formatUSD } from "@/lib/money";
-import { tierAt } from "@/lib/round";
+import { tierAt, unitLabel } from "@/lib/round";
 import type { NegotiationTurn, RoundState } from "@/lib/store";
 
 const PROVIDER = { claude: "Claude", gemini: "Gemini" } as const;
@@ -14,7 +14,7 @@ const STEP_MS = 1200;
 export function outcome(s: RoundState): { text: string; deal: boolean } | null {
   const last = s.negotiation.at(-1);
   if (!last) return null;
-  if (s.agreedPrice !== undefined) return { text: `Agreed at ${formatUSD(s.agreedPrice)} a carton, inside ${s.round.supplier}'s rules. It applies when the round closes.`, deal: true };
+  if (s.agreedPrice !== undefined) return { text: `Agreed at ${formatUSD(s.agreedPrice)} a ${s.round.unit.one}, inside ${s.round.supplier}'s rules. It applies when the round closes.`, deal: true };
   if (last.move === "accept" && last.verdict === "ok") return { text: "Deal dropped: the tier changed", deal: false };
   if (last.move === "walk_away") return { text: `${last.side === "shop" ? "The Shoal agent" : s.round.supplier} walked away. The tier price stands.`, deal: false };
   return { text: `No deal in ${s.negotiation.length} turns. The tier price stands.`, deal: false };
@@ -60,14 +60,14 @@ export default function Negotiation({ state, pending, animate }: Props) {
       <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)_minmax(0,1fr)] items-stretch gap-4 @max-[760px]:grid-cols-1">
         <Party
           name="Shoal agent"
-          sub={`For ${commitments.length} ${commitments.length === 1 ? "shop" : "shops"} · ${units.toLocaleString("en-US")} cartons`}
+          sub={`For ${commitments.length} ${commitments.length === 1 ? "shop" : "shops"} · ${unitLabel(round, units)}`}
           provider={provider("shop")}
           tint="bg-live-tint"
           lines={seen.map((t, i) => ({ ...t, n: i + 1 })).filter((t) => t.side === "shop")}
           fish={<Swimmy size={52} state={mood("shop")} />}
         />
         <div className="flex flex-col justify-center gap-2.5 rounded-lg bg-blush p-[18px] text-center">
-          <span className="text-[13px] text-muted">{end?.deal ? "Agreed price per carton" : "Group price per carton"}</span>
+          <span className="text-[13px] text-muted">{end?.deal ? "Agreed" : "Group"} price per {round.unit.one}</span>
           <span className="font-display text-[44px] leading-none font-[750] tracking-[-0.035em] tabular-nums">{formatUSD(price)}</span>
           <span className="text-[13px] text-muted tabular-nums">
             Supplier floor {formatUSD(round.floor)}
@@ -80,7 +80,7 @@ export default function Negotiation({ state, pending, animate }: Props) {
         </div>
         <Party
           name={round.supplier}
-          sub={`Tiers ${round.tiers.slice(1).map((t) => t.min.toLocaleString("en-US")).join(" / ")} · min ${round.minPerShop} per drop · Delivery ${formatUSD(round.delivery.perDrop)} per drop + ${formatUSD(round.delivery.perUnit)} per carton`}
+          sub={`Tiers ${round.tiers.slice(1).map((t) => t.min.toLocaleString("en-US")).join(" / ")} · min ${round.minPerShop} per drop · Delivery ${formatUSD(round.delivery.perDrop)} per drop + ${formatUSD(round.delivery.perUnit)} per ${round.unit.one}`}
           provider={provider("supplier")}
           tint="bg-[#EFE7F8]"
           lines={seen.map((t, i) => ({ ...t, n: i + 1 })).filter((t) => t.side === "supplier")}

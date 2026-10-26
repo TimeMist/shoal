@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { tierAt, deliveryCents, reserveCents, captureCents, savingsCents, validateQty, type Round } from "./round.ts";
+import { tierAt, deliveryCents, reserveCents, captureCents, savingsCents, validateQty, unitLabel, type Round } from "./round.ts";
 
 const tiers = [
   { min: 0, price: 240 },
@@ -55,4 +55,12 @@ test("validateQty enforces whole cartons at or above the minimum", () => {
   assert.match(validateQty(round, 95) ?? "", /96/);
   assert.equal(validateQty(round, 96), null);
   assert.equal(typeof validateQty(round, 100.5), "string");
+});
+
+test("unitLabel uses the singular only for exactly one", () => {
+  const rolls = { unit: { one: "roll", many: "rolls" } };
+  assert.equal(unitLabel(rolls, 1), "1 roll");
+  assert.equal(unitLabel(rolls, 0), "0 rolls");
+  assert.equal(unitLabel(rolls, 1100), "1,100 rolls");
+  assert.equal(unitLabel(round, 12), "12 cartons");
 });

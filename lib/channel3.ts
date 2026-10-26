@@ -14,11 +14,13 @@ export async function searchOffers(query: string): Promise<Offer[]> {
   });
   if (res.status === 402) throw new ConfigError("Channel3 credits used up", 402);
   if (!res.ok) throw new Error(`Channel3 search failed (${res.status})`);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- untyped Channel3 JSON; every field is coerced below
   const data = (await res.json()) as { products?: any[] };
   return (data.products ?? []).flatMap((p) => {
     // Pack count and roll size usually live in the description, not the title.
     const feats = Array.isArray(p.key_features) ? p.key_features.slice(0, 3).map(String) : [];
     const details = [typeof p.description === "string" ? p.description.slice(0, 300) : "", ...feats].filter(Boolean).join(" | ") || undefined;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- untyped Channel3 JSON; every field is coerced below
     return (p.offers ?? []).map((o: any): Offer => ({
       merchant: String(o.merchant?.name ?? o.domain ?? ""),
       url: String(o.url ?? ""),
