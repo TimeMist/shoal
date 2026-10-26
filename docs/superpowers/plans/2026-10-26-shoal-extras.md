@@ -139,6 +139,36 @@
 - [ ] **Step 4:** `npm test`, tsc → clean. Live check only if `CHANNEL3_API_KEY` is set (check presence, never print): one `GET /benchmark` for the demo product; report the median, offer count and merchants. If unset, report that.
 - [ ] **Step 5:** Commit `feat: Channel3 retail benchmark with AI pack sizing`.
 
+### Task 5b: A unit per round and the receipt-roll round
+
+**Files:**
+- Modify: `lib/round.ts` (Round fields), `lib/seed.ts` (two rounds), `lib/store.ts` (`resetDemo`, `getState` for both ids), `lib/agents/negotiate.ts`, `lib/agents/triage.ts`, `lib/agents/packs.ts`, `lib/benchmark.ts`, `app/api/rounds/[id]/benchmark/route.ts`, `app/api/rounds/[id]/claims/route.ts`, `lib/guard.ts`, `lib/claims.ts` (unit wording only)
+- Test: existing tests updated; `lib/seed.test.ts` (new)
+
+**Interfaces:**
+- Produces:
+  - `Round.unit: { one: string; many: string }`, `Round.step: number`, `Round.searchQuery: string`; `Round.delivery.perUnit` (renamed from `perCarton`, same meaning).
+  - `seedRound(id: "demo" | "receipts"): RoundState`; `DEMO_SHOPS` gains per-round quantities (`qty: { demo: number; receipts: number }`) or a second list — implementer's choice, one source of truth.
+  - `ROUND_IDS = ["demo", "receipts"] as const`; `resetDemo()` resets both; `getState` lazily seeds either id.
+  - `validateQty` also rejects quantities that aren't a multiple of `round.step`.
+  - Prompts and messages use `round.unit` (no literal "carton" left in lib except the oat-milk seed).
+  - `classifyPacks` counts units per pack generically (`units` instead of `cartons` in the tool schema; same 1–48 range for cartons, 1–200 for rolls → use `1..round.step * 4`).
+  - `getBenchmark(round.searchQuery, …)`; the route passes the round's query.
+- Values: oat-milk round unchanged plus `unit {carton, cartons}`, `step 12`, `searchQuery "barista oat milk 1L"`. Receipt round per the spec addendum; tiers mins 0 / 400 / 800 / 1200, prices from the live median R by the addendum's formula, `minPerShop 50`, `step 50`, `delivery { perDrop: 900, perUnit: 2 }`, `holdbackPct 10`, supplier "Brightline Paper Co.", product "Thermal receipt paper, 3⅛″ × 230′ roll", `searchQuery "thermal receipt paper rolls 3 1/8 x 230"`.
+- [ ] **Step 1:** One live benchmark lookup for the receipt query (dev server or a script); record R, offer count and merchants in the report. If no benchmark comes back, stop and report BLOCKED.
+- [ ] **Step 2: Write failing tests:** `seedRound("receipts")` has 1,100 rolls across 8 shops when simulated, sits on the 800+ tier, and its tier prices follow the formula from the recorded R; `validateQty` rejects 75 rolls (not a multiple of 50) and 25 (below minimum); `deliveryCents(receipts, 200) === 1300`; benchmark lookups for the two rounds use different cache keys.
+- [ ] **Step 3:** `npm test` → FAIL; implement; `npm test`, tsc, build → PASS.
+- [ ] **Step 4:** Commit `feat: unit per round and a receipt-roll demo round`.
+
+### Task 5c: Round-aware screens and navigation
+
+**Files:**
+- Create: `app/supplier/[id]/page.tsx`; Modify: `app/supplier/page.tsx` (redirect to `/supplier/demo`), `app/page.tsx` (list both rounds), `components/role-action.ts` + `components/RoleSwitch.tsx` + `app/DemoBar.tsx` (keep the current round id), `app/api/demo/reset/route.ts` (reset both, return both public states), and every UI file that says "carton(s)" (`app/rounds/[id]/*`, `app/supplier/*`, `components/RoundPool.tsx`, `components/TierLadder.tsx`)
+- Behaviour: all unit words come from `round.unit`; the join stepper uses `round.step` and `round.minPerShop`; the landing hero stays the oat-milk animation, and a "Open rounds" list below the CTAs links each round's shop page and supplier console with product, supplier, units committed and the current price; the role switch maps `/rounds/{id}` ↔ `/supplier/{id}`; reset refreshes whichever round page is open.
+- [ ] **Step 1:** Implement.
+- [ ] **Step 2:** tests, tsc, lint, build → clean. Dev server: both rounds' shop page and supplier console at 1440 and 390 (reset → simulate 8 in each); confirm no "carton" on the receipt round and no horizontal scroll. Screenshots under the SDD workspace.
+- [ ] **Step 3:** Commit `feat: round-aware screens and navigation for two demo rounds`.
+
 ### Task 6: Benchmark on the ladder, receipt and supplier console
 
 **Files:**

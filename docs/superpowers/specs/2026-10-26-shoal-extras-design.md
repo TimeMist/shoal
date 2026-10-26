@@ -73,3 +73,12 @@ Constraints: submission Nov 12, 2026; everything shown is either a real sandbox/
 ## Out of scope
 
 Delivery refunds on claims; a supplier setting to switch Shoal invoicing off; webhook/ERP feeds to suppliers; live per-view retail lookups; local-hub delivery.
+
+## Addendum (2026-10-26): a second demo round for the benchmark
+
+Channel3's catalog has no oat milk (live check and probes: only beauty/home items match), so the oat-milk round shows no benchmark. A second demo round sells a bulk supply Channel3 does cover: **thermal receipt paper, 3⅛″ × 230′ roll**, sold in cases of 50, from the fictional supplier **Brightline Paper Co.** to the same 8 demo shops.
+
+- Each round has a unit (`carton`/`cartons`, `roll`/`rolls`), a pack step (12 cartons, 50 rolls) and a Channel3 search query. Every UI string, AI prompt and receipt uses the round's unit; the benchmark is keyed by the round's query.
+- Receipt-round tiers are set from the live retail median R (cents per roll): Alone round(0.95R), 400+ round(0.85R), 800+ round(0.75R), 1200+ round(0.68R); floor = the 1200+ price. Demo quantities 200, 150, 50, 100, 250, 100, 100, 150 (1,100 rolls, 100 short of the top tier). Delivery $9.00 per drop + $0.02 per roll.
+- Navigation: the landing page lists both rounds; the supplier console lives at `/supplier/[id]` (`/supplier` redirects to the oat-milk round); the role switch keeps the current round; Reset demo resets both rounds.
+- Oat milk keeps no benchmark (the line is absent; the supplier console says why).
