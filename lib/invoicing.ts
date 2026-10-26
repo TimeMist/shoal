@@ -39,14 +39,15 @@ export const invoiceApi: InvoiceApi = {
       amount: { breakdown: { shipping: { amount: usd(d.shipping) } } },
     }, true);
     if (!inv.id) throw new Error("PayPal invoicing returned no invoice id");
-    if (inv.amount?.value !== toMoney(d.total)) {
-      throw new Error(`PayPal invoice ${inv.id} total ${inv.amount?.value} does not match expected ${toMoney(d.total)}`);
-    }
-    return inv.id;
+    return { id: inv.id, total: inv.amount?.value ?? "" };
+  },
+  async total(id) {
+    return (await call<{ amount?: { value?: string } }>("GET", `/${id}`)).amount?.value ?? "";
   },
   async send(id) {
     await call("POST", `/${id}/send`, { send_to_recipient: true });
-    // The send reply is only a link; the recipient view URL is on the invoice itself.
+  },
+  async viewUrl(id) {
     const inv = await call<{ detail?: { metadata?: { recipient_view_url?: string } } }>("GET", `/${id}`);
     const url = inv.detail?.metadata?.recipient_view_url;
     if (!url) throw new Error("PayPal invoice has no recipient view url");

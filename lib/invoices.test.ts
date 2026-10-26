@@ -2,6 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { buildInvoice, invoiceNumber, issueInvoices } from "./invoices.ts";
 import type { InvoiceApi, InvoiceDraft } from "./invoices.ts";
+import { toMoney } from "./money.ts";
 import { seedRound } from "./seed.ts";
 import type { Commitment, RoundState } from "./store.ts";
 
@@ -17,8 +18,10 @@ function setup(over: Partial<Commitment>[] = [{}]) {
 function fake(over: Partial<InvoiceApi> = {}) {
   const log: string[] = [];
   const api: InvoiceApi = {
-    create: async (d: InvoiceDraft) => (log.push(`create ${d.number}`), `INV-${d.number}`),
-    send: async (id) => (log.push(`send ${id}`), `https://pay/${id}`),
+    create: async (d: InvoiceDraft) => (log.push(`create ${d.number}`), { id: `INV-${d.number}`, total: toMoney(d.total) }),
+    total: async () => "240.00",
+    send: async (id) => void log.push(`send ${id}`),
+    viewUrl: async (id) => `https://pay/${id}`,
     recordPayment: async (id, cents, cap) => void log.push(`pay ${id} ${cents} ${cap}`),
     recordRefund: async () => {},
     ...over,
@@ -57,7 +60,7 @@ test("issueInvoices needs a payer email", async () => {
 
 test("issueInvoices isolates a failing shop", async () => {
   const s = setup([{}, {}]);
-  const { api } = fake({ send: async (id) => { if (id.includes("-1-")) throw new Error("boom"); return `https://pay/${id}`; } });
+  const { api } = fake({ send: async (id) => { if (id.includes("-1-")) throw new Error("boom"); } });
   assert.deepEqual(await issueInvoices(s, api), { issued: 1, failed: 1 });
   assert.equal(s.commitments[0].invoiceError, "boom");
   assert.equal(s.commitments[0].invoiceStatus, undefined);
@@ -111,5 +114,34 @@ test("a failure after create and send resumes without re-creating", async () => 
   assert.equal(c.invoiceStatus, "paid");
   assert.equal(c.invoiceError, undefined);
   assert.equal(log.filter((l) => l.startsWith("create")).length, 1);
+  assert.equal(log.filter((l) => l.startsWith("send")).length, 1);
+});
+
+test("a wrong PayPal total keeps the draft, sends nothing, and a retry re-checks without re-creating", async () => {
+  const s = setup([{}]);
+  let paypalTotal = "239.99";
+  const { api, log } = fake({
+    create: async (d) => (log.push(`create ${d.number}`), { id: "INV-X", total: paypalTotal }),
+    total: async () => paypalTotal,
+  });
+  assert.deepEqual(await issueInvoices(s, api), { issued: 0, failed: 1 });
+  const c = s.commitments[0];
+  assert.equal(c.invoiceId, "INV-X");
+  assert.match(c.invoiceError!, /does not match/);
+  assert.ok(!log.some((l) => l.startsWith("send")));
+  assert.deepEqual(await issueInvoices(s, api), { issued: 0, failed: 1 });
+  paypalTotal = "240.00";
+  assert.deepEqual(await issueInvoices(s, api), { issued: 1, failed: 0 });
+  assert.equal(log.filter((l) => l.startsWith("create")).length, 1);
+  assert.equal(c.invoiceStatus, "paid");
+});
+
+test("a failed view-url fetch does not re-send on retry", async () => {
+  const s = setup([{}]);
+  let down = true;
+  const { api, log } = fake({ viewUrl: async (id) => { if (down) throw new Error("get down"); return `https://pay/${id}`; } });
+  await issueInvoices(s, api);
+  down = false;
+  assert.deepEqual(await issueInvoices(s, api), { issued: 1, failed: 0 });
   assert.equal(log.filter((l) => l.startsWith("send")).length, 1);
 });

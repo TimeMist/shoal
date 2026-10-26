@@ -1,5 +1,5 @@
 // Invoices in the supplier's name, one per real captured shop, marked paid against its capture.
-import { formatUSD } from "./money.ts";
+import { formatUSD, toMoney } from "./money.ts";
 import type { Commitment, RoundState } from "./store.ts";
 
 export type InvoiceDraft = {
@@ -14,8 +14,10 @@ export type InvoiceDraft = {
 };
 
 export type InvoiceApi = {
-  create(d: InvoiceDraft): Promise<string>;
-  send(id: string): Promise<string>; // recipient view url
+  create(d: InvoiceDraft): Promise<{ id: string; total: string }>;
+  total(id: string): Promise<string>; // the draft's total as PayPal holds it
+  send(id: string): Promise<void>;
+  viewUrl(id: string): Promise<string>; // recipient view url
   recordPayment(id: string, cents: number, captureId: string): Promise<void>;
   recordRefund(id: string, cents: number): Promise<void>;
 };
@@ -48,14 +50,24 @@ export async function issueInvoices(s: RoundState, api: InvoiceApi): Promise<{ i
     if (c.simulated || !c.captured || c.invoiceStatus) continue;
     try {
       // Each step runs only if its result is missing, so a retry resumes where the last run stopped.
+      const number = c.invoiceNumber ?? invoiceNumber(s, i);
+      const draft = buildInvoice(s, c, number);
+      if ("error" in draft) throw new Error(draft.error);
+      let held: string | undefined;
       if (!c.invoiceId) {
-        const number = c.invoiceNumber ?? invoiceNumber(s, i);
-        const draft = buildInvoice(s, c, number);
-        if ("error" in draft) throw new Error(draft.error);
-        c.invoiceId = await api.create(draft);
+        const made = await api.create(draft);
+        c.invoiceId = made.id;
         c.invoiceNumber = number;
+        held = made.total;
       }
-      c.invoiceUrl ??= await api.send(c.invoiceId);
+      if (!c.invoiceSent) {
+        // The draft stays unsent until PayPal's total matches ours to the cent.
+        held ??= await api.total(c.invoiceId);
+        if (held !== toMoney(draft.total)) throw new Error(`PayPal invoice total ${held} does not match ${toMoney(draft.total)}, so it was not sent`);
+        await api.send(c.invoiceId);
+        c.invoiceSent = true;
+      }
+      c.invoiceUrl ??= await api.viewUrl(c.invoiceId);
       await api.recordPayment(c.invoiceId, c.captured, c.captureId ?? "");
       c.invoiceStatus = "paid";
       c.invoiceError = undefined;

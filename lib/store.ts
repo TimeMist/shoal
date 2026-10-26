@@ -17,6 +17,7 @@ export type Commitment = {
   captured?: number;
   invoiceId?: string;
   invoiceNumber?: string;
+  invoiceSent?: boolean;
   invoiceUrl?: string;
   invoiceStatus?: "paid" | "refunded";
   invoiceError?: string;
