@@ -1,0 +1,37 @@
+# Render Blueprint for the Shoal demo.
+# Run ONE instance only: rounds, commitments and claims live in memory (lib/store.ts),
+# so a second instance would see different rounds, and a restart resets the demo.
+services:
+  - type: web
+    name: shoal
+    runtime: node
+    plan: free
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_VERSION
+        value: "24"
+      # Lets npm ci fetch @bryntum/scheduler-trial (see .npmrc). Copy it from ~/.npmrc after npm login.
+      - key: BRYNTUM_NPM_TOKEN
+        sync: false
+      - key: PAYPAL_CLIENT_ID
+        sync: false
+      - key: PAYPAL_CLIENT_SECRET
+        sync: false
+      # Read at build time for the browser PayPal button.
+      - key: NEXT_PUBLIC_PAYPAL_CLIENT_ID
+        sync: false
+      - key: DEAL_SECRET
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: SHOP_AGENT_PROVIDER
+        sync: false
+      - key: SUPPLIER_AGENT_PROVIDER
+        sync: false
+      - key: SUPPLIER_PAYPAL_EMAIL
+        sync: false
+      - key: CHANNEL3_API_KEY
+        sync: false

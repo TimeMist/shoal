@@ -79,7 +79,7 @@ export default function Home() {
       </section>
 
       <footer className="border-t border-rule py-6 text-[13px] text-muted">
-        Built with PayPal (Orders, Payments, Payouts), Claude and Gemini agents, AG Grid, Bryntum and Render.
+        Built with PayPal (Orders, Payments, Payouts, Invoicing), Claude and Gemini agents, AG Grid, Bryntum, Channel3 and Render.
       </footer>
     </main>
   );

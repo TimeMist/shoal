@@ -30,8 +30,8 @@ On-demand buying rounds with automatic settlement: no membership scheme, no fixe
 
 ## Capabilities and Constraints
 
-- Already built (from the earlier Sweetspot scaffold, to be adapted): a price guardrail (`lib/rules.ts`), signed expiring tokens (`lib/deal.ts`), PayPal order create/capture routes.
-- Planned: buying rounds with tiered pricing, authorization at the price shown when a shop joins and partial capture at the achieved price, void on failure, supplier tier negotiation (AI, inside supplier-set tiers), shipping split, per-shop sub-orders with tracking, delivery claims with AI triage and holdback refunds, supplier payout via Payouts, invoices as receipts, dashboards.
+- Built: two demo buying rounds (oat milk, thermal receipt rolls) with tiered pricing; a PayPal authorization at the price shown when a shop joins (goods + delivery), capture at the group price at close, void on failure; tier negotiation between two agents (Claude or Gemini per side) with every offer checked in code (`lib/guard.ts`) and the deal signed (`lib/deal.ts`); delivery split (per drop + per unit); PayPal invoices in the supplier's name, marked paid; purchase-order CSV export; per-shop tracking and delivery; claims with AI triage, a person's approval and refunds from a 10% holdback; supplier payouts via Payouts; Channel3 retail benchmark; supplier console with AG Grid allocation and Bryntum timeline; PII redaction on shop-facing state.
+- Planned: PayPal multiparty (shops pay the supplier directly), persistent storage, logins, a local-hub delivery option.
 - Stack: Next.js 16 App Router, React 19, Tailwind CSS 4, TypeScript. PayPal server SDK covers Orders and Payments; Invoicing and Payouts use direct REST calls.
 - Hackathon constraints: submission by Nov 12, 2026; demo video under 3 minutes without third-party trademarks or copyrighted music; repo public and MIT-licensed at submission.
 - Undecided: pricing model (platform fee per round vs. subscription); first product categories; whether a real supplier will participate before submission.
