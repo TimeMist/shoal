@@ -7,16 +7,15 @@ export function maskEmail(email: string | undefined): string | undefined {
   return `${email[0]}•••${at > 0 ? email.slice(at) : ""}`;
 }
 
+export function publicCommitment(c: Commitment): Commitment {
+  const out = { ...c, payerEmail: maskEmail(c.payerEmail) };
+  delete out.address;
+  delete out.invoiceUrl;
+  return out;
+}
+
 export function publicState(s: RoundState): RoundState {
-  return {
-    ...s,
-    commitments: s.commitments.map((c): Commitment => {
-      const out = { ...c, payerEmail: maskEmail(c.payerEmail) };
-      delete out.address;
-      delete out.invoiceUrl;
-      return out;
-    }),
-  };
+  return { ...s, commitments: s.commitments.map(publicCommitment) };
 }
 
 export type PurchaseOrderRow = {

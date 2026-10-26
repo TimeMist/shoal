@@ -87,8 +87,8 @@ const PO: [keyof Row, string][] = [
 ];
 const PO_MONEY = new Set(["unit", "goods", "delivery", "captured"]);
 
-// A leading apostrophe stops spreadsheets from running a cell as a formula.
-const safe = (v: string) => (/^[=+\-@]/.test(v) ? `'${v}` : v);
+// A leading apostrophe stops spreadsheets from running a cell as a formula (OWASP CSV injection set).
+const safe = (v: string) => (/^[=+\-@\t\r]/.test(v) ? `'${v}` : v);
 
 /** Addresses never reach the browser's round state, so they come from the supplier-only purchase-order route. */
 export function exportPurchaseOrder(grid: GridHandle | null, roundId: string, addresses: Record<string, string | undefined>) {

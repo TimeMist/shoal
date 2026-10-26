@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { maskEmail, publicState, purchaseOrder } from "./privacy.ts";
+import { maskEmail, publicCommitment, publicState, purchaseOrder } from "./privacy.ts";
 import { seedRound } from "./seed.ts";
 import type { Commitment } from "./store.ts";
 
@@ -33,4 +33,12 @@ test("purchaseOrder rows carry the supplier's columns in cents", () => {
   assert.deepEqual(purchaseOrder(s), [
     { id: "c1", shop: "Corner Books Café", address: "1 Real St", qty: 120, unit: 185, goods: 22200, delivery: 1800, captured: 24000, captureId: "cap1", invoiceNumber: "N1", tracking: "T1" },
   ]);
+});
+
+test("publicCommitment strips one shop's private fields for the authorize response", () => {
+  const raw = shop();
+  const c = publicCommitment(raw);
+  assert.ok(!("address" in c) && !("invoiceUrl" in c));
+  assert.deepEqual([c.payerEmail, c.id, c.qty], ["j•••@example.com", "c1", 120]);
+  assert.equal(raw.payerEmail, "jane@example.com");
 });

@@ -126,3 +126,9 @@ test("a shop without an invoice never records an invoice refund", async () => {
   assert.equal((await approveClaim(s, "k1", calls().fn, async (id, cents) => void inv.fn(id, cents))).ok, true);
   assert.equal(inv.log.length, 0);
 });
+
+test("a new invoice refund keeps the error of an earlier unrecorded one", async () => {
+  const { s, c } = setup({ invoiceId: "INV2-1", invoiceStatus: "paid", refunded: 1000, invoiceRefunded: 0, invoiceError: "Refund not recorded" });
+  assert.equal((await approveClaim(s, "k1", calls().fn, async () => {})).ok, true);
+  assert.deepEqual([c.refunded, c.invoiceRefunded, c.invoiceStatus, c.invoiceError], [3220, 2220, "refunded", "Refund not recorded"]);
+});

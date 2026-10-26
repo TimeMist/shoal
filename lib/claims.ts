@@ -48,7 +48,8 @@ export async function approveClaim(
       await recordInvoiceRefund(c.invoiceId, cents);
       c.invoiceRefunded = (c.invoiceRefunded ?? 0) + cents;
       c.invoiceStatus = "refunded";
-      c.invoiceError = undefined;
+      // An earlier refund that failed to record is still owed; keep its error for the retry.
+      if (c.invoiceRefunded === c.refunded) c.invoiceError = undefined;
     } catch (e) {
       c.invoiceError = `Refund not recorded on the invoice: ${e instanceof Error ? e.message : "Invoicing error"}`;
     }
