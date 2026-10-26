@@ -70,13 +70,7 @@ You need Node 24 and a free Bryntum trial login (for `@bryntum/scheduler-trial`,
    npm login --registry=https://npm.bryntum.com
    ```
 
-2. Export the token. The repo's `.npmrc` reads it from `BRYNTUM_NPM_TOKEN`, and that setting overrides your login, so `npm install` fails with a 401 when the variable is unset:
-
-   ```bash
-   export BRYNTUM_NPM_TOKEN="$(sed -n 's#^//npm.bryntum.com/:_authToken=##p' ~/.npmrc)"
-   ```
-
-3. Install, configure and run:
+2. Install, configure and run:
 
    ```bash
    npm install
@@ -124,7 +118,7 @@ This follows the video ([docs/demo-script.md](docs/demo-script.md)).
 - **AG Grid**: the supplier's allocation grid and the purchase-order CSV export.
 - **Bryntum Scheduler**: the round timeline, one lane per shop.
 - **Channel3**: the retail benchmark.
-- **Render**: hosting (`render.yaml`, one instance).
+- **Render**: hosting (`render.yaml`, one instance). Set `BRYNTUM_NPM_TOKEN` (the token from your `~/.npmrc` after `npm login`) and the `.env.example` values in the Render dashboard.
 
 ## Status
 

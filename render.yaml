@@ -6,12 +6,13 @@ services:
     name: shoal
     runtime: node
     plan: free
-    buildCommand: npm ci && npm run build
+    # The token line is added at build time so the repo's .npmrc never overrides a local npm login.
+    buildCommand: echo "//npm.bryntum.com/:_authToken=${BRYNTUM_NPM_TOKEN}" >> .npmrc && npm ci && npm run build
     startCommand: npm start
     envVars:
       - key: NODE_VERSION
         value: "24"
-      # Lets npm ci fetch @bryntum/scheduler-trial (see .npmrc). Copy it from ~/.npmrc after npm login.
+      # Lets npm ci fetch @bryntum/scheduler-trial. Copy it from ~/.npmrc after npm login.
       - key: BRYNTUM_NPM_TOKEN
         sync: false
       - key: PAYPAL_CLIENT_ID
