@@ -1,6 +1,7 @@
 import { verifyQuoteToken } from "@/lib/deal";
 import { body, fail, paypalFail } from "@/lib/http";
 import { createAuthorizeOrder, dealSecret } from "@/lib/paypal";
+import { deliveryCents } from "@/lib/round";
 import { getState } from "@/lib/store";
 
 export async function POST(request: Request, ctx: RouteContext<"/api/rounds/[id]/orders">) {
@@ -12,7 +13,8 @@ export async function POST(request: Request, ctx: RouteContext<"/api/rounds/[id]
   const q = typeof token === "string" ? verifyQuoteToken(token, dealSecret()) : null;
   if (!q || q.roundId !== id) return fail("Invalid or expired quote", 400);
   try {
-    const orderId = await createAuthorizeOrder(q.reserved, `${s.round.product} x ${q.qty}`, id);
+    const delivery = deliveryCents(s.round, q.qty);
+    const orderId = await createAuthorizeOrder({ goods: q.reserved - delivery, delivery }, `${s.round.product} x ${q.qty}`, id);
     return Response.json({ orderId });
   } catch (e) {
     return paypalFail(e);

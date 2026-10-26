@@ -6,6 +6,7 @@ import {
   PaymentsController,
   ShipmentCarrier,
 } from "@paypal/paypal-server-sdk";
+import { orderAmount } from "./join.ts";
 import { toMoney } from "./money.ts";
 
 function required(name: string): string {
@@ -38,25 +39,33 @@ function payments(): PaymentsController {
 
 const usd = (cents: number) => ({ currencyCode: "USD", value: toMoney(cents) });
 
-export async function createAuthorizeOrder(cents: number, description: string, referenceId: string): Promise<string> {
+export async function createAuthorizeOrder(amount: { goods: number; delivery: number }, description: string, referenceId: string): Promise<string> {
   const { result } = await orders().createOrder({
     body: {
       intent: CheckoutPaymentIntent.Authorize,
-      purchaseUnits: [{ referenceId, description, amount: usd(cents) }],
+      purchaseUnits: [{ referenceId, description, amount: orderAmount(amount.goods, amount.delivery) }],
     },
   });
   if (!result.id) throw new Error("PayPal createOrder returned no id");
   return result.id;
 }
 
-export type Authorization = { authorizationId: string; amount: string; referenceId: string };
+export type Authorization = { authorizationId: string; amount: string; referenceId: string; payerEmail?: string; address?: string };
 
 export async function authorizeOrder(orderId: string): Promise<Authorization> {
   const { result } = await orders().authorizeOrder({ id: orderId });
   const unit = result.purchaseUnits?.[0];
   const auth = unit?.payments?.authorizations?.[0];
   if (!auth?.id) throw new Error("PayPal authorizeOrder returned no authorization id");
-  return { authorizationId: auth.id, amount: auth.amount?.value ?? "", referenceId: unit?.referenceId ?? "" };
+  const a = unit?.shipping?.address;
+  const address = a ? [a.addressLine1, a.adminArea2, a.adminArea1, a.postalCode, a.countryCode].filter(Boolean).join(", ") : "";
+  return {
+    authorizationId: auth.id,
+    amount: auth.amount?.value ?? "",
+    referenceId: unit?.referenceId ?? "",
+    payerEmail: result.payer?.emailAddress,
+    address: address || undefined,
+  };
 }
 
 export async function captureAuthorization(authorizationId: string, cents: number): Promise<string> {

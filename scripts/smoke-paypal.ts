@@ -8,7 +8,7 @@ import {
 const rl = createInterface({ input: process.stdin, output: process.stdout });
 
 async function newApprovedOrder(label: string, cents: number): Promise<string> {
-  const id = await createAuthorizeOrder(cents, `Shoal smoke test ${label}`, `smoke-${label}`);
+  const id = await createAuthorizeOrder({ goods: cents, delivery: 0 }, `Shoal smoke test ${label}`, `smoke-${label}`);
   console.log(`order ${label}: ${id}`);
   const { result } = await orders().getOrder({ id });
   const link = result.links?.find((l) => l.rel === "approve" || l.rel === "payer-action")?.href;

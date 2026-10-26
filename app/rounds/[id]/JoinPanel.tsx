@@ -3,7 +3,7 @@
 import { PayPalOneTimePaymentButton, PayPalProvider, type OnApproveDataOneTimePayments } from "@paypal/react-paypal-js/sdk-v6";
 import { useId, useRef, useState } from "react";
 import { formatUSD } from "@/lib/money";
-import { reserveCents, tierAt, type Round } from "@/lib/round";
+import { deliveryCents, reserveCents, tierAt, type Round } from "@/lib/round";
 import type { Commitment } from "@/lib/store";
 import { api, ApiError, errorText } from "./api";
 
@@ -24,7 +24,8 @@ export default function JoinPanel({ round, units, onJoined }: Props) {
   const now = tierAt(round.tiers, units).price;
   const alone = round.tiers[0].price;
   const next = round.tiers.find((t) => t.min > units);
-  const reserve = reserveCents(round, units, qty);
+  const reserve = reserveCents(round, units, qty); // goods + delivery
+  const delivery = deliveryCents(round, qty);
 
   async function createOrder() {
     setError("");
@@ -94,7 +95,7 @@ export default function JoinPanel({ round, units, onJoined }: Props) {
       </div>
 
       <p className="border-t border-rule pt-3 text-sm text-muted">
-        We&apos;ll reserve <b className="text-ink tabular-nums">{formatUSD(reserve)}</b> on PayPal. You&apos;ll pay the group price when the round closes, never more. If it doesn&apos;t reach its first tier, nothing is charged.
+        We&apos;ll reserve <b className="text-ink tabular-nums">{formatUSD(reserve)}</b> on PayPal (goods {formatUSD(reserve - delivery)} + delivery {formatUSD(delivery)}). You&apos;ll pay the group price when the round closes, never more. If it doesn&apos;t reach its first tier, nothing is charged.
       </p>
 
       {error && (

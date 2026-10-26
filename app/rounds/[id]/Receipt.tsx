@@ -1,7 +1,7 @@
 import type { ReactNode, Ref } from "react";
 import StatusChip from "@/components/StatusChip";
 import { formatUSD } from "@/lib/money";
-import { aloneCents, savingsCents } from "@/lib/round";
+import { aloneCents, goodsCents, savingsCents } from "@/lib/round";
 import type { Commitment, RoundState } from "@/lib/store";
 
 /** The shop's receipt after a successful close: what was captured, what was never taken, what it saved. */
@@ -33,6 +33,8 @@ export default function Receipt({ state, mine }: { state: RoundState; mine: Comm
       <p className="font-display text-[40px] leading-none font-[750] tracking-[-0.035em] tabular-nums">{formatUSD(mine.captured)}</p>
       <dl className="grid grid-cols-2 gap-x-5 gap-y-3">
         <Def term="Reserved" value={formatUSD(mine.reserved)} />
+        <Def term="Goods" value={formatUSD(goodsCents(round, mine.qty, mine.captured))} />
+        <Def term="Delivery" value={formatUSD(mine.delivery)} />
         <Def term="Never taken" value={formatUSD(mine.reserved - mine.captured)} />
         <Def term="Alone you'd pay" value={formatUSD(aloneCents(round, mine.qty))} />
         <Def term="You saved" value={formatUSD(savingsCents(round, mine.qty, mine.captured))} leaf />

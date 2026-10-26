@@ -27,7 +27,7 @@ export async function POST(request: Request, ctx: RouteContext<"/api/rounds/[id]
   const again = findByOrder(s, orderId); // a double submit may have finished while PayPal was answering
   if (again) return Response.json({ commitment: again });
   try {
-    addCommitment(s, { shop: q.shop, qty: q.qty, simulated: false, orderId, reserved: q.reserved });
+    addCommitment(s, { shop: q.shop, qty: q.qty, simulated: false, orderId, reserved: q.reserved, payerEmail: auth.payerEmail, address: auth.address });
   } catch (e) {
     await voidAuthorization(auth.authorizationId).catch(() => {}); // round closed mid-flight: release the hold
     return fail(e instanceof Error ? e.message : "Could not join", 409);

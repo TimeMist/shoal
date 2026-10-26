@@ -39,6 +39,7 @@ type Row = {
   shop: string;
   qty: number;
   reserved: number;
+  delivery: number;
   captured?: number;
   saved?: number;
   refunded: number;
@@ -71,6 +72,7 @@ export default function AllocationGrid({ state, busyId, disabled, onDeliver }: P
         shop: c.shop,
         qty: c.qty,
         reserved: c.reserved,
+        delivery: c.delivery,
         captured: c.captured,
         saved: c.captured === undefined ? undefined : savingsCents(round, c.qty, c.captured),
         refunded: c.refunded,
@@ -80,13 +82,14 @@ export default function AllocationGrid({ state, busyId, disabled, onDeliver }: P
     [commitments, round],
   );
   const total = useMemo<Row[]>(() => {
-    const sum = (k: "qty" | "reserved" | "captured" | "saved" | "refunded") => rows.reduce((n, r) => n + (r[k] ?? 0), 0);
+    const sum = (k: "qty" | "reserved" | "delivery" | "captured" | "saved" | "refunded") => rows.reduce((n, r) => n + (r[k] ?? 0), 0);
     const any = rows.some((r) => r.captured !== undefined);
     return [{
       id: "total",
       shop: `${rows.length} ${rows.length === 1 ? "shop" : "shops"}`,
       qty: sum("qty"),
       reserved: sum("reserved"),
+      delivery: sum("delivery"),
       captured: any ? sum("captured") : undefined,
       saved: any ? sum("saved") : undefined,
       refunded: sum("refunded"),
@@ -96,9 +99,10 @@ export default function AllocationGrid({ state, busyId, disabled, onDeliver }: P
 
   const columns = useMemo<ColDef<Row>[]>(
     () => [
-      { field: "shop", headerName: "Shop", flex: 1.5, minWidth: 190, cellRenderer: Shop },
+      { field: "shop", headerName: "Shop", flex: 1.2, minWidth: 180, cellRenderer: Shop },
       { field: "qty", headerName: "Cartons", type: "rightAligned", minWidth: 100, flex: 0.7, valueFormatter: ({ value }) => value.toLocaleString("en-US") },
       { field: "reserved", headerName: "Reserved", type: "rightAligned", minWidth: 120, flex: 0.9, valueFormatter: money },
+      { field: "delivery", headerName: "Delivery cost", type: "rightAligned", minWidth: 110, flex: 0.8, valueFormatter: money },
       { field: "captured", headerName: "Captured", type: "rightAligned", minWidth: 120, flex: 0.9, valueFormatter: money },
       { field: "saved", headerName: "Saved", type: "rightAligned", minWidth: 110, flex: 0.8, valueFormatter: money, cellClass: `${RIGHT} font-semibold text-leaf-ink` },
       { field: "status", headerName: "Delivery", minWidth: 170, flex: 1, cellRenderer: Delivery },

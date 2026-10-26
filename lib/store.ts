@@ -1,4 +1,4 @@
-import { reserveCents, validateQty } from "./round.ts";
+import { deliveryCents, reserveCents, validateQty } from "./round.ts";
 import type { Round } from "./round.ts";
 import { seedRound } from "./seed.ts";
 
@@ -7,6 +7,9 @@ export type Commitment = {
   shop: string;
   qty: number;
   reserved: number;
+  delivery: number;
+  payerEmail?: string;
+  address?: string;
   simulated: boolean;
   orderId?: string;
   authorizationId?: string;
@@ -72,7 +75,7 @@ export function unitsCommitted(s: RoundState): number {
 
 export function addCommitment(
   s: RoundState,
-  input: { shop: string; qty: number; simulated: boolean; orderId?: string; reserved?: number },
+  input: { shop: string; qty: number; simulated: boolean; orderId?: string; reserved?: number; payerEmail?: string; address?: string },
 ): Commitment {
   if (s.round.status !== "open" || s.closing) throw new Error("Round is not open");
   const err = validateQty(s.round, input.qty);
@@ -82,6 +85,9 @@ export function addCommitment(
     shop: input.shop,
     qty: input.qty,
     reserved: input.reserved ?? reserveCents(s.round, unitsCommitted(s), input.qty),
+    delivery: deliveryCents(s.round, input.qty),
+    payerEmail: input.payerEmail,
+    address: input.address,
     simulated: input.simulated,
     orderId: input.orderId,
     refunded: 0,

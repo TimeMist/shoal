@@ -4,14 +4,14 @@ import { addCommitment } from "./store.ts";
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 export const DEMO_SHOPS = [
-  { shop: "Hilltop Bakery", qty: 240 },
-  { shop: "Little Fern Coffee", qty: 180 },
-  { shop: "Northside Deli", qty: 96 },
-  { shop: "Corner Books Café", qty: 120 },
-  { shop: "Ground Control Coffee", qty: 300 },
-  { shop: "Pressed Juice Bar", qty: 144 },
-  { shop: "Rye & Co", qty: 120 },
-  { shop: "The Daily Grind", qty: 240 },
+  { shop: "Hilltop Bakery", qty: 240, address: "12 Demo Street, Springfield (demo)" },
+  { shop: "Little Fern Coffee", qty: 180, address: "34 Demo Lane, Springfield (demo)" },
+  { shop: "Northside Deli", qty: 96, address: "56 Demo Road, Shelbyville (demo)" },
+  { shop: "Corner Books Café", qty: 120, address: "78 Demo Avenue, Springfield (demo)" },
+  { shop: "Ground Control Coffee", qty: 300, address: "90 Demo Court, Capital City (demo)" },
+  { shop: "Pressed Juice Bar", qty: 144, address: "21 Demo Way, Shelbyville (demo)" },
+  { shop: "Rye & Co", qty: 120, address: "43 Demo Place, Springfield (demo)" },
+  { shop: "The Daily Grind", qty: 240, address: "65 Demo Close, Capital City (demo)" },
 ];
 
 // Shared with the landing page's hero round.
