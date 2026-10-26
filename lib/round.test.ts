@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { tierAt, reserveCents, captureCents, savingsCents, validateQty, type Round } from "./round.ts";
+import { tierAt, deliveryCents, reserveCents, captureCents, savingsCents, validateQty, type Round } from "./round.ts";
 
 const tiers = [
   { min: 0, price: 240 },
@@ -16,6 +16,7 @@ const round: Round = {
   floor: 180,
   minPerShop: 96,
   holdbackPct: 10,
+  delivery: { perDrop: 1200, perCarton: 5 },
   closesAt: "2026-11-01T00:00:00Z",
   status: "open",
 };
@@ -27,18 +28,23 @@ test("tierAt picks the highest tier reached", () => {
   assert.equal(tierAt(tiers, 1500).price, 180);
 });
 
-test("reserve uses the price showing when the shop joins", () => {
-  assert.equal(reserveCents(round, 0, 240), 57600);
-  assert.equal(reserveCents(round, 516, 120), 25920);
+test("delivery is a drop fee plus a per-carton fee", () => {
+  assert.equal(deliveryCents(round, 240), 2400);
+  assert.equal(deliveryCents(round, 120), 1800);
 });
 
-test("capture never exceeds reservation", () => {
-  assert.equal(captureCents(120, 185, 25920), 22200);
-  assert.equal(captureCents(120, 250, 25920), 25920);
+test("reserve uses the price showing when the shop joins", () => {
+  assert.equal(reserveCents(round, 0, 240), 60000);
+  assert.equal(reserveCents(round, 516, 120), 27720);
+});
+
+test("capture keeps delivery and never exceeds the reservation", () => {
+  assert.equal(captureCents(120, 185, 27720, 1800), 24000);
+  assert.equal(captureCents(120, 250, 27720, 1800), 27720);
 });
 
 test("savings compare against buying alone", () => {
-  assert.equal(savingsCents(round, 120, 22200), 6600);
+  assert.equal(savingsCents(round, 120, 24000), 6600);
 });
 
 test("validateQty enforces whole cartons at or above the minimum", () => {

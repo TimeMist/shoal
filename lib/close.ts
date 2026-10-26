@@ -1,4 +1,4 @@
-import { captureCents, tierAt } from "./round.ts";
+import { captureCents, deliveryCents, tierAt } from "./round.ts";
 import { unitsCommitted } from "./store.ts";
 import type { RoundState } from "./store.ts";
 
@@ -29,7 +29,7 @@ export async function closeRound(s: RoundState, pay: Pay): Promise<RoundState> {
       // A deal struck at an earlier headcount never beats the tier price now.
       const price = s.agreedPrice === undefined ? tierPrice : Math.min(s.agreedPrice, tierPrice);
       for (const c of s.commitments) {
-        const cents = captureCents(c.qty, price, c.reserved);
+        const cents = captureCents(c.qty, price, c.reserved, deliveryCents(round, c.qty));
         try {
           if (!c.simulated) {
             if (!c.authorizationId) throw new Error("Not authorized");

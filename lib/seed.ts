@@ -24,6 +24,7 @@ export const DEMO_ROUND = {
     { min: 1000, price: 192 },
     { min: 1500, price: 180 },
   ],
+  delivery: { perDrop: 1200, perCarton: 5 },
 };
 
 export function seedRound(): RoundState {
@@ -32,6 +33,7 @@ export function seedRound(): RoundState {
       id: "demo",
       ...DEMO_ROUND,
       tiers: DEMO_ROUND.tiers.map((t) => ({ ...t })),
+      delivery: { ...DEMO_ROUND.delivery },
       floor: 180,
       minPerShop: 96,
       holdbackPct: 10,

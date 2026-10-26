@@ -10,6 +10,7 @@ export type Round = {
   floor: number;
   minPerShop: number;
   holdbackPct: number;
+  delivery: { perDrop: number; perCarton: number };
   closesAt: string;
   status: "open" | "closed" | "failed";
   finalPrice?: number;
@@ -20,20 +21,30 @@ export function tierAt(tiers: Tier[], units: number): Tier {
   return tiers.reduce((best, t) => (units >= t.min ? t : best), tiers[0]);
 }
 
-export function reserveCents(round: Round, unitsBefore: number, qty: number): number {
-  return qty * tierAt(round.tiers, unitsBefore).price;
+export function deliveryCents(round: Round, qty: number): number {
+  return round.delivery.perDrop + round.delivery.perCarton * qty;
 }
 
-export function captureCents(qty: number, finalPrice: number, reserved: number): number {
-  return Math.min(qty * finalPrice, reserved);
+// Goods at the price showing plus delivery, fixed at join.
+export function reserveCents(round: Round, unitsBefore: number, qty: number): number {
+  return qty * tierAt(round.tiers, unitsBefore).price + deliveryCents(round, qty);
+}
+
+export function captureCents(qty: number, finalPrice: number, reserved: number, delivery: number): number {
+  return Math.min(qty * finalPrice + delivery, reserved);
 }
 
 export function aloneCents(round: Round, qty: number): number {
   return qty * round.tiers[0].price;
 }
 
+export function goodsCents(round: Round, qty: number, captured: number): number {
+  return captured - deliveryCents(round, qty);
+}
+
+// Savings compare goods only; delivery is the same alone or together.
 export function savingsCents(round: Round, qty: number, captured: number): number {
-  return aloneCents(round, qty) - captured;
+  return aloneCents(round, qty) - goodsCents(round, qty, captured);
 }
 
 export function validateQty(round: Round, qty: number): string | null {

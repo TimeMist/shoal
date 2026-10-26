@@ -22,11 +22,11 @@ function fakePay(failCapture?: string) {
 }
 
 function real(s: ReturnType<typeof seedRound>, shop: string, qty: number) {
-  const c = addCommitment(s, { shop, qty, simulated: false, orderId: `o-${shop}`, reserved: qty * 240 });
+  const c = addCommitment(s, { shop, qty, simulated: false, orderId: `o-${shop}`, reserved: qty * 240 + 1200 + 5 * qty });
   c.authorizationId = `auth-${shop}`;
 }
 
-test("closeRound voids all when below first tier", async () => {
+test("closeRound below first tier voids the full goods+delivery authorization", async () => {
   const s = seedRound();
   real(s, "A", 150);
   real(s, "B", 150);
@@ -40,7 +40,7 @@ test("closeRound voids all when below first tier", async () => {
   assert.equal(s.closing, false);
 });
 
-test("closeRound captures qty x final price for real shops", async () => {
+test("closeRound captures qty x final price plus delivery for real shops", async () => {
   const s = seedRound();
   real(s, "A", 100);
   real(s, "B", 200);
@@ -49,12 +49,12 @@ test("closeRound captures qty x final price for real shops", async () => {
   s.closing = true;
   const pay = fakePay();
   await closeRound(s, pay);
-  assert.deepEqual(pay.captures, [["auth-A", 100 * 185], ["auth-B", 200 * 185]]);
+  assert.deepEqual(pay.captures, [["auth-A", 100 * 185 + 1200 + 5 * 100], ["auth-B", 200 * 185 + 1200 + 5 * 200]]);
   assert.equal(s.round.status, "closed");
   assert.equal(s.round.finalPrice, 185);
   assert.ok(s.commitments.every((c) => c.status === "captured"));
   const sim = s.commitments.find((c) => c.simulated)!;
-  assert.equal(sim.captured, sim.qty * 185);
+  assert.equal(sim.captured, sim.qty * 185 + 1200 + 5 * sim.qty);
   assert.equal(s.closing, false);
 });
 

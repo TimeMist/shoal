@@ -20,7 +20,7 @@ test("simulateShops adds the demo shops with tier-at-join reservations", () => {
   simulateShops(s, 8);
   assert.equal(unitsCommitted(s), 1440);
   assert.equal(s.commitments[3].shop, "Corner Books Café");
-  assert.equal(s.commitments[3].reserved, 25920);
+  assert.equal(s.commitments[3].reserved, 27720);
   assert.ok(s.commitments.every((c) => c.simulated));
 });
 
