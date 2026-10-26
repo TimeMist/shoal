@@ -54,7 +54,8 @@ export const invoiceApi: InvoiceApi = {
     return url;
   },
   async recordPayment(id, cents, captureId) {
-    await call("POST", `/${id}/payments`, { method: "PAYPAL", payment_id: captureId, payment_date: today(), amount: usd(cents), note: "Paid through Shoal" });
+    // PayPal looks up payment_id as its own transaction id (404 for a capture id), so the capture goes in the note.
+    await call("POST", `/${id}/payments`, { method: "PAYPAL", payment_date: today(), amount: usd(cents), note: `Paid through Shoal, PayPal capture ${captureId}` });
   },
   async recordRefund(id, cents) {
     await call("POST", `/${id}/refunds`, { method: "PAYPAL", refund_date: today(), amount: usd(cents) });

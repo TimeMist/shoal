@@ -43,7 +43,28 @@ export default function Receipt({ state, mine }: { state: RoundState; mine: Comm
       <p className="text-[13px] text-muted">
         {mine.qty} cartons at {agreed ? `the price agreed with ${round.supplier}` : "the group price"} of {formatUSD(price)}. {delivery}
       </p>
+      {!mine.simulated && <Invoice c={mine} />}
     </Panel>
+  );
+}
+
+function Invoice({ c }: { c: Commitment }) {
+  if (!c.invoiceSent || !c.invoiceNumber) {
+    return <p className={`text-[13px] ${c.invoiceError ? "text-jam" : "text-muted"}`}>{c.invoiceError ? `Invoice not sent: ${c.invoiceError}` : "Invoice pending."}</p>;
+  }
+  return (
+    <p className="text-[13px] text-muted">
+      PayPal invoice {c.invoiceNumber} sent to {c.payerEmail}
+      {c.invoiceStatus && <span className="font-semibold text-ink"> · {c.invoiceStatus === "refunded" ? "Refunded" : "Paid"}</span>}
+      {c.invoiceUrl && (
+        <>
+          {" · "}
+          <a href={c.invoiceUrl} target="_blank" rel="noreferrer" className="font-semibold text-ink underline underline-offset-2">
+            View
+          </a>
+        </>
+      )}
+    </p>
   );
 }
 

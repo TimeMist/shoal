@@ -9,7 +9,7 @@ import type { Claim, RoundState } from "@/lib/store";
 import { RESET_EVENT } from "../DemoBar";
 import { api, errorText } from "../rounds/[id]/api";
 import { KIND_WORD } from "../rounds/[id]/ClaimForm";
-import AllocationGrid from "./AllocationGrid";
+import AllocationGrid, { exportPurchaseOrder, type GridHandle } from "./AllocationGrid";
 import Negotiation from "./Negotiation";
 import Timeline from "./Timeline";
 import { DEAL, GHOST, PRIMARY, SPINNER } from "./ui";
@@ -24,6 +24,7 @@ export default function SupplierConsole({ id, initial }: { id: string; initial: 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [replay, setReplay] = useState(0); // bumps per fresh negotiation, remounting the replay
   const [said, setSaid] = useState("");
+  const grid = useRef<GridHandle>(null);
   const gen = useRef(0); // bumped on demo reset; results of requests started before it are dropped
 
   const { round, commitments, claims, payouts } = state;
@@ -77,6 +78,8 @@ export default function SupplierConsole({ id, initial }: { id: string; initial: 
   const awaiting = claims.filter((k) => k.status === "open");
   const sold = commitments.filter((c) => c.captured !== undefined);
   const deliverable = sold.filter((c) => c.status === "captured" && c.tracking).length;
+  const toInvoice = sold.filter((c) => !c.simulated && !c.invoiceStatus);
+  const failedInvoices = toInvoice.filter((c) => c.invoiceError).length;
   const outForDelivery = commitments.filter((c) => c.status === "captured").length; // lib/fulfil.ts releaseRound gate
   const notOpen = round.status === "closed" ? "The round is closed" : round.status === "failed" ? "The round ended without reaching a tier" : "The round is closing";
 
@@ -108,6 +111,34 @@ export default function SupplierConsole({ id, initial }: { id: string; initial: 
         act("close", post("close"), (s) =>
           s.round.status === "closed" ? `Round closed at ${formatUSD(s.round.finalPrice ?? 0)} a carton.` : "Round didn't reach its first tier. Every reservation was released.",
         ),
+    },
+    {
+      key: "invoices",
+      label: "Issue invoices",
+      busyLabel: "Issuing invoices",
+      why:
+        round.status !== "closed"
+          ? "Close the round first"
+          : !toInvoice.length
+            ? sold.some((c) => !c.simulated) ? "Every real shop has a PayPal invoice" : "No real shops to invoice; demo shops get none"
+            : undefined,
+      note: toInvoice.length
+        ? failedInvoices
+          ? `${failedInvoices} ${failedInvoices === 1 ? "invoice" : "invoices"} failed; see the Invoice column. Retrying skips shops already invoiced.`
+          : `${toInvoice.length} ${toInvoice.length === 1 ? "shop" : "shops"} still to invoice in ${round.supplier}'s name.`
+        : undefined,
+      run: () => {
+        let r = { issued: 0, failed: 0 };
+        return act(
+          "invoices",
+          async () => {
+            const res = await api<{ issued: number; failed: number; state: RoundState }>(`/api/rounds/${id}/invoices`, {});
+            r = res;
+            return res.state;
+          },
+          () => `${r.issued} ${r.issued === 1 ? "invoice" : "invoices"} issued${r.failed ? `, ${r.failed} failed` : ""}.`,
+        );
+      },
     },
     {
       key: "ship",
@@ -281,9 +312,16 @@ export default function SupplierConsole({ id, initial }: { id: string; initial: 
       </aside>
 
       <section aria-labelledby="alloc-title" className="col-span-2 row-start-2 grid min-w-0 gap-3 max-[1100px]:col-span-1 max-[1100px]:row-start-3">
-        <h2 id="alloc-title" className="font-display text-lg font-bold tracking-[-0.01em]">Allocation</h2>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 id="alloc-title" className="font-display text-lg font-bold tracking-[-0.01em]">Allocation</h2>
+          {round.status === "closed" && (
+            <button type="button" className={GHOST} onClick={() => exportPurchaseOrder(grid.current, round.id)}>
+              Export purchase order
+            </button>
+          )}
+        </div>
         {errors.deliver && <p role="alert" className="text-sm text-jam">{errors.deliver}</p>}
-        <AllocationGrid state={state} busyId={busy} disabled={!!busy} onDeliver={onDeliver} />
+        <AllocationGrid ref={grid} state={state} busyId={busy} disabled={!!busy} onDeliver={onDeliver} />
       </section>
       <LiveRegion message={said} />
     </div>

@@ -1,5 +1,7 @@
 import { closeRound } from "@/lib/close";
 import { fail } from "@/lib/http";
+import { issueInvoicesOnce } from "@/lib/invoices";
+import { invoiceApi } from "@/lib/invoicing";
 import { captureAuthorization, voidAuthorization } from "@/lib/paypal";
 import { beginClose, getState } from "@/lib/store";
 
@@ -9,5 +11,7 @@ export async function POST(_request: Request, ctx: RouteContext<"/api/rounds/[id
   if (!s) return fail("Round not found", 404);
   if (!beginClose(s)) return fail("Round is not open or is already closing", 409);
   await closeRound(s, { capture: captureAuthorization, void: voidAuthorization });
+  // Invoice failures are recorded per shop and never change the close response.
+  if (s.round.status === "closed") await issueInvoicesOnce(s, invoiceApi).catch(() => null);
   return Response.json(s);
 }

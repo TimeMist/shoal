@@ -43,7 +43,7 @@ export async function POST(request: Request, ctx: RouteContext<"/api/rounds/[id]
   const before = c.status;
   c.status = "claim";
   try {
-    claim.proposal = await triage(claim, c, s.round.finalPrice ?? 0, s.holdbackLeft, claudeTriage, photo);
+    claim.proposal = await triage(claim, c, s.round, s.holdbackLeft, claudeTriage, photo);
   } catch (e) {
     c.status = before;
     if (e instanceof ConfigError) return fail(e.message, e.status);

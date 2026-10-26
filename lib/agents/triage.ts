@@ -1,6 +1,7 @@
 import type Anthropic from "@anthropic-ai/sdk";
 import { ask } from "../claude.ts";
 import { formatUSD } from "../money.ts";
+import { goodsCents, type Round } from "../round.ts";
 import { clampRefund } from "../settle.ts";
 import type { Claim, Commitment } from "../store.ts";
 
@@ -26,7 +27,7 @@ const TOOL: Anthropic.Beta.BetaTool = {
 export async function triage(
   claim: Claim,
   c: Commitment,
-  finalPrice: number,
+  round: Round,
   holdbackLeft: number,
   model: Model,
   photo?: Photo,
@@ -34,14 +35,16 @@ export async function triage(
   const p = await model(claim, c, photo);
   if (typeof p.cartons !== "number" || !Number.isInteger(p.cartons) || p.cartons < 0) throw new Error("Triage returned invalid cartons");
   // The shop's note could talk the model into a bigger number: never refund more cartons than were claimed.
-  const requested = Math.min(p.cartons, claim.cartons) * finalPrice;
-  const paid = (c.captured ?? 0) - c.refunded;
-  const { refund, shortfall } = clampRefund(requested, c.captured ?? 0, c.refunded, holdbackLeft);
+  const requested = Math.min(p.cartons, claim.cartons) * (round.finalPrice ?? 0);
+  // Delivery is never refunded, so the shop's cap is the goods it paid for.
+  const goods = goodsCents(round, c.qty, c.captured ?? 0);
+  const paid = goods - c.refunded;
+  const { refund, shortfall } = clampRefund(requested, goods, c.refunded, holdbackLeft);
   if (!shortfall) return { refund, reason: p.reason };
   const why =
     holdbackLeft < paid
       ? `Only ${formatUSD(holdbackLeft)} is left in the supplier's holdback.`
-      : `The shop paid only ${formatUSD(paid)} for this order.`;
+      : `The shop paid only ${formatUSD(paid)} for the goods in this order.`;
   return { refund, reason: `${p.reason} The ${formatUSD(requested)} request was cut to ${formatUSD(refund)}. ${why}` };
 }
 

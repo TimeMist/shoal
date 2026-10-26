@@ -1,15 +1,15 @@
 "use client";
 
 import { AgGridReact, type CustomCellRendererProps } from "ag-grid-react";
-import { CellStyleModule, ClientSideRowModelModule, ModuleRegistry, PinnedRowModule, ValidationModule, themeQuartz, type ColDef } from "ag-grid-community";
-import { useMemo } from "react";
+import { CellStyleModule, ClientSideRowModelModule, CsvExportModule, ModuleRegistry, PinnedRowModule, ValidationModule, themeQuartz, type ColDef } from "ag-grid-community";
+import { useMemo, type Ref } from "react";
 import StatusChip, { type ChipStatus } from "@/components/StatusChip";
-import { formatUSD } from "@/lib/money";
-import { savingsCents } from "@/lib/round";
+import { formatUSD, toMoney } from "@/lib/money";
+import { goodsCents, savingsCents } from "@/lib/round";
 import type { Commitment, RoundState } from "@/lib/store";
 import { GHOST_SM } from "./ui";
 
-ModuleRegistry.registerModules([ClientSideRowModelModule, PinnedRowModule, CellStyleModule, ...(process.env.NODE_ENV === "production" ? [] : [ValidationModule])]);
+ModuleRegistry.registerModules([ClientSideRowModelModule, PinnedRowModule, CellStyleModule, CsvExportModule, ...(process.env.NODE_ENV === "production" ? [] : [ValidationModule])]);
 
 // Shoal tokens (DESIGN.md: Data views): Funnel Sans, Jam 11px headers on #FFFBFB, Rule lines, Pool Well hover.
 const shoalTheme = themeQuartz.withParams({
@@ -44,6 +44,15 @@ type Row = {
   saved?: number;
   refunded: number;
   status?: ChipStatus;
+  simulated?: boolean;
+  address?: string;
+  unit?: number;
+  goods?: number;
+  captureId?: string;
+  invoiceNumber?: string;
+  invoice?: "paid" | "refunded" | "error" | "pending";
+  invoiceError?: string;
+  tracking?: string;
   /** Why "Mark delivered" is unavailable; undefined when it can run. Empty when there's nothing to say. */
   blocked?: string;
   total?: true;
@@ -60,10 +69,41 @@ function blockedReason(c: Commitment): string | undefined {
 const money = ({ value }: { value: number | undefined }) => (value === undefined ? "—" : formatUSD(value));
 const RIGHT = "ag-right-aligned-cell";
 
-type Props = { state: RoundState; busyId: string | null; disabled: boolean; onDeliver: (c: { id: string; shop: string }) => void };
+export type GridHandle = AgGridReact<Row>;
+type Props = { state: RoundState; busyId: string | null; disabled: boolean; onDeliver: (c: { id: string; shop: string }) => void; ref?: Ref<GridHandle> };
+
+// Purchase-order CSV: one row per shop, money as plain dollars; hidden columns carry what the grid doesn't show.
+const PO: [keyof Row, string][] = [
+  ["shop", "Shop"],
+  ["address", "Delivery address"],
+  ["qty", "Cartons"],
+  ["unit", "Unit price"],
+  ["goods", "Goods"],
+  ["delivery", "Delivery"],
+  ["captured", "Total captured"],
+  ["captureId", "PayPal capture id"],
+  ["invoiceNumber", "Invoice number"],
+  ["tracking", "Tracking"],
+];
+const PO_MONEY = new Set(["unit", "goods", "delivery", "captured"]);
+
+export function exportPurchaseOrder(grid: GridHandle | null, roundId: string) {
+  grid?.api.exportDataAsCsv({
+    fileName: `shoal-${roundId}-purchase-order.csv`,
+    columnKeys: PO.map(([k]) => k),
+    skipPinnedBottom: true,
+    processHeaderCallback: ({ column }) => PO.find(([k]) => k === column.getColId())?.[1] ?? column.getColId(),
+    processCellCallback: ({ column, value }) => (value === undefined || value === null ? "" : PO_MONEY.has(column.getColId()) ? toMoney(value) : String(value)),
+  });
+}
+
+function invoiceState(c: Commitment): Row["invoice"] {
+  if (c.simulated || c.captured === undefined) return undefined;
+  return c.invoiceStatus ?? (c.invoiceError ? "error" : "pending");
+}
 
 /** Who committed what, what was reserved and captured, and where each delivery stands. */
-export default function AllocationGrid({ state, busyId, disabled, onDeliver }: Props) {
+export default function AllocationGrid({ state, busyId, disabled, onDeliver, ref }: Props) {
   const { round, commitments } = state;
   const rows = useMemo<Row[]>(
     () =>
@@ -78,6 +118,15 @@ export default function AllocationGrid({ state, busyId, disabled, onDeliver }: P
         refunded: c.refunded,
         status: deliveryStatus(c),
         blocked: blockedReason(c),
+        simulated: c.simulated,
+        address: c.address,
+        unit: c.captured === undefined ? undefined : round.finalPrice,
+        goods: c.captured === undefined ? undefined : goodsCents(round, c.qty, c.captured),
+        captureId: c.captureId,
+        invoiceNumber: c.invoiceNumber,
+        invoice: invoiceState(c),
+        invoiceError: c.invoiceError,
+        tracking: c.tracking,
       })),
     [commitments, round],
   );
@@ -99,18 +148,20 @@ export default function AllocationGrid({ state, busyId, disabled, onDeliver }: P
 
   const columns = useMemo<ColDef<Row>[]>(
     () => [
-      { field: "shop", headerName: "Shop", flex: 1.2, minWidth: 180, cellRenderer: Shop },
-      { field: "qty", headerName: "Cartons", type: "rightAligned", minWidth: 100, flex: 0.7, valueFormatter: ({ value }) => value.toLocaleString("en-US") },
-      { field: "reserved", headerName: "Reserved", type: "rightAligned", minWidth: 120, flex: 0.9, valueFormatter: money },
-      { field: "delivery", headerName: "Delivery cost", type: "rightAligned", minWidth: 110, flex: 0.8, valueFormatter: money },
-      { field: "captured", headerName: "Captured", type: "rightAligned", minWidth: 120, flex: 0.9, valueFormatter: money },
-      { field: "saved", headerName: "Saved", type: "rightAligned", minWidth: 110, flex: 0.8, valueFormatter: money, cellClass: `${RIGHT} font-semibold text-leaf-ink` },
-      { field: "status", headerName: "Delivery", minWidth: 170, flex: 1, cellRenderer: Delivery },
-      { field: "refunded", headerName: "Refunded", type: "rightAligned", minWidth: 110, flex: 0.8, valueFormatter: ({ value }) => (value ? formatUSD(value) : "—") },
+      { field: "shop", headerName: "Shop", flex: 2, minWidth: 186, cellRenderer: Shop },
+      { field: "qty", headerName: "Cartons", type: "rightAligned", minWidth: 92, flex: 0.5, valueFormatter: ({ value }) => value.toLocaleString("en-US") },
+      { field: "reserved", headerName: "Reserved", type: "rightAligned", minWidth: 92, flex: 0.6, valueFormatter: money },
+      { field: "delivery", headerName: "Delivery cost", type: "rightAligned", minWidth: 118, flex: 0.5, valueFormatter: money },
+      { field: "captured", headerName: "Captured", type: "rightAligned", minWidth: 92, flex: 0.6, valueFormatter: money },
+      { field: "saved", headerName: "Saved", type: "rightAligned", minWidth: 80, flex: 0.5, valueFormatter: money, cellClass: `${RIGHT} font-semibold text-leaf-ink` },
+      { field: "status", headerName: "Delivery", minWidth: 124, flex: 0.6, cellRenderer: Delivery },
+      { field: "refunded", headerName: "Refunded", type: "rightAligned", minWidth: 100, flex: 0.5, valueFormatter: ({ value }) => (value ? formatUSD(value) : "—") },
+      { field: "invoice", headerName: "Invoice", minWidth: 110, flex: 0.8, cellRenderer: Invoice },
+      ...(["address", "unit", "goods", "captureId", "invoiceNumber", "tracking"] as const).map((field) => ({ field, hide: true })),
       {
         colId: "action",
         headerName: "Action",
-        minWidth: 170,
+        minWidth: 228,
         flex: 1,
         cellRenderer: (p: CustomCellRendererProps<Row>) => {
           const r = p.data;
@@ -140,6 +191,7 @@ export default function AllocationGrid({ state, busyId, disabled, onDeliver }: P
   return (
     <div className="shoal-grid overflow-hidden rounded-lg bg-white px-2 py-1.5 shadow-base">
       <AgGridReact<Row>
+        ref={ref}
         theme={shoalTheme}
         rowData={rows}
         pinnedBottomRowData={total}
@@ -168,4 +220,17 @@ function Shop({ data }: CustomCellRendererProps<Row>) {
 
 function Delivery({ data }: CustomCellRendererProps<Row>) {
   return data?.status ? <span className="flex h-full items-center leading-normal"><StatusChip status={data.status} /></span> : null;
+}
+
+function Invoice({ data }: CustomCellRendererProps<Row>) {
+  if (!data || data.total) return null;
+  if (data.simulated) return <span className="text-[13px] text-muted">Demo shop</span>;
+  if (!data.invoice) return <span className="text-muted">—</span>;
+  const word = { paid: "Paid", refunded: "Refunded", error: "Error", pending: "Pending" }[data.invoice];
+  return (
+    <span className="flex h-full flex-col justify-center leading-tight" title={data.invoiceError}>
+      {data.invoiceNumber && <span className="truncate text-[13px] tabular-nums">{data.invoiceNumber}</span>}
+      <span className={`text-[13px] font-semibold ${data.invoice === "error" ? "text-jam" : data.invoice === "pending" ? "text-muted" : ""}`}>{word}</span>
+    </span>
+  );
 }

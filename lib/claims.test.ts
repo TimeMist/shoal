@@ -78,3 +78,36 @@ test("reject restores the status the commitment had before the claim", () => {
     assert.equal(rejectClaim(s, "k1").ok, false);
   }
 });
+
+test("refunds are capped at goods, never the delivery charge", async () => {
+  // 120 cartons at 185 plus 1800 delivery captured; a 120-carton claim refunds 22200.
+  const { s, c, claim } = setup({ captured: 24000, reserved: 24600 }, 24000);
+  claim.cartons = 120;
+  s.round.finalPrice = 185;
+  const r = calls();
+  assert.deepEqual(await approveClaim(s, "k1", r.fn), { ok: true, refunded: 22200 });
+  assert.equal(c.refunded, 22200);
+});
+
+test("approve on an invoiced shop records the refund on its invoice", async () => {
+  const { s, c } = setup({ invoiceId: "INV2-1", invoiceStatus: "paid" });
+  const inv = calls();
+  assert.equal((await approveClaim(s, "k1", calls().fn, async (id, cents) => void inv.fn(id, cents))).ok, true);
+  assert.deepEqual(inv.log, [["INV2-1", 2220]]);
+  assert.deepEqual([c.invoiceStatus, c.invoiceError], ["refunded", undefined]);
+});
+
+test("an invoice refund failure is recorded and the claim is still approved", async () => {
+  const { s, c, claim } = setup({ invoiceId: "INV2-1", invoiceStatus: "paid" });
+  const out = await approveClaim(s, "k1", calls().fn, async () => { throw new Error("invoice down"); });
+  assert.deepEqual(out, { ok: true, refunded: 2220 });
+  assert.deepEqual([claim.status, c.refunded, c.invoiceStatus], ["approved", 2220, "paid"]);
+  assert.match(c.invoiceError ?? "", /invoice down/);
+});
+
+test("a shop without an invoice never records an invoice refund", async () => {
+  const { s } = setup();
+  const inv = calls();
+  assert.equal((await approveClaim(s, "k1", calls().fn, async (id, cents) => void inv.fn(id, cents))).ok, true);
+  assert.equal(inv.log.length, 0);
+});
