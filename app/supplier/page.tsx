@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import Wordmark from "@/components/Wordmark";
 import { getState } from "@/lib/store";
 import SupplierConsole from "./SupplierConsole";
+import { publicState } from "@/lib/privacy";
 
 export const metadata: Metadata = { title: "Supplier console · Shoal" };
 
@@ -23,5 +24,5 @@ export default function SupplierPage() {
 async function Console() {
   await connection(); // the round lives in memory: render per request, never at build time
   const state = getState("demo")!;
-  return <SupplierConsole id="demo" initial={state} />;
+  return <SupplierConsole id="demo" initial={publicState(state)} />;
 }

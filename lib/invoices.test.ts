@@ -145,3 +145,27 @@ test("a failed view-url fetch does not re-send on retry", async () => {
   assert.deepEqual(await issueInvoices(s, api), { issued: 1, failed: 0 });
   assert.equal(log.filter((l) => l.startsWith("send")).length, 1);
 });
+
+test("a claim refunded before the invoice existed is recorded on it once, after payment", async () => {
+  const s = setup([{ refunded: 2220 }]);
+  const refunds: [string, number][] = [];
+  const { api, log } = fake({ recordRefund: async (id, cents) => void refunds.push([id, cents]) });
+  await issueInvoices(s, api);
+  const c = s.commitments[0];
+  assert.deepEqual(refunds, [[c.invoiceId!, 2220]]);
+  assert.equal(log.at(-1), `pay ${c.invoiceId} 24000 cap0`);
+  assert.deepEqual([c.invoiceStatus, c.invoiceRefunded, c.invoiceError], ["refunded", 2220, undefined]);
+  await issueInvoices(s, api);
+  assert.equal(refunds.length, 1);
+});
+
+test("a failed refund record is retried and the error cleared, without paying again", async () => {
+  const s = setup([{ invoiceId: "INV-1", invoiceNumber: "N1", invoiceSent: true, invoiceUrl: "u", invoiceStatus: "paid", refunded: 2220, invoiceError: "Refund not recorded" }]);
+  const refunds: [string, number][] = [];
+  const { api, log } = fake({ recordRefund: async (id, cents) => void refunds.push([id, cents]) });
+  await issueInvoices(s, api);
+  const c = s.commitments[0];
+  assert.deepEqual(refunds, [["INV-1", 2220]]);
+  assert.deepEqual(log, []);
+  assert.deepEqual([c.invoiceStatus, c.invoiceError], ["refunded", undefined]);
+});

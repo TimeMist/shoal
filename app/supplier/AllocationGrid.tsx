@@ -5,7 +5,7 @@ import { CellStyleModule, ClientSideRowModelModule, CsvExportModule, ModuleRegis
 import { useMemo, type Ref } from "react";
 import StatusChip, { type ChipStatus } from "@/components/StatusChip";
 import { formatUSD, toMoney } from "@/lib/money";
-import { goodsCents, savingsCents } from "@/lib/round";
+import { savingsCents } from "@/lib/round";
 import type { Commitment, RoundState } from "@/lib/store";
 import { GHOST_SM } from "./ui";
 
@@ -87,19 +87,28 @@ const PO: [keyof Row, string][] = [
 ];
 const PO_MONEY = new Set(["unit", "goods", "delivery", "captured"]);
 
-export function exportPurchaseOrder(grid: GridHandle | null, roundId: string) {
+// A leading apostrophe stops spreadsheets from running a cell as a formula.
+const safe = (v: string) => (/^[=+\-@]/.test(v) ? `'${v}` : v);
+
+/** Addresses never reach the browser's round state, so they come from the supplier-only purchase-order route. */
+export function exportPurchaseOrder(grid: GridHandle | null, roundId: string, addresses: Record<string, string | undefined>) {
   grid?.api.exportDataAsCsv({
     fileName: `shoal-${roundId}-purchase-order.csv`,
     columnKeys: PO.map(([k]) => k),
     skipPinnedBottom: true,
+    shouldRowBeSkipped: ({ node }) => node.data?.captured === undefined,
     processHeaderCallback: ({ column }) => PO.find(([k]) => k === column.getColId())?.[1] ?? column.getColId(),
-    processCellCallback: ({ column, value }) => (value === undefined || value === null ? "" : PO_MONEY.has(column.getColId()) ? toMoney(value) : String(value)),
+    processCellCallback: ({ column, value, node }) => {
+      const key = column.getColId();
+      const v = key === "address" ? addresses[node?.data?.id ?? ""] : value;
+      return v === undefined || v === null ? "" : PO_MONEY.has(key) ? toMoney(v) : safe(String(v));
+    },
   });
 }
 
 function invoiceState(c: Commitment): Row["invoice"] {
   if (c.simulated || c.captured === undefined) return undefined;
-  return c.invoiceStatus ?? (c.invoiceError ? "error" : "pending");
+  return c.invoiceError ? "error" : (c.invoiceStatus ?? "pending");
 }
 
 /** Who committed what, what was reserved and captured, and where each delivery stands. */
@@ -119,9 +128,8 @@ export default function AllocationGrid({ state, busyId, disabled, onDeliver, ref
         status: deliveryStatus(c),
         blocked: blockedReason(c),
         simulated: c.simulated,
-        address: c.address,
         unit: c.captured === undefined ? undefined : round.finalPrice,
-        goods: c.captured === undefined ? undefined : goodsCents(round, c.qty, c.captured),
+        goods: c.captured === undefined ? undefined : c.captured - c.delivery,
         captureId: c.captureId,
         invoiceNumber: c.invoiceNumber,
         invoice: invoiceState(c),
@@ -228,7 +236,7 @@ function Invoice({ data }: CustomCellRendererProps<Row>) {
   if (!data.invoice) return <span className="text-muted">—</span>;
   const word = { paid: "Paid", refunded: "Refunded", error: "Error", pending: "Pending" }[data.invoice];
   return (
-    <span className="flex h-full flex-col justify-center leading-tight" title={data.invoiceError}>
+    <span className="flex h-full flex-col justify-center leading-tight" title={[data.invoiceNumber, data.invoiceError].filter(Boolean).join(" · ") || undefined}>
       {data.invoiceNumber && <span className="truncate text-[13px] tabular-nums">{data.invoiceNumber}</span>}
       <span className={`text-[13px] font-semibold ${data.invoice === "error" ? "text-jam" : data.invoice === "pending" ? "text-muted" : ""}`}>{word}</span>
     </span>

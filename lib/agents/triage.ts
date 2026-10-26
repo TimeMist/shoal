@@ -1,7 +1,7 @@
 import type Anthropic from "@anthropic-ai/sdk";
 import { ask } from "../claude.ts";
 import { formatUSD } from "../money.ts";
-import { goodsCents, type Round } from "../round.ts";
+import type { Round } from "../round.ts";
 import { clampRefund } from "../settle.ts";
 import type { Claim, Commitment } from "../store.ts";
 
@@ -37,7 +37,7 @@ export async function triage(
   // The shop's note could talk the model into a bigger number: never refund more cartons than were claimed.
   const requested = Math.min(p.cartons, claim.cartons) * (round.finalPrice ?? 0);
   // Delivery is never refunded, so the shop's cap is the goods it paid for.
-  const goods = goodsCents(round, c.qty, c.captured ?? 0);
+  const goods = (c.captured ?? 0) - c.delivery;
   const paid = goods - c.refunded;
   const { refund, shortfall } = clampRefund(requested, goods, c.refunded, holdbackLeft);
   if (!shortfall) return { refund, reason: p.reason };

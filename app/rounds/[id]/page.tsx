@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import Wordmark from "@/components/Wordmark";
 import { getState } from "@/lib/store";
 import RoundScreen from "./RoundScreen";
+import { publicState } from "@/lib/privacy";
 
 export default function RoundPage({ params }: PageProps<"/rounds/[id]">) {
   return (
@@ -21,5 +22,5 @@ async function Round({ params }: Pick<PageProps<"/rounds/[id]">, "params">) {
   const { id } = await params;
   const state = getState(id);
   if (!state) notFound();
-  return <RoundScreen id={id} initial={state} />;
+  return <RoundScreen id={id} initial={publicState(state)} />;
 }

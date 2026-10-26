@@ -4,6 +4,7 @@ import { modelFromEnv, negotiate } from "@/lib/agents/negotiate";
 import { ConfigError, fail } from "@/lib/http";
 import { validateOffer } from "@/lib/guard";
 import { getState, unitsCommitted } from "@/lib/store";
+import { publicState } from "@/lib/privacy";
 
 const open = (s: NonNullable<ReturnType<typeof getState>>) => s.round.status === "open" && !s.closing;
 
@@ -19,7 +20,7 @@ export async function POST(_request: Request, ctx: RouteContext<"/api/rounds/[id
     s.negotiation = turns;
     // More shops may have joined meanwhile and dropped the tier: re-check against the current count.
     s.agreedPrice = agreed !== undefined && validateOffer(s.round, unitsCommitted(s), agreed).ok ? agreed : undefined;
-    return Response.json(s);
+    return Response.json(publicState(s));
   } catch (e) {
     if (e instanceof ConfigError) return fail(e.message, e.status);
     if (e instanceof Anthropic.APIError || e instanceof ApiError) return fail(e.message, 502);

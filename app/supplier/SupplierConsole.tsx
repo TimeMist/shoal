@@ -78,7 +78,8 @@ export default function SupplierConsole({ id, initial }: { id: string; initial: 
   const awaiting = claims.filter((k) => k.status === "open");
   const sold = commitments.filter((c) => c.captured !== undefined);
   const deliverable = sold.filter((c) => c.status === "captured" && c.tracking).length;
-  const toInvoice = sold.filter((c) => !c.simulated && !c.invoiceStatus);
+  // Not yet invoiced, or an invoice whose last step (payment or refund record) failed.
+  const toInvoice = sold.filter((c) => !c.simulated && (!c.invoiceStatus || c.invoiceError));
   const failedInvoices = toInvoice.filter((c) => c.invoiceError).length;
   const outForDelivery = commitments.filter((c) => c.status === "captured").length; // lib/fulfil.ts releaseRound gate
   const notOpen = round.status === "closed" ? "The round is closed" : round.status === "failed" ? "The round ended without reaching a tier" : "The round is closing";
@@ -124,7 +125,7 @@ export default function SupplierConsole({ id, initial }: { id: string; initial: 
             : undefined,
       note: toInvoice.length
         ? failedInvoices
-          ? `${failedInvoices} ${failedInvoices === 1 ? "invoice" : "invoices"} failed; see the Invoice column. Retrying skips shops already invoiced.`
+          ? `${failedInvoices} ${failedInvoices === 1 ? "invoice has" : "invoices have"} an error; see the Invoice column. Retrying skips finished invoices.`
           : `${toInvoice.length} ${toInvoice.length === 1 ? "shop" : "shops"} still to invoice in ${round.supplier}'s name.`
         : undefined,
       run: () => {
@@ -315,12 +316,24 @@ export default function SupplierConsole({ id, initial }: { id: string; initial: 
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 id="alloc-title" className="font-display text-lg font-bold tracking-[-0.01em]">Allocation</h2>
           {round.status === "closed" && (
-            <button type="button" className={GHOST} onClick={() => exportPurchaseOrder(grid.current, round.id)}>
+            <button
+              type="button"
+              className={GHOST}
+              disabled={!!busy}
+              onClick={() =>
+                act("export", async () => {
+                  const { rows } = await api<{ rows: { id: string; address?: string }[] }>(`/api/rounds/${id}/purchase-order`);
+                  exportPurchaseOrder(grid.current, round.id, Object.fromEntries(rows.map((r) => [r.id, r.address])));
+                  return state;
+                })
+              }
+            >
               Export purchase order
             </button>
           )}
         </div>
         {errors.deliver && <p role="alert" className="text-sm text-jam">{errors.deliver}</p>}
+        {errors.export && <p role="alert" className="text-sm text-jam">Couldn&apos;t export the purchase order: {errors.export}</p>}
         <AllocationGrid ref={grid} state={state} busyId={busy} disabled={!!busy} onDeliver={onDeliver} />
       </section>
       <LiveRegion message={said} />

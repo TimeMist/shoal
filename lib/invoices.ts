@@ -47,29 +47,39 @@ export async function issueInvoices(s: RoundState, api: InvoiceApi): Promise<{ i
   let issued = 0;
   let failed = 0;
   for (const [i, c] of s.commitments.entries()) {
-    if (c.simulated || !c.captured || c.invoiceStatus) continue;
+    if (c.simulated || !c.captured) continue;
+    // Refunds approved before the invoice existed, or whose recording failed, are still owed on the invoice.
+    const owed = c.refunded - (c.invoiceRefunded ?? 0);
+    if (c.invoiceStatus && owed <= 0) continue;
     try {
-      // Each step runs only if its result is missing, so a retry resumes where the last run stopped.
-      const number = c.invoiceNumber ?? invoiceNumber(s, i);
-      const draft = buildInvoice(s, c, number);
-      if ("error" in draft) throw new Error(draft.error);
-      let held: string | undefined;
-      if (!c.invoiceId) {
-        const made = await api.create(draft);
-        c.invoiceId = made.id;
-        c.invoiceNumber = number;
-        held = made.total;
+      if (!c.invoiceStatus) {
+        // Each step runs only if its result is missing, so a retry resumes where the last run stopped.
+        const number = c.invoiceNumber ?? invoiceNumber(s, i);
+        const draft = buildInvoice(s, c, number);
+        if ("error" in draft) throw new Error(draft.error);
+        let held: string | undefined;
+        if (!c.invoiceId) {
+          const made = await api.create(draft);
+          c.invoiceId = made.id;
+          c.invoiceNumber = number;
+          held = made.total;
+        }
+        if (!c.invoiceSent) {
+          // The draft stays unsent until PayPal's total matches ours to the cent.
+          held ??= await api.total(c.invoiceId);
+          if (held !== toMoney(draft.total)) throw new Error(`PayPal invoice total ${held} does not match ${toMoney(draft.total)}, so it was not sent`);
+          await api.send(c.invoiceId);
+          c.invoiceSent = true;
+        }
+        c.invoiceUrl ??= await api.viewUrl(c.invoiceId);
+        await api.recordPayment(c.invoiceId, c.captured, c.captureId ?? "");
+        c.invoiceStatus = "paid";
       }
-      if (!c.invoiceSent) {
-        // The draft stays unsent until PayPal's total matches ours to the cent.
-        held ??= await api.total(c.invoiceId);
-        if (held !== toMoney(draft.total)) throw new Error(`PayPal invoice total ${held} does not match ${toMoney(draft.total)}, so it was not sent`);
-        await api.send(c.invoiceId);
-        c.invoiceSent = true;
+      if (owed > 0) {
+        await api.recordRefund(c.invoiceId!, owed);
+        c.invoiceRefunded = c.refunded;
+        c.invoiceStatus = "refunded";
       }
-      c.invoiceUrl ??= await api.viewUrl(c.invoiceId);
-      await api.recordPayment(c.invoiceId, c.captured, c.captureId ?? "");
-      c.invoiceStatus = "paid";
       c.invoiceError = undefined;
       issued++;
     } catch (e) {

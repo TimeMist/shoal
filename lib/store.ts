@@ -21,6 +21,7 @@ export type Commitment = {
   invoiceUrl?: string;
   invoiceStatus?: "paid" | "refunded";
   invoiceError?: string;
+  invoiceRefunded?: number; // cents recorded as refunded on the invoice
   refunded: number;
   status: "reserved" | "captured" | "released" | "delivered" | "claim" | "resolved";
   tracking?: string;

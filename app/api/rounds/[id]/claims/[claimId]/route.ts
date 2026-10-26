@@ -3,6 +3,7 @@ import { body, fail } from "@/lib/http";
 import { invoiceApi } from "@/lib/invoicing";
 import { refundCapture } from "@/lib/paypal";
 import { getState } from "@/lib/store";
+import { publicState } from "@/lib/privacy";
 
 export async function POST(request: Request, ctx: RouteContext<"/api/rounds/[id]/claims/[claimId]">) {
   const { id, claimId } = await ctx.params;
@@ -11,5 +12,5 @@ export async function POST(request: Request, ctx: RouteContext<"/api/rounds/[id]
   const { decision } = await body(request);
   if (decision !== "approve" && decision !== "reject") return fail("decision must be approve or reject", 400);
   const r = decision === "approve" ? await approveClaim(s, claimId, refundCapture, invoiceApi.recordRefund) : rejectClaim(s, claimId);
-  return r.ok ? Response.json({ refunded: r.refunded, state: s }) : fail(r.error, r.status);
+  return r.ok ? Response.json({ refunded: r.refunded, state: publicState(s) }) : fail(r.error, r.status);
 }

@@ -7,7 +7,7 @@ import { seedRound } from "../seed.ts";
 
 const at = (finalPrice: number) => ({ ...seedRound().round, finalPrice });
 
-const c = { id: "c1", shop: "Corner Books Café", qty: 120, reserved: 24600, captured: 24000, refunded: 0, simulated: true, status: "claim" } as Commitment;
+const c = { id: "c1", shop: "Corner Books Café", qty: 120, reserved: 24600, delivery: 1800, captured: 24000, refunded: 0, simulated: true, status: "claim" } as Commitment;
 const claim: Claim = { id: "k1", commitmentId: "c1", kind: "damaged", cartons: 12, note: "wet boxes", status: "open" };
 const says = (cartons: unknown, reason = "Looks damaged."): Model => async () => ({ cartons, reason });
 

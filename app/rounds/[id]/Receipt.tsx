@@ -1,8 +1,9 @@
-import type { ReactNode, Ref } from "react";
+import { useEffect, useState, type ReactNode, type Ref } from "react";
 import StatusChip from "@/components/StatusChip";
 import { formatUSD } from "@/lib/money";
 import { aloneCents, goodsCents, savingsCents } from "@/lib/round";
 import type { Commitment, RoundState } from "@/lib/store";
+import { api } from "./api";
 
 /** The shop's receipt after a successful close: what was captured, what was never taken, what it saved. */
 export default function Receipt({ state, mine }: { state: RoundState; mine: Commitment }) {
@@ -43,23 +44,41 @@ export default function Receipt({ state, mine }: { state: RoundState; mine: Comm
       <p className="text-[13px] text-muted">
         {mine.qty} cartons at {agreed ? `the price agreed with ${round.supplier}` : "the group price"} of {formatUSD(price)}. {delivery}
       </p>
-      {!mine.simulated && <Invoice c={mine} />}
+      {!mine.simulated && <Invoice roundId={round.id} c={mine} supplier={round.supplier} />}
     </Panel>
   );
 }
 
-function Invoice({ c }: { c: Commitment }) {
+function Invoice({ roundId, c, supplier }: { roundId: string; c: Commitment; supplier: string }) {
+  // The link is the shop's own, so it isn't in the shared round state.
+  const [url, setUrl] = useState<string>();
+  useEffect(() => {
+    if (!c.invoiceSent) return;
+    let live = true;
+    api<{ invoiceUrl: string }>(`/api/rounds/${roundId}/commitments/${c.id}/invoice`)
+      .then((r) => live && setUrl(r.invoiceUrl))
+      .catch(() => {}); // no link: the invoice is still in the shop's PayPal email
+    return () => {
+      live = false;
+    };
+  }, [roundId, c.id, c.invoiceSent]);
+
   if (!c.invoiceSent || !c.invoiceNumber) {
-    return <p className={`text-[13px] ${c.invoiceError ? "text-jam" : "text-muted"}`}>{c.invoiceError ? `Invoice not sent: ${c.invoiceError}` : "Invoice pending."}</p>;
+    // PayPal's error text is for the supplier; the shop gets a plain line.
+    return <p className="text-[13px] text-muted">{c.invoiceError ? `Your invoice isn't ready yet; ${supplier} will send it.` : "Invoice pending."}</p>;
   }
   return (
     <p className="text-[13px] text-muted">
       PayPal invoice {c.invoiceNumber} sent to {c.payerEmail}
-      {c.invoiceStatus && <span className="font-semibold text-ink"> · {c.invoiceStatus === "refunded" ? "Refunded" : "Paid"}</span>}
-      {c.invoiceUrl && (
+      {c.invoiceStatus ? (
+        <span className="font-semibold text-ink"> · {c.invoiceStatus === "refunded" ? "Refunded" : "Paid"}</span>
+      ) : (
+        <span className="font-semibold text-ink"> · Already paid through Shoal — don&apos;t pay this invoice.</span>
+      )}
+      {url && (
         <>
           {" · "}
-          <a href={c.invoiceUrl} target="_blank" rel="noreferrer" className="font-semibold text-ink underline underline-offset-2">
+          <a href={url} target="_blank" rel="noreferrer" className="font-semibold text-ink underline underline-offset-2">
             View
           </a>
         </>

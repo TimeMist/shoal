@@ -6,7 +6,7 @@ import type { Claim, Commitment, RoundState } from "./store.ts";
 
 function setup(over: Partial<Commitment> = {}, refund = 2220, holdback = 100000) {
   const s: RoundState = seedRound();
-  const c = { id: "c1", shop: "Corner Books Café", qty: 120, reserved: 22800, captured: 22200, captureId: "cap1", refunded: 0, simulated: false, status: "claim", ...over } as Commitment;
+  const c = { id: "c1", shop: "Corner Books Café", qty: 120, reserved: 22800, delivery: 1800, captured: 22200, captureId: "cap1", refunded: 0, simulated: false, status: "claim", ...over } as Commitment;
   const claim: Claim = { id: "k1", commitmentId: "c1", kind: "damaged", cartons: 12, note: "", priorStatus: "captured", proposal: { refund, reason: "r" }, status: "open" };
   s.commitments.push(c);
   s.claims.push(claim);
@@ -94,7 +94,22 @@ test("approve on an invoiced shop records the refund on its invoice", async () =
   const inv = calls();
   assert.equal((await approveClaim(s, "k1", calls().fn, async (id, cents) => void inv.fn(id, cents))).ok, true);
   assert.deepEqual(inv.log, [["INV2-1", 2220]]);
-  assert.deepEqual([c.invoiceStatus, c.invoiceError], ["refunded", undefined]);
+  assert.deepEqual([c.invoiceStatus, c.invoiceError, c.invoiceRefunded], ["refunded", undefined, 2220]);
+});
+
+test("an invoice not yet paid is left for the invoice retry to refund", async () => {
+  const { s, c } = setup({ invoiceId: "INV2-1" });
+  const inv = calls();
+  assert.equal((await approveClaim(s, "k1", calls().fn, async (id, cents) => void inv.fn(id, cents))).ok, true);
+  assert.equal(inv.log.length, 0);
+  assert.equal(c.invoiceStatus, undefined);
+});
+
+test("the goods cap uses the delivery stored at join, not today's rates", async () => {
+  const { s, claim } = setup({ captured: 24000, reserved: 24600 }, 24000);
+  claim.cartons = 120;
+  s.round.delivery = { perDrop: 0, perCarton: 0 };
+  assert.deepEqual(await approveClaim(s, "k1", calls().fn), { ok: true, refunded: 22200 });
 });
 
 test("an invoice refund failure is recorded and the claim is still approved", async () => {

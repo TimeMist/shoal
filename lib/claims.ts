@@ -1,4 +1,3 @@
-import { goodsCents } from "./round.ts";
 import { clampRefund } from "./settle.ts";
 import { releasing } from "./fulfil.ts";
 import type { RoundState } from "./store.ts";
@@ -26,7 +25,7 @@ export async function approveClaim(
   if (releasing(s.round.id)) return { ok: false, status: 409, error: "Holdback release in progress" };
   if (claim.status !== "open" || busy.has(claimId)) return { ok: false, status: 409, error: "Claim is not open" };
   // Re-clamp: the holdback or earlier refunds may have changed since the proposal. Delivery is never refunded.
-  const goods = goodsCents(s.round, c.qty, c.captured ?? 0);
+  const goods = (c.captured ?? 0) - c.delivery;
   const { refund: cents } = clampRefund(claim.proposal?.refund ?? 0, goods, c.refunded, s.holdbackLeft);
   if (cents > 0 && !c.simulated) {
     busy.add(claimId);
@@ -43,9 +42,11 @@ export async function approveClaim(
   claim.status = "approved";
   c.status = "resolved";
   // The PayPal refund already happened, so an invoice failure is recorded, never fatal.
-  if (cents > 0 && c.invoiceId && recordInvoiceRefund) {
+  // An unpaid invoice can't take a refund; the invoice retry records it after payment.
+  if (cents > 0 && c.invoiceId && c.invoiceStatus && recordInvoiceRefund) {
     try {
       await recordInvoiceRefund(c.invoiceId, cents);
+      c.invoiceRefunded = (c.invoiceRefunded ?? 0) + cents;
       c.invoiceStatus = "refunded";
       c.invoiceError = undefined;
     } catch (e) {
