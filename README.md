@@ -57,16 +57,15 @@ Both rounds use the same 8 demo shops, labelled as demo data.
 
 Oat milk sells in packs of 12 (minimum 96 a shop); receipt rolls in packs of 50 (minimum 50). The lowest tier price is the supplier's floor.
 
-Verified in the sandbox on 2026-10-26: in the receipts round a real shop joined with 500 rolls, the round closed at $1.28, PayPal captured $659.00 ($640.00 goods + $19.00 delivery), and the PayPal invoice `SH-receipts-1-…` was sent and recorded as paid.
+Verified in the sandbox on 2026-10-26: in the receipts round, with no simulated shops, a real shop joined with 500 rolls, the round closed at $1.28, PayPal captured $659.00 ($640.00 goods + $19.00 delivery), and the PayPal invoice `SH-receipts-1-…` was sent and recorded as paid.
 
 ## Run it locally
 
-You need Node 24 and a free Bryntum trial login (for `@bryntum/scheduler-trial`, installed under the name `@bryntum/scheduler`).
+You need Node 24 and a free Bryntum trial login (for `@bryntum/scheduler-trial`, installed under the name `@bryntum/scheduler`). The repo's `.npmrc` already points the `@bryntum` scope at Bryntum's registry. Trying the hosted demo needs no Bryntum login.
 
 1. Log in to Bryntum's npm registry with the trial login from Bryntum's trial instructions:
 
    ```bash
-   npm config set @bryntum:registry https://npm.bryntum.com
    npm login --registry=https://npm.bryntum.com
    ```
 
@@ -107,7 +106,7 @@ This follows the video ([docs/demo-script.md](docs/demo-script.md)).
 - **Shops are simulated**, apart from the one you join with. Demo shops get no PayPal order or invoice.
 - **Payouts stand in for PayPal multiparty.** In the demo, Shoal's sandbox account collects the money and pays the supplier with Payouts. In production, shops would pay the supplier directly through multiparty, and Shoal would take a platform fee without holding funds.
 - **Invoices come from the app's sandbox account** with the supplier's business name and the note "Issued by Shoal on behalf of …". In production, Shoal would call Invoicing for the connected supplier, so invoices come from the supplier's own PayPal account.
-- **The store is in memory.** A restart resets the rounds, and only one instance can run.
+- **The store is in memory.** A restart resets the rounds, and only one instance can run. On Render's free plan the instance sleeps when idle, which also resets the demo.
 - **There are no logins.** The shop, invoice and purchase-order routes are open in the demo.
 
 ## Sponsor tools
