@@ -14,7 +14,9 @@ export async function POST(request: Request, ctx: RouteContext<"/api/rounds/[id]
   if (!q || q.roundId !== id) return fail("Invalid or expired quote", 400);
   try {
     const delivery = deliveryCents(s.round, q.qty);
-    const orderId = await createAuthorizeOrder({ goods: q.reserved - delivery, delivery }, `${s.round.product} x ${q.qty}`, id);
+    const goods = q.reserved - delivery;
+    if (goods < 0) return fail("Invalid or expired quote", 400);
+    const orderId = await createAuthorizeOrder({ goods, delivery }, `${s.round.product} x ${q.qty}`, id);
     return Response.json({ orderId });
   } catch (e) {
     return paypalFail(e);

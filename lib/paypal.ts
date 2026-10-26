@@ -63,7 +63,7 @@ export async function authorizeOrder(orderId: string): Promise<Authorization> {
     authorizationId: auth.id,
     amount: auth.amount?.value ?? "",
     referenceId: unit?.referenceId ?? "",
-    payerEmail: result.payer?.emailAddress,
+    payerEmail: result.payer?.emailAddress || result.paymentSource?.paypal?.emailAddress || undefined,
     address: address || undefined,
   };
 }
@@ -97,10 +97,10 @@ export async function addTracking(orderId: string, captureId: string, trackingNu
   });
 }
 
-const API = "https://api-m.sandbox.paypal.com";
+export const API = "https://api-m.sandbox.paypal.com";
 
-// Payouts are not in the SDK, so call REST directly.
-export async function sendPayout(receiverEmail: string, cents: number, note: string, senderBatchId: string): Promise<string> {
+// Payouts and Invoicing are not in the SDK, so call REST directly.
+export async function accessToken(): Promise<string> {
   const basic = Buffer.from(`${required("PAYPAL_CLIENT_ID")}:${required("PAYPAL_CLIENT_SECRET")}`).toString("base64");
   const tokenRes = await fetch(`${API}/v1/oauth2/token`, {
     method: "POST",
@@ -108,7 +108,11 @@ export async function sendPayout(receiverEmail: string, cents: number, note: str
     body: "grant_type=client_credentials",
   });
   if (!tokenRes.ok) throw new Error(`PayPal token request failed: HTTP ${tokenRes.status}`);
-  const { access_token } = (await tokenRes.json()) as { access_token: string };
+  return ((await tokenRes.json()) as { access_token: string }).access_token;
+}
+
+export async function sendPayout(receiverEmail: string, cents: number, note: string, senderBatchId: string): Promise<string> {
+  const access_token = await accessToken();
 
   const res = await fetch(`${API}/v1/payments/payouts`, {
     method: "POST",

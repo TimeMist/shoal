@@ -15,6 +15,11 @@ export type Commitment = {
   authorizationId?: string;
   captureId?: string;
   captured?: number;
+  invoiceId?: string;
+  invoiceNumber?: string;
+  invoiceUrl?: string;
+  invoiceStatus?: "paid" | "refunded";
+  invoiceError?: string;
   refunded: number;
   status: "reserved" | "captured" | "released" | "delivered" | "claim" | "resolved";
   tracking?: string;
