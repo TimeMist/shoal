@@ -40,7 +40,7 @@ export const claudeModel: Model = async (product, offers) => {
       "Do not do any price maths. Call judge_offers exactly once, with one verdict per offer.",
     messages: [{ role: "user", content: `Product: ${product}\nOffers:\n${list}` }],
     tools: [TOOL],
-  });
+  }, { timeout: 20_000 });
   const use = res.stop_reason === "tool_use" ? res.content.find((b) => b.type === "tool_use") : undefined;
   if (!use || use.type !== "tool_use") throw new Error(res.stop_reason === "refusal" ? "The model declined to judge the offers" : "The model made no judgement");
   return (use.input as { verdicts?: unknown }).verdicts;

@@ -11,7 +11,7 @@ export function ask(params: {
   system: string;
   messages: Anthropic.Beta.BetaMessageParam[];
   tools: Anthropic.Beta.BetaTool[];
-}): Promise<Anthropic.Beta.BetaMessage> {
+}, options?: { timeout?: number }): Promise<Anthropic.Beta.BetaMessage> {
   return claude().beta.messages.create({
     model: "claude-opus-5-5",
     max_tokens: 16000,
@@ -20,5 +20,5 @@ export function ask(params: {
     output_config: { effort: "medium" },
     tool_choice: { type: "auto" },
     ...params,
-  });
+  }, options);
 }

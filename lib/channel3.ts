@@ -10,6 +10,7 @@ export async function searchOffers(query: string): Promise<Offer[]> {
     method: "POST",
     headers: { "x-api-key": key, "content-type": "application/json" },
     body: JSON.stringify({ query, limit: 10 }),
+    signal: AbortSignal.timeout(8000),
   });
   if (res.status === 402) throw new ConfigError("Channel3 credits used up", 402);
   if (!res.ok) throw new Error(`Channel3 search failed (${res.status})`);
