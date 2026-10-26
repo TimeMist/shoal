@@ -4,7 +4,7 @@ import { seedRound, simulateShops } from "./seed.ts";
 import { deliveryCents, tierAt, validateQty } from "./round.ts";
 import { getState, resetDemo, unitsCommitted } from "./store.ts";
 
-const R = 184; // Channel3 retail median, 2026-10-26
+const R = 150; // Channel3 retail median, 5 offers, 2026-10-26
 
 test("the receipt round: 1,100 rolls from 8 shops sit on the 800+ tier", () => {
   const s = seedRound("receipts");

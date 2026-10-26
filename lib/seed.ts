@@ -45,16 +45,17 @@ export const RECEIPT_ROUND = {
   unit: { one: "roll", many: "rolls" },
   step: 50,
   searchQuery: "3 1/8 x 230 thermal paper rolls 50 pack",
+  // Accepts 200-275 ft: retail 3⅛″ rolls come in 230 and 273 ft, both comparable per roll.
   matchHint: "3⅛″ (3 1/8 in) wide thermal receipt paper rolls, 200 to 275 ft long",
-  // From Channel3 retail median R = 184¢/roll, fetched 2026-10-26: round(0.95R / 0.85R / 0.75R / 0.68R).
+  // Channel3 retail median R = 150¢/roll from 5 offers, fetched 2026-10-26: round(0.95R / 0.85R / 0.75R / 0.68R).
   tiers: [
-    { min: 0, price: 175 },
-    { min: 400, price: 156 },
-    { min: 800, price: 138 },
-    { min: 1200, price: 125 },
+    { min: 0, price: 143 },
+    { min: 400, price: 128 },
+    { min: 800, price: 113 },
+    { min: 1200, price: 102 },
   ],
   delivery: { perDrop: 900, perUnit: 2 },
-  floor: 125,
+  floor: 102,
   minPerShop: 50,
 };
 
@@ -84,6 +85,7 @@ export function seedRound(id: RoundId = "demo"): RoundState {
 // Adds the next `count` demo shops, continuing after those already simulated.
 export function simulateShops(s: RoundState, count: number): void {
   const done = s.commitments.filter((c) => c.simulated).length;
+  if (!ROUND_IDS.includes(s.round.id as RoundId)) throw new Error(`No demo shops for round ${s.round.id}`);
   for (const d of shopsFor(s.round.id as RoundId).slice(done, done + count)) {
     addCommitment(s, { ...d, simulated: true });
   }

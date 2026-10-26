@@ -119,3 +119,15 @@ test("classifyPacks hands the model the round's hint and offer details, never pr
   assert.match(got?.text ?? "", /A case of 50 rolls/);
   assert.doesNotMatch(got?.text ?? "", /62\.72/);
 });
+
+test("offers far from the first median are dropped before the final median", async () => {
+  // Per-unit cents: 100, 110, 120, 130, 400 (4x), 1000 (10x)
+  const os = [o("a", 1), o("b", 1.1), o("c", 1.2), o("d", 1.3), o("e", 4), o("f", 10)];
+  const vs = os.map(() => ({ relevant: true, units: 1 }));
+  const r = await getBenchmark("p-out", item, { search: async () => os, classify: async () => vs });
+  assert.deepEqual(r.benchmark?.offers.map((x) => x.merchant), ["a", "b", "c", "d"]);
+  assert.equal(r.benchmark?.perUnit, 115);
+  const few = [o("a", 1), o("b", 1.1), o("e", 4), o("f", 10)];
+  const r2 = await getBenchmark("p-out-few", item, { search: async () => few, classify: async () => vs.slice(0, 4) });
+  assert.deepEqual(r2, { benchmark: null, reason: "Not enough comparable offers" });
+});

@@ -43,7 +43,7 @@ type Opts = {
   classify?: (item: Item, offers: Offer[]) => Promise<PackVerdict[]>;
 };
 
-// Cached per search query, so each round's product has its own benchmark.
+// The cache key is the query only: rounds sharing a query share a benchmark.
 export async function getBenchmark(query: string, item: Item, opts: Opts = {}): Promise<Result> {
   const now = opts.now ?? Date.now();
   const hit = cache.get(query);
@@ -69,12 +69,15 @@ async function fetchBenchmark(query: string, item: Item, now: number, opts: Opts
   }
   const verdicts = await (opts.classify ?? classifyPacks)(item, offers);
   const usable = normalise(offers, verdicts, item.step * 4);
-  if (usable.length < MIN_OFFERS) {
+  // Backstop for a misread pack size: keep offers within 0.5x-2x of a first median.
+  const first = usable.length ? median(usable.map((u) => u.price)) : 0;
+  const kept = usable.filter((u) => u.price >= first / 2 && u.price <= first * 2);
+  if (kept.length < MIN_OFFERS) {
     const result = { benchmark: null, reason: NOT_ENOUGH };
     cache.set(query, { at: now, ttl: NULL_TTL, result });
     return result;
   }
-  const benchmark = { perUnit: median(usable.map((u) => u.price)), offers: usable, fetchedAt: new Date(now).toISOString() };
+  const benchmark = { perUnit: median(kept.map((u) => u.price)), offers: kept, fetchedAt: new Date(now).toISOString() };
   const result = { benchmark };
   cache.set(query, { at: now, ttl: TTL, result });
   return result;
