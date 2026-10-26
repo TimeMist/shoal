@@ -30,8 +30,10 @@ export default function SupplierConsole({ id, initial }: { id: string; initial: 
   const loadRetail = useCallback(
     (refresh: boolean) => {
       setRetailBusy(true);
-      return retailFor(id, refresh)
-        .then(setRetail, (e) => setRetail({ benchmark: null, reason: errorText(e) }))
+      const fail = (reason?: string) => (prev?: Retail) => ({ benchmark: prev?.benchmark ?? null, reason });
+      return retailFor(id, refresh ? "refresh" : "fetch")
+        // A failed refresh keeps the benchmark already shown and adds why.
+        .then((r) => setRetail(r.benchmark ? r : fail(r.reason)), (e) => setRetail(fail(errorText(e))))
         .finally(() => setRetailBusy(false));
     },
     [id],

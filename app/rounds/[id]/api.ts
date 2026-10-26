@@ -23,9 +23,10 @@ export const errorText = (e: unknown) => (e instanceof Error ? e.message : "Some
 
 export type Retail = { benchmark: Benchmark | null; reason?: string };
 
-/** GET the cached-or-fetched retail benchmark, or POST to refresh it. A 502 still carries `{ benchmark: null, reason }`. */
-export async function retailFor(roundId: string, refresh = false): Promise<Retail> {
-  const res = await fetch(`/api/rounds/${roundId}/benchmark`, refresh ? { method: "POST" } : { cache: "no-store" });
+/** "cached": read the cache only (shop pages); "fetch": cached-or-fetched; "refresh": POST. A 502 still carries `{ benchmark: null, reason }`. */
+export async function retailFor(roundId: string, mode: "cached" | "fetch" | "refresh"): Promise<Retail> {
+  const path = `/api/rounds/${roundId}/benchmark${mode === "cached" ? "?cached=1" : ""}`;
+  const res = await fetch(path, mode === "refresh" ? { method: "POST" } : { cache: "no-store" });
   const data = await res.json().catch(() => ({}));
   return { benchmark: data.benchmark ?? null, reason: data.reason ?? data.error ?? (res.ok ? undefined : `Request failed (${res.status})`) };
 }

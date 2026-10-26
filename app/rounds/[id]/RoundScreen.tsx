@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "
 import LiveRegion from "@/components/LiveRegion";
 import RoundPool from "@/components/RoundPool";
 import StatusChip from "@/components/StatusChip";
-import TierLadder from "@/components/TierLadder";
+import TierLadder, { RetailSources } from "@/components/TierLadder";
 import { formatUSD } from "@/lib/money";
 import { tierAt, unitLabel } from "@/lib/round";
 import type { Commitment, RoundState } from "@/lib/store";
@@ -65,9 +65,9 @@ export default function RoundScreen({ id, initial }: { id: string; initial: Roun
   const minute = useMinute();
   const [retail, setRetail] = useState<Benchmark | null>(null);
   useEffect(() => {
-    // Once per page load; shop pages never refresh retail.
+    // Once per page load, cache only: shop pages never spend a Channel3 lookup.
     let live = true;
-    retailFor(id).then((r) => live && setRetail(r.benchmark)).catch(() => {}); // no line on failure
+    retailFor(id, "cached").then((r) => live && setRetail(r.benchmark)).catch(() => {}); // no line on failure
     return () => {
       live = false;
     };
@@ -155,6 +155,7 @@ export default function RoundScreen({ id, initial }: { id: string; initial: Roun
           <RoundPool units={units} shops={commitments.map((c) => ({ name: c.shop, qty: c.qty }))} closed={round.status === "closed"} tiers={round.tiers} unit={round.unit} />
           <TierLadder tiers={round.tiers} units={units} unit={round.unit} agreed={deal} closed={round.status !== "open"} retail={retail} />
         </div>
+        {retail && <RetailSources retail={retail} unit={round.unit} />}
 
         <div className="grid gap-2.5">
           <h2 className="font-display text-[15px] font-bold">

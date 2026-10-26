@@ -139,3 +139,22 @@ test("the route's helper keys the benchmark by the round's search query", async 
   await roundBenchmark(round, { search: async (q) => (asked.push(q), []), classify: async () => [] });
   assert.deepEqual(asked, [round.searchQuery]);
 });
+
+test("normalise drops offers without an https link or a merchant", () => {
+  const v = [{ relevant: true, units: 1 }, { relevant: true, units: 1 }, { relevant: true, units: 1 }];
+  const bad = [o("a", 1), { ...o("b", 1), url: "http://b" }, { ...o("c", 1), merchant: " " }];
+  assert.deepEqual(normalise(bad, v, 48).map((x) => x.merchant), ["a"]);
+});
+
+test("cachedOnly with an empty cache answers without searching", async () => {
+  let calls = 0;
+  const search = async () => (calls++, offers);
+  const r = await getBenchmark("p-cached-only", item, { cachedOnly: true, search, classify: async () => verdicts });
+  assert.equal(r.benchmark, null);
+  assert.ok(r.reason);
+  assert.equal(calls, 0);
+  await getBenchmark("p-cached-only", item, { search, classify: async () => verdicts });
+  const hit = await getBenchmark("p-cached-only", item, { cachedOnly: true, search, classify: async () => verdicts });
+  assert.equal(hit.benchmark?.perUnit, 399);
+  assert.equal(calls, 1);
+});

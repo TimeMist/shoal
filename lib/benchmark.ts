@@ -25,6 +25,7 @@ export function normalise(offers: Offer[], verdicts: PackVerdict[], maxUnits: nu
   return offers.flatMap((o, i) => {
     const v = verdicts[i];
     if (!v?.relevant || !Number.isInteger(v.units) || v.units < 1 || v.units > maxUnits) return [];
+    if (!o.merchant?.trim() || !o.url?.startsWith("https://")) return [];
     if (o.currency !== "USD" || typeof o.price !== "number" || !(o.price > 0)) return [];
     return [{ merchant: o.merchant, url: o.url, units: v.units, price: Math.round(Math.round(o.price * 100) / v.units) }];
   });
@@ -38,6 +39,8 @@ export function median(cents: number[]): number {
 
 type Opts = {
   refresh?: boolean;
+  /** Never start a paid lookup: answer from the cache (or a lookup already running) only. */
+  cachedOnly?: boolean;
   now?: number;
   search?: (q: string) => Promise<Offer[]>;
   classify?: (item: Item, offers: Offer[]) => Promise<PackVerdict[]>;
@@ -59,6 +62,7 @@ export async function getBenchmark(query: string, item: Item, opts: Opts = {}): 
   }
   const running = inflight.get(query);
   if (running) return running;
+  if (opts.cachedOnly) return { benchmark: null, reason: "No retail benchmark yet" };
   const p = fetchBenchmark(query, item, now, opts).finally(() => inflight.delete(query));
   inflight.set(query, p);
   return p;
