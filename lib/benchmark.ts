@@ -1,10 +1,12 @@
 import { ConfigError } from "./http.ts";
 import { searchOffers, type Offer } from "./channel3.ts";
 import { classifyPacks, type PackVerdict } from "./agents/packs.ts";
+import type { Round } from "./round.ts";
 
+export type Item = Pick<Round, "product" | "unit" | "step" | "matchHint">;
 export type Benchmark = {
-  perCarton: number;
-  offers: { merchant: string; url: string; cartons: number; price: number }[];
+  perUnit: number;
+  offers: { merchant: string; url: string; units: number; price: number }[];
   fetchedAt: string;
 };
 
@@ -17,13 +19,14 @@ const NOT_ENOUGH = "Not enough comparable offers";
 const cache = new Map<string, { at: number; ttl: number; result: Result }>();
 const inflight = new Map<string, Promise<Result>>();
 
-// Per-carton cents from Channel3's own prices; the model only supplied relevant + cartons.
-export function normalise(offers: Offer[], verdicts: PackVerdict[]): Benchmark["offers"] {
+// Per-unit cents from Channel3's own prices; the model only supplied relevant + units.
+// Packs of 1 to four cases (48 cartons, 200 rolls) count.
+export function normalise(offers: Offer[], verdicts: PackVerdict[], maxUnits: number): Benchmark["offers"] {
   return offers.flatMap((o, i) => {
     const v = verdicts[i];
-    if (!v?.relevant || !Number.isInteger(v.cartons) || v.cartons < 1 || v.cartons > 48) return [];
+    if (!v?.relevant || !Number.isInteger(v.units) || v.units < 1 || v.units > maxUnits) return [];
     if (o.currency !== "USD" || typeof o.price !== "number" || !(o.price > 0)) return [];
-    return [{ merchant: o.merchant, url: o.url, cartons: v.cartons, price: Math.round(Math.round(o.price * 100) / v.cartons) }];
+    return [{ merchant: o.merchant, url: o.url, units: v.units, price: Math.round(Math.round(o.price * 100) / v.units) }];
   });
 }
 
@@ -33,49 +36,46 @@ export function median(cents: number[]): number {
   return s.length % 2 ? s[m] : Math.round((s[m - 1] + s[m]) / 2);
 }
 
-// "Barista oat milk, 1 L carton" -> "barista oat milk 1L"
-const queryFor = (product: string) => product.toLowerCase().replace(/,/g, "").replace(/(\d+)\s*l\b/g, "$1L").replace(/\bcartons?\b/g, "").replace(/\s+/g, " ").trim();
-
 type Opts = {
   refresh?: boolean;
   now?: number;
   search?: (q: string) => Promise<Offer[]>;
-  classify?: (product: string, offers: Offer[]) => Promise<PackVerdict[]>;
+  classify?: (item: Item, offers: Offer[]) => Promise<PackVerdict[]>;
 };
 
-// key is a plain string so the caller can later pass a per-round query instead of the product.
-export async function getBenchmark(product: string, opts: Opts = {}): Promise<Result> {
+// Cached per search query, so each round's product has its own benchmark.
+export async function getBenchmark(query: string, item: Item, opts: Opts = {}): Promise<Result> {
   const now = opts.now ?? Date.now();
-  const hit = cache.get(product);
+  const hit = cache.get(query);
   if (hit && now - hit.at < hit.ttl) {
     if (!opts.refresh) return hit.result;
     const b = hit.result.benchmark;
     if (b && now - Date.parse(b.fetchedAt) < REFRESH_GAP) return { benchmark: b, reason: "Refreshed less than a minute ago" };
   }
-  const running = inflight.get(product);
+  const running = inflight.get(query);
   if (running) return running;
-  const p = fetchBenchmark(product, now, opts).finally(() => inflight.delete(product));
-  inflight.set(product, p);
+  const p = fetchBenchmark(query, item, now, opts).finally(() => inflight.delete(query));
+  inflight.set(query, p);
   return p;
 }
 
-async function fetchBenchmark(product: string, now: number, opts: Opts): Promise<Result> {
+async function fetchBenchmark(query: string, item: Item, now: number, opts: Opts): Promise<Result> {
   let offers: Offer[];
   try {
-    offers = await (opts.search ?? searchOffers)(queryFor(product));
+    offers = await (opts.search ?? searchOffers)(query);
   } catch (e) {
     if (e instanceof ConfigError) return { benchmark: null, reason: e.message }; // never cached
     throw e;
   }
-  const verdicts = await (opts.classify ?? classifyPacks)(product, offers);
-  const usable = normalise(offers, verdicts);
+  const verdicts = await (opts.classify ?? classifyPacks)(item, offers);
+  const usable = normalise(offers, verdicts, item.step * 4);
   if (usable.length < MIN_OFFERS) {
     const result = { benchmark: null, reason: NOT_ENOUGH };
-    cache.set(product, { at: now, ttl: NULL_TTL, result });
+    cache.set(query, { at: now, ttl: NULL_TTL, result });
     return result;
   }
-  const benchmark = { perCarton: median(usable.map((u) => u.price)), offers: usable, fetchedAt: new Date(now).toISOString() };
+  const benchmark = { perUnit: median(usable.map((u) => u.price)), offers: usable, fetchedAt: new Date(now).toISOString() };
   const result = { benchmark };
-  cache.set(product, { at: now, ttl: TTL, result });
+  cache.set(query, { at: now, ttl: TTL, result });
   return result;
 }

@@ -2,11 +2,12 @@ import Link from "next/link";
 import Wordmark from "@/components/Wordmark";
 import { formatUSD } from "@/lib/money";
 import { tierAt } from "@/lib/round";
-import { DEMO_ROUND, DEMO_SHOPS } from "@/lib/seed";
+import { DEMO_ROUND, shopsFor } from "@/lib/seed";
 import HeroRound from "./HeroRound";
 import { GHOST, PRIMARY } from "./ui";
 
 const { tiers, product, supplier } = DEMO_ROUND;
+const DEMO_SHOPS = shopsFor("demo");
 const units = DEMO_SHOPS.reduce((u, s) => u + s.qty, 0);
 const alone = formatUSD(tiers[0].price), group = formatUSD(tierAt(tiers, units).price);
 

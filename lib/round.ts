@@ -6,11 +6,15 @@ export type Round = {
   id: string;
   supplier: string;
   product: string;
+  unit: { one: string; many: string };
+  step: number; // pack size: quantities are multiples of this
+  searchQuery: string; // Channel3 query for the retail benchmark
+  matchHint: string; // what counts as the same product and size, for the benchmark classifier
   tiers: Tier[];
   floor: number;
   minPerShop: number;
   holdbackPct: number;
-  delivery: { perDrop: number; perCarton: number };
+  delivery: { perDrop: number; perUnit: number };
   closesAt: string;
   status: "open" | "closed" | "failed";
   finalPrice?: number;
@@ -22,7 +26,7 @@ export function tierAt(tiers: Tier[], units: number): Tier {
 }
 
 export function deliveryCents(round: Round, qty: number): number {
-  return round.delivery.perDrop + round.delivery.perCarton * qty;
+  return round.delivery.perDrop + round.delivery.perUnit * qty;
 }
 
 // Goods at the price showing plus delivery, fixed at join.
@@ -48,7 +52,9 @@ export function savingsCents(round: Round, qty: number, captured: number): numbe
 }
 
 export function validateQty(round: Round, qty: number): string | null {
-  if (!Number.isInteger(qty)) return "Quantity must be a whole number of cartons";
-  if (qty < round.minPerShop) return `Minimum is ${round.minPerShop} cartons per delivery`;
+  const { many } = round.unit;
+  if (!Number.isInteger(qty)) return `Quantity must be a whole number of ${many}`;
+  if (qty < round.minPerShop) return `Minimum is ${round.minPerShop} ${many} per delivery`;
+  if (qty % round.step) return `Quantity must be a multiple of ${round.step} ${many}`;
   return null;
 }

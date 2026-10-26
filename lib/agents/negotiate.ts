@@ -22,14 +22,14 @@ const TOOL_NAMES = { propose_price: "propose", accept_price: "accept", walk_away
 const priceSchema = {
   type: "object",
   properties: {
-    price_cents: { type: "integer", description: "Price per carton in whole cents" },
+    price_cents: { type: "integer", description: "Price per unit in whole cents" },
     message: { type: "string", description: "One or two sentences to the other agent" },
   },
   required: ["price_cents", "message"],
   additionalProperties: false,
 };
 const TOOLS = [
-  { name: "propose_price", description: "Propose a price per carton to the other agent.", schema: priceSchema },
+  { name: "propose_price", description: "Propose a price per unit to the other agent.", schema: priceSchema },
   { name: "accept_price", description: "Accept the other agent's last valid price, which ends the negotiation.", schema: priceSchema },
   {
     name: "walk_away",
@@ -84,19 +84,20 @@ function system(side: Side, s: RoundState): string {
   const units = unitsCommitted(s);
   const now = tierAt(round.tiers, units);
   const next = round.tiers.find((t) => t.min > units);
-  const tiers = round.tiers.map((t) => `${t.min}+ cartons: ${t.price}`).join("; ");
+  const { one, many } = round.unit;
+  const tiers = round.tiers.map((t) => `${t.min}+ ${many}: ${t.price}`).join("; ");
   const facts =
-    `Product: ${round.product} from ${round.supplier}. Prices are whole cents per carton. ` +
-    `${s.commitments.length} independent shops have committed ${units} cartons and prepaid-authorised them. Tier price list: ${tiers}. ` +
-    `At ${units} cartons the current tier price is ${now.price}.` +
-    (next ? ` The next tier is ${next.min} cartons at ${next.price}.` : "");
+    `Product: ${round.product} from ${round.supplier}. Prices are whole cents per ${one}. ` +
+    `${s.commitments.length} independent shops have committed ${units} ${many} and prepaid-authorised them. Tier price list: ${tiers}. ` +
+    `At ${units} ${many} the current tier price is ${now.price}.` +
+    (next ? ` The next tier is ${next.min} ${many} at ${next.price}.` : "");
   const rules =
     `A code guard checks every price you propose or accept: a whole number of cents, within the supplier's limits and at most ${now.price}; a rejected price comes back so you can retry. ` +
     `The negotiation has ${MAX_TURNS} turns in total, shared by both sides, and each turn you call exactly one tool. ` +
     `With no deal the round closes at the current tier price of ${now.price}, so both sides are better off agreeing before the last turn.`;
   return side === "shop"
-    ? `You are the buying agent for a group of ${s.commitments.length} small shops. Get a lower price per carton than ${now.price}. ${facts} Open with a credible offer, not a lowball; the supplier has a floor you do not know. Each counter should move toward the supplier's last price, and accept a supplier price within a few cents of your own last offer. ${rules}`
-    : `You are the sales agent for ${round.supplier}. Your floor is ${round.floor} cents per carton and you must never go below it. ${facts} ${units} committed, prepaid cartons${next ? ` are close to the ${next.min}-carton tier` : ""} and are worth real value: guaranteed volume, no credit risk. Settle somewhere between your floor and ${now.price}, and close the deal rather than lose it. ${rules}`;
+    ? `You are the buying agent for a group of ${s.commitments.length} small shops. Get a lower price per ${one} than ${now.price}. ${facts} Open with a credible offer, not a lowball; the supplier has a floor you do not know. Each counter should move toward the supplier's last price, and accept a supplier price within a few cents of your own last offer. ${rules}`
+    : `You are the sales agent for ${round.supplier}. Your floor is ${round.floor} cents per ${one} and you must never go below it. ${facts} ${units} committed, prepaid ${many}${next ? ` are close to the ${next.min}-${one} tier` : ""} and are worth real value: guaranteed volume, no credit risk. Settle somewhere between your floor and ${now.price}, and close the deal rather than lose it. ${rules}`;
 }
 
 // Plain-text history from one side's point of view: its own moves as assistant text, everything else as user text.
@@ -104,7 +105,7 @@ function system(side: Side, s: RoundState): string {
 // The other side's rejected tries never reached us, so they are skipped.
 const VERB = { propose: "I proposed", accept: "I tried to accept", walk_away: "I walked away", none: "I made no valid move" };
 
-export function chat(side: Side, transcript: NegotiationTurn[]): { role: "user" | "assistant"; text: string }[] {
+export function chat(side: Side, transcript: NegotiationTurn[], unit = "unit"): { role: "user" | "assistant"; text: string }[] {
   const out: { role: "user" | "assistant"; text: string }[] = [
     { role: "user", text: side === "shop" ? "The negotiation is open. Make your first move." : "The negotiation is open. The shop agent moves first." },
   ];
@@ -120,7 +121,7 @@ export function chat(side: Side, transcript: NegotiationTurn[]): { role: "user" 
       const reason = side === "shop" && /floor/.test(t.reason ?? "") ? "Price is below what the supplier can accept" : t.reason;
       if (t.verdict === "rejected") add("user", `The guard rejected that move: ${reason}. Try again.`);
     } else if (t.verdict === "ok") {
-      add("user", `The ${t.side} agent proposes ${t.price} cents per carton: ${t.message}`);
+      add("user", `The ${t.side} agent proposes ${t.price} cents per ${unit}: ${t.message}`);
     }
   }
   if (out[out.length - 1].role === "assistant") add("user", "Your turn.");
@@ -140,7 +141,7 @@ function decision(name: string | undefined, input: unknown, provider: Provider):
 }
 
 export const claudeNegotiator: Model = async (side, transcript, s) => {
-  const messages: Anthropic.Beta.BetaMessageParam[] = chat(side, transcript).map((m) => ({ role: m.role, content: m.text }));
+  const messages: Anthropic.Beta.BetaMessageParam[] = chat(side, transcript, s.round.unit.one).map((m) => ({ role: m.role, content: m.text }));
   const res = await ask({
     system: system(side, s),
     messages,
@@ -152,7 +153,7 @@ export const claudeNegotiator: Model = async (side, transcript, s) => {
 };
 
 export const geminiNegotiator: Model = async (side, transcript, s) => {
-  const contents: Content[] = chat(side, transcript).map((m) => ({ role: m.role === "user" ? "user" : "model", parts: [{ text: m.text }] }));
+  const contents: Content[] = chat(side, transcript, s.round.unit.one).map((m) => ({ role: m.role === "user" ? "user" : "model", parts: [{ text: m.text }] }));
   const res = await askGemini({
     system: system(side, s),
     contents,

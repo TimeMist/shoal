@@ -33,14 +33,14 @@ test("simulateShops continues from where it left off", () => {
 
 test("addCommitment uses a given reserved amount as-is", () => {
   const s = fresh();
-  const c = addCommitment(s, { shop: "Real", qty: 100, simulated: false, orderId: "o1", reserved: 12345 });
+  const c = addCommitment(s, { shop: "Real", qty: 108, simulated: false, orderId: "o1", reserved: 12345 });
   assert.equal(c.reserved, 12345);
   assert.equal(findByOrder(s, "o1"), c);
 });
 
 test("authorize is idempotent per order id", () => {
   const s = fresh();
-  addCommitment(s, { shop: "Real", qty: 100, simulated: false, orderId: "o1" });
+  addCommitment(s, { shop: "Real", qty: 108, simulated: false, orderId: "o1" });
   const a = markAuthorized(s, "o1", "auth-1");
   const b = markAuthorized(s, "o1", "auth-2");
   assert.equal(s.commitments.length, 1);

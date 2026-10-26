@@ -28,8 +28,8 @@ function real(s: ReturnType<typeof seedRound>, shop: string, qty: number) {
 
 test("closeRound below first tier voids the full goods+delivery authorization", async () => {
   const s = seedRound();
-  real(s, "A", 150);
-  real(s, "B", 150);
+  real(s, "A", 144);
+  real(s, "B", 144);
   s.closing = true;
   const pay = fakePay();
   await closeRound(s, pay);
@@ -42,14 +42,14 @@ test("closeRound below first tier voids the full goods+delivery authorization", 
 
 test("closeRound captures qty x final price plus delivery for real shops", async () => {
   const s = seedRound();
-  real(s, "A", 100);
-  real(s, "B", 200);
+  real(s, "A", 108);
+  real(s, "B", 192);
   simulateShops(s, 6); // 1080 + 300 = 1380 units: tier price 192
   s.agreedPrice = 185;
   s.closing = true;
   const pay = fakePay();
   await closeRound(s, pay);
-  assert.deepEqual(pay.captures, [["auth-A", 100 * 185 + 1200 + 5 * 100], ["auth-B", 200 * 185 + 1200 + 5 * 200]]);
+  assert.deepEqual(pay.captures, [["auth-A", 108 * 185 + 1200 + 5 * 108], ["auth-B", 192 * 185 + 1200 + 5 * 192]]);
   assert.equal(s.round.status, "closed");
   assert.equal(s.round.finalPrice, 185);
   assert.ok(s.commitments.every((c) => c.status === "captured"));
@@ -60,8 +60,8 @@ test("closeRound captures qty x final price plus delivery for real shops", async
 
 test("closeRound never charges an agreed price above the current tier price", async () => {
   const s = seedRound();
-  real(s, "A", 100);
-  simulateShops(s, 8); // 1540 units: tier price 180
+  real(s, "A", 108);
+  simulateShops(s, 8); // 1548 units: tier price 180
   s.agreedPrice = 192;
   s.closing = true;
   await closeRound(s, fakePay());
@@ -77,8 +77,8 @@ test("closeRound defaults to the tier price", async () => {
 
 test("a failing capture does not stop the others", async () => {
   const s = seedRound();
-  real(s, "A", 100);
-  real(s, "B", 100);
+  real(s, "A", 108);
+  real(s, "B", 108);
   simulateShops(s, 8);
   s.closing = true;
   const pay = fakePay("auth-A");

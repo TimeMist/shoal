@@ -1,6 +1,6 @@
 import { ConfigError } from "./http.ts";
 
-export type Offer = { merchant: string; url: string; title: string; price?: number /* dollars */; currency?: string };
+export type Offer = { merchant: string; url: string; title: string; details?: string; price?: number /* dollars */; currency?: string };
 
 // POST https://api.trychannel3.com/v1/search, header x-api-key, body { query, limit } (Channel3 docs via Context7).
 export async function searchOffers(query: string): Promise<Offer[]> {
@@ -15,14 +15,18 @@ export async function searchOffers(query: string): Promise<Offer[]> {
   if (res.status === 402) throw new ConfigError("Channel3 credits used up", 402);
   if (!res.ok) throw new Error(`Channel3 search failed (${res.status})`);
   const data = (await res.json()) as { products?: any[] };
-  return (data.products ?? []).flatMap((p) =>
-    (p.offers ?? []).map((o: any): Offer => ({
+  return (data.products ?? []).flatMap((p) => {
+    // Pack count and roll size usually live in the description, not the title.
+    const feats = Array.isArray(p.key_features) ? p.key_features.slice(0, 3).map(String) : [];
+    const details = [typeof p.description === "string" ? p.description.slice(0, 300) : "", ...feats].filter(Boolean).join(" | ") || undefined;
+    return (p.offers ?? []).map((o: any): Offer => ({
       merchant: String(o.merchant?.name ?? o.domain ?? ""),
       url: String(o.url ?? ""),
       title: String(p.title ?? ""),
+      details,
       // Docs show both `price` and `value` for the amount.
       price: typeof (o.price?.price ?? o.price?.value) === "number" ? (o.price.price ?? o.price.value) : undefined,
       currency: o.price?.currency,
-    })),
-  );
+    }));
+  });
 }

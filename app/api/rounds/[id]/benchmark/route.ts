@@ -7,7 +7,7 @@ async function run(ctx: RouteContext<"/api/rounds/[id]/benchmark">, refresh: boo
   const s = getState(id);
   if (!s) return fail("Round not found", 404);
   try {
-    return Response.json(await getBenchmark(s.round.product, { refresh }));
+    return Response.json(await getBenchmark(s.round.searchQuery, s.round, { refresh }));
   } catch (e) {
     // Same { benchmark, reason } contract as a plain "no benchmark"; not cached.
     return Response.json({ benchmark: null, reason: e instanceof Error ? e.message : "Benchmark lookup failed" }, { status: 502 });

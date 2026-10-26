@@ -21,7 +21,7 @@ export async function POST(request: Request, ctx: RouteContext<"/api/rounds/[id]
   const c = s.commitments.find((x) => x.id === b.commitmentId);
   if (!c) return fail("Commitment not found", 404);
   if (!["missing", "damaged", "short"].includes(b.kind as string)) return fail("kind must be missing, damaged or short", 400);
-  if (!Number.isInteger(b.cartons) || (b.cartons as number) < 1 || (b.cartons as number) > c.qty) return fail("cartons must be between 1 and the shop's order", 400);
+  if (!Number.isInteger(b.cartons) || (b.cartons as number) < 1 || (b.cartons as number) > c.qty) return fail(`cartons (${s.round.unit.many}) must be between 1 and the shop's order`, 400);
   let photo: Photo | undefined;
   if (b.photo !== undefined) {
     photo = parsePhoto(b.photo) ?? undefined;

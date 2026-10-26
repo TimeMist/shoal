@@ -108,7 +108,7 @@ test("an invoice not yet paid is left for the invoice retry to refund", async ()
 test("the goods cap uses the delivery stored at join, not today's rates", async () => {
   const { s, claim } = setup({ captured: 24000, reserved: 24600 }, 24000);
   claim.cartons = 120;
-  s.round.delivery = { perDrop: 0, perCarton: 0 };
+  s.round.delivery = { perDrop: 0, perUnit: 0 };
   assert.deepEqual(await approveClaim(s, "k1", calls().fn), { ok: true, refunded: 22200 });
 });
 

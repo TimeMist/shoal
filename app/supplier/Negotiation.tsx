@@ -80,7 +80,7 @@ export default function Negotiation({ state, pending, animate }: Props) {
         </div>
         <Party
           name={round.supplier}
-          sub={`Tiers ${round.tiers.slice(1).map((t) => t.min.toLocaleString("en-US")).join(" / ")} · min ${round.minPerShop} per drop · Delivery ${formatUSD(round.delivery.perDrop)} per drop + ${formatUSD(round.delivery.perCarton)} per carton`}
+          sub={`Tiers ${round.tiers.slice(1).map((t) => t.min.toLocaleString("en-US")).join(" / ")} · min ${round.minPerShop} per drop · Delivery ${formatUSD(round.delivery.perDrop)} per drop + ${formatUSD(round.delivery.perUnit)} per carton`}
           provider={provider("supplier")}
           tint="bg-[#EFE7F8]"
           lines={seen.map((t, i) => ({ ...t, n: i + 1 })).filter((t) => t.side === "supplier")}

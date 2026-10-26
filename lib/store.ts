@@ -1,6 +1,6 @@
 import { deliveryCents, reserveCents, validateQty } from "./round.ts";
 import type { Round } from "./round.ts";
-import { seedRound } from "./seed.ts";
+import { ROUND_IDS, seedRound, type RoundId } from "./seed.ts";
 
 export type Commitment = {
   id: string;
@@ -68,11 +68,11 @@ const g = globalThis as unknown as { __shoal?: Map<string, RoundState> };
 const store = (g.__shoal ??= new Map());
 
 export function resetDemo(): void {
-  store.set("demo", seedRound());
+  for (const id of ROUND_IDS) store.set(id, seedRound(id));
 }
 
 export function getState(roundId: string): RoundState | undefined {
-  if (roundId === "demo" && !store.has("demo")) resetDemo();
+  if (ROUND_IDS.includes(roundId as RoundId) && !store.has(roundId)) store.set(roundId, seedRound(roundId as RoundId));
   return store.get(roundId);
 }
 
