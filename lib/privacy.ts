@@ -11,6 +11,7 @@ export function publicCommitment(c: Commitment): Commitment {
   const out = { ...c, payerEmail: maskEmail(c.payerEmail) };
   delete out.address;
   delete out.invoiceUrl;
+  delete out.authorizationId;
   return out;
 }
 

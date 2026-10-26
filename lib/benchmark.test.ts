@@ -158,3 +158,25 @@ test("cachedOnly with an empty cache answers without searching", async () => {
   assert.equal(hit.benchmark?.perUnit, 399);
   assert.equal(calls, 1);
 });
+
+test("a short refresh keeps the cached benchmark", async () => {
+  const good = async () => offers;
+  const short = async () => offers.slice(0, 2);
+  const classifyShort = async () => verdicts.slice(0, 2);
+  await getBenchmark("p-keep", item, { now: 0, search: good, classify: async () => verdicts });
+  const r = await getBenchmark("p-keep", item, { now: 5 * 60_000, refresh: true, search: short, classify: classifyShort });
+  assert.equal(r.reason, "Not enough comparable offers");
+  assert.equal(r.benchmark?.perUnit, 399);
+  const again = await getBenchmark("p-keep", item, { now: 6 * 60_000, search: good, classify: async () => verdicts });
+  assert.equal(again.benchmark?.perUnit, 399);
+});
+
+test("refreshing a no-benchmark entry is throttled too", async () => {
+  let calls = 0;
+  const search = async () => (calls++, offers.slice(0, 2));
+  const classify = async () => verdicts.slice(0, 2);
+  await getBenchmark("p-nullref", item, { now: 0, search, classify });
+  const r = await getBenchmark("p-nullref", item, { now: 10_000, refresh: true, search, classify });
+  assert.equal(calls, 1);
+  assert.equal(r.reason, "Refreshed less than a minute ago");
+});

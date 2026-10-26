@@ -22,7 +22,7 @@ test("publicState drops addresses and invoice links, masks emails, and leaves th
   const p = publicState(s);
   const c = p.commitments[0];
   assert.deepEqual([c.address, c.invoiceUrl, c.payerEmail, c.invoiceNumber], [undefined, undefined, "j•••@example.com", "N1"]);
-  assert.ok(!("address" in c) && !("invoiceUrl" in c));
+  assert.ok(!("address" in c) && !("invoiceUrl" in c) && !("authorizationId" in c));
   assert.equal(s.commitments[0].address, "1 Real St");
 });
 
@@ -36,9 +36,9 @@ test("purchaseOrder rows carry the supplier's columns in cents", () => {
 });
 
 test("publicCommitment strips one shop's private fields for the authorize response", () => {
-  const raw = shop();
+  const raw = shop({ authorizationId: "auth-1" });
   const c = publicCommitment(raw);
-  assert.ok(!("address" in c) && !("invoiceUrl" in c));
+  assert.ok(!("address" in c) && !("invoiceUrl" in c) && !("authorizationId" in c));
   assert.deepEqual([c.payerEmail, c.id, c.qty], ["j•••@example.com", "c1", 120]);
   assert.equal(raw.payerEmail, "jane@example.com");
 });

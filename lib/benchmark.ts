@@ -57,8 +57,7 @@ export async function getBenchmark(query: string, item: Item, opts: Opts = {}): 
   const hit = cache.get(query);
   if (hit && now - hit.at < hit.ttl) {
     if (!opts.refresh) return hit.result;
-    const b = hit.result.benchmark;
-    if (b && now - Date.parse(b.fetchedAt) < REFRESH_GAP) return { benchmark: b, reason: "Refreshed less than a minute ago" };
+    if (now - hit.at < REFRESH_GAP) return { benchmark: hit.result.benchmark, reason: "Refreshed less than a minute ago" };
   }
   const running = inflight.get(query);
   if (running) return running;
@@ -82,6 +81,8 @@ async function fetchBenchmark(query: string, item: Item, now: number, opts: Opts
   const first = usable.length ? median(usable.map((u) => u.price)) : 0;
   const kept = usable.filter((u) => u.price >= first / 2 && u.price <= first * 2);
   if (kept.length < MIN_OFFERS) {
+    const prior = cache.get(query)?.result.benchmark;
+    if (prior) return { benchmark: prior, reason: NOT_ENOUGH }; // a short refresh never wipes a good benchmark
     const result = { benchmark: null, reason: NOT_ENOUGH };
     cache.set(query, { at: now, ttl: NULL_TTL, result });
     return result;

@@ -93,7 +93,14 @@ test("invoiceNumber differs for two closesAt", () => {
   const b = setup();
   b.round.closesAt = new Date(Date.parse(a.round.closesAt) + 1000).toISOString();
   assert.notEqual(invoiceNumber(a, 0), invoiceNumber(b, 0));
-  assert.match(invoiceNumber(a, 1), /^SHOAL-demo-2-\d+$/);
+  assert.match(invoiceNumber(a, 1), /^SHOAL-demo-2-[0-9a-z]+$/);
+});
+
+test("invoiceNumber fits PayPal's 25 characters for both rounds at the ninth shop", () => {
+  for (const id of ["demo", "receipts"] as const) {
+    const s = seedRound(id);
+    assert.ok(invoiceNumber(s, 8).length <= 25, invoiceNumber(s, 8));
+  }
 });
 
 test("buildInvoice refuses a missing capture id", () => {

@@ -22,7 +22,7 @@ export type InvoiceApi = {
   recordRefund(id: string, cents: number): Promise<void>;
 };
 
-export const invoiceNumber = (s: RoundState, index: number) => `SHOAL-${s.round.id}-${index + 1}-${Date.parse(s.round.closesAt)}`;
+export const invoiceNumber = (s: RoundState, index: number) => `SHOAL-${s.round.id}-${index + 1}-${Date.parse(s.round.closesAt).toString(36)}`;
 
 export function buildInvoice(s: RoundState, c: Commitment, number: string): InvoiceDraft | { error: string } {
   const { supplier, product, finalPrice = 0 } = s.round;
@@ -51,6 +51,7 @@ export async function issueInvoices(s: RoundState, api: InvoiceApi): Promise<{ i
     // Refunds approved before the invoice existed, or whose recording failed, are still owed on the invoice.
     const owed = c.refunded - (c.invoiceRefunded ?? 0);
     if (c.invoiceStatus && owed <= 0) continue;
+    const alreadyInvoiced = !!c.invoiceStatus;
     try {
       if (!c.invoiceStatus) {
         // Each step runs only if its result is missing, so a retry resumes where the last run stopped.
@@ -81,7 +82,7 @@ export async function issueInvoices(s: RoundState, api: InvoiceApi): Promise<{ i
         c.invoiceStatus = "refunded";
       }
       c.invoiceError = undefined;
-      issued++;
+      if (!alreadyInvoiced) issued++; // a retry that only records a refund is not a new invoice
     } catch (e) {
       c.invoiceError = e instanceof Error ? e.message : "Invoice failed";
       failed++;

@@ -8,6 +8,7 @@ export async function POST(_request: Request, ctx: RouteContext<"/api/rounds/[id
   const { id } = await ctx.params;
   const s = getState(id);
   if (!s) return fail("Round not found", 404);
+  // shortcut: one sandbox supplier account for both demo suppliers; production pays each round's own supplier.
   try {
     const r = await shipRound(s, supplierEmail(), { payout: sendPayout, track: addTracking });
     return r.ok ? Response.json(publicState(s)) : fail(r.error, r.status);
