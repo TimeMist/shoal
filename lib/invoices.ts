@@ -1,4 +1,5 @@
 // Invoices in the supplier's name, one per real captured shop, marked paid against its capture.
+import { formatUSD } from "./money.ts";
 import type { Commitment, RoundState } from "./store.ts";
 
 export type InvoiceDraft = {
@@ -8,6 +9,7 @@ export type InvoiceDraft = {
   recipient: { email: string; business: string };
   item: { name: string; quantity: number; unitAmount: number };
   shipping: number;
+  total: number; // expected invoice total in cents, checked by the adapter
   reference: string; // capture id
 };
 
@@ -24,7 +26,8 @@ export function buildInvoice(s: RoundState, c: Commitment, number: string): Invo
   const { supplier, product, finalPrice = 0 } = s.round;
   const total = c.qty * finalPrice + c.delivery;
   if (!c.payerEmail) return { error: "No payer email on file, so no invoice was sent" };
-  if (total !== c.captured) return { error: `Invoice total ${total} does not match the capture ${c.captured}, so nothing was sent` };
+  if (!c.captureId) return { error: "No capture id on file, so no invoice was sent" };
+  if (total !== c.captured) return { error: `Invoice total ${formatUSD(total)} does not match the capture ${formatUSD(c.captured ?? 0)}, so nothing was sent` };
   return {
     number,
     invoicer: supplier,
@@ -32,7 +35,8 @@ export function buildInvoice(s: RoundState, c: Commitment, number: string): Invo
     recipient: { email: c.payerEmail, business: c.shop },
     item: { name: product, quantity: c.qty, unitAmount: finalPrice },
     shipping: c.delivery,
-    reference: c.captureId ?? "",
+    total,
+    reference: c.captureId,
   };
 }
 
@@ -41,15 +45,20 @@ export async function issueInvoices(s: RoundState, api: InvoiceApi): Promise<{ i
   let issued = 0;
   let failed = 0;
   for (const [i, c] of s.commitments.entries()) {
-    if (c.simulated || !c.captured || c.invoiceId) continue;
+    if (c.simulated || !c.captured || c.invoiceStatus) continue;
     try {
-      const number = invoiceNumber(s, i);
-      const draft = buildInvoice(s, c, number);
-      if ("error" in draft) throw new Error(draft.error);
-      const id = await api.create(draft);
-      const url = await api.send(id);
-      await api.recordPayment(id, c.captured, c.captureId ?? "");
-      Object.assign(c, { invoiceId: id, invoiceNumber: number, invoiceUrl: url, invoiceStatus: "paid", invoiceError: undefined });
+      // Each step runs only if its result is missing, so a retry resumes where the last run stopped.
+      if (!c.invoiceId) {
+        const number = c.invoiceNumber ?? invoiceNumber(s, i);
+        const draft = buildInvoice(s, c, number);
+        if ("error" in draft) throw new Error(draft.error);
+        c.invoiceId = await api.create(draft);
+        c.invoiceNumber = number;
+      }
+      c.invoiceUrl ??= await api.send(c.invoiceId);
+      await api.recordPayment(c.invoiceId, c.captured, c.captureId ?? "");
+      c.invoiceStatus = "paid";
+      c.invoiceError = undefined;
       issued++;
     } catch (e) {
       c.invoiceError = e instanceof Error ? e.message : "Invoice failed";

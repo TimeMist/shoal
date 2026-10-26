@@ -43,7 +43,7 @@ test("issueInvoices records a mismatch and sends nothing", async () => {
   const s = setup([{ captured: 23999 }]);
   const { api, log } = fake();
   assert.deepEqual(await issueInvoices(s, api), { issued: 0, failed: 1 });
-  assert.match(s.commitments[0].invoiceError!, /does not match/);
+  assert.match(s.commitments[0].invoiceError!, /\$240\.00 does not match the capture \$239\.99/);
   assert.deepEqual(log, []);
 });
 
@@ -91,4 +91,25 @@ test("invoiceNumber differs for two closesAt", () => {
   b.round.closesAt = new Date(Date.parse(a.round.closesAt) + 1000).toISOString();
   assert.notEqual(invoiceNumber(a, 0), invoiceNumber(b, 0));
   assert.match(invoiceNumber(a, 1), /^SHOAL-demo-2-\d+$/);
+});
+
+test("buildInvoice refuses a missing capture id", () => {
+  const s = setup([{ captureId: undefined }]);
+  assert.match((buildInvoice(s, s.commitments[0], "N") as { error: string }).error, /capture id/);
+});
+
+test("a failure after create and send resumes without re-creating", async () => {
+  const s = setup([{}]);
+  let fail = true;
+  const { api, log } = fake({ recordPayment: async () => { if (fail) throw new Error("pay down"); } });
+  assert.deepEqual(await issueInvoices(s, api), { issued: 0, failed: 1 });
+  const c = s.commitments[0];
+  assert.ok(c.invoiceId && c.invoiceNumber && c.invoiceUrl);
+  assert.equal(c.invoiceStatus, undefined);
+  fail = false;
+  assert.deepEqual(await issueInvoices(s, api), { issued: 1, failed: 0 });
+  assert.equal(c.invoiceStatus, "paid");
+  assert.equal(c.invoiceError, undefined);
+  assert.equal(log.filter((l) => l.startsWith("create")).length, 1);
+  assert.equal(log.filter((l) => l.startsWith("send")).length, 1);
 });

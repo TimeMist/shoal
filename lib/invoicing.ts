@@ -31,7 +31,7 @@ const today = () => new Date().toISOString().slice(0, 10);
 
 export const invoiceApi: InvoiceApi = {
   async create(d: InvoiceDraft) {
-    const inv = await call<{ id?: string }>("POST", "", {
+    const inv = await call<{ id?: string; amount?: { value?: string } }>("POST", "", {
       detail: { invoice_number: d.number, invoice_date: today(), currency_code: "USD", note: d.note, reference: d.reference },
       invoicer: { business_name: d.invoicer },
       primary_recipients: [{ billing_info: { business_name: d.recipient.business, email_address: d.recipient.email } }],
@@ -39,6 +39,9 @@ export const invoiceApi: InvoiceApi = {
       amount: { breakdown: { shipping: { amount: usd(d.shipping) } } },
     }, true);
     if (!inv.id) throw new Error("PayPal invoicing returned no invoice id");
+    if (inv.amount?.value !== toMoney(d.total)) {
+      throw new Error(`PayPal invoice ${inv.id} total ${inv.amount?.value} does not match expected ${toMoney(d.total)}`);
+    }
     return inv.id;
   },
   async send(id) {
