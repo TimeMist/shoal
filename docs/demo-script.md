@@ -2,7 +2,7 @@
 
 Length: 2:40 (Devpost limit 3:00). One take in the PayPal sandbox, receipt-roll round. No music.
 
-Placeholder host: `https://<your-render-app>.onrender.com` (or `http://localhost:3000`). Paths below are relative to it.
+Host: https://shoal-m7zz.onrender.com (or `http://localhost:3000`). Paths below are relative to it.
 
 ## Before recording
 

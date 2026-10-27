@@ -2,7 +2,7 @@
 
 Shoal lets independent shops buy supplies together, so they pay closer to what chains pay. Shops join a short buying round, PayPal reserves each shop's money, and when the round closes each shop pays only the price the group reached.
 
-Built for the [PayPal AI Hackathon](https://paypalaihackathon.devpost.com/). Live demo (PayPal sandbox): `https://<your-render-app>.onrender.com` <!-- TODO: replace with the Render URL after deploy -->
+Built for the [PayPal AI Hackathon](https://paypalaihackathon.devpost.com/). Live demo (PayPal sandbox): https://shoal-m7zz.onrender.com
 
 ## Money flow
 
@@ -131,7 +131,7 @@ This follows the video ([docs/demo-script.md](docs/demo-script.md)).
 - [x] Supplier console: AG Grid allocation and purchase-order export, Bryntum timeline
 - [x] Shop addresses, invoice links and emails kept off public round data
 - [x] Render config
-- [ ] Hosted demo on Render
+- [x] Hosted demo on Render
 - [ ] PayPal multiparty, persistent storage, logins
 
 ## License
