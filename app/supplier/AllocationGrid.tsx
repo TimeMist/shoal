@@ -227,7 +227,14 @@ function Shop({ data }: CustomCellRendererProps<Row>) {
 }
 
 function Delivery({ data }: CustomCellRendererProps<Row>) {
-  return data?.status ? <span className="flex h-full items-center leading-normal"><StatusChip status={data.status} /></span> : null;
+  if (!data?.status) return null;
+  // Once shipped, the tracking number sits under the chip (same two-line pattern as the Invoice cell).
+  return (
+    <span className="flex h-full flex-col items-start justify-center gap-0.5 leading-tight">
+      <StatusChip status={data.status} />
+      {data.tracking && <span className="text-xs text-muted tabular-nums">{data.tracking}</span>}
+    </span>
+  );
 }
 
 function Invoice({ data }: CustomCellRendererProps<Row>) {

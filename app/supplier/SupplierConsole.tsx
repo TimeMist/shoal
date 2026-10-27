@@ -171,7 +171,7 @@ export default function SupplierConsole({ id, initial }: { id: string; initial: 
       label: "Mark shipped",
       busyLabel: "Sending payout",
       primary: true,
-      why: round.status === "failed" ? "The round ended without reaching a tier" : round.status !== "closed" ? "Close the round first" : shipped ? (payouts.find((p) => p.kind === "ship")?.batchId ? "Shipped; payout sent" : "Shipped; demo shops only, so no PayPal Payout") : !sold.length ? "Nothing was captured" : undefined,
+      why: round.status === "failed" ? "The round ended without reaching a tier" : round.status !== "closed" ? "Close the round first" : shipped ? "Shipped. What happened:" : !sold.length ? "Nothing was captured" : undefined,
       note: round.status === "closed" && !shipped ? `Pays ${100 - round.holdbackPct}% of what was captured now and holds ${round.holdbackPct}% for claims.` : undefined,
       run: () => act("ship", post("ship"), (s) => {
         const p = s.payouts.find((x) => x.kind === "ship");
@@ -319,6 +319,7 @@ export default function SupplierConsole({ id, initial }: { id: string; initial: 
                     {s.why ?? s.note}
                   </p>
                   {errors[s.key] && <p role="alert" className="text-[13px] text-jam">{errors[s.key]}</p>}
+                  {s.key === "ship" && shipped && <ShipResult state={state} />}
                 </div>
               </li>
             ))}
@@ -335,7 +336,7 @@ export default function SupplierConsole({ id, initial }: { id: string; initial: 
         )}
 
         <section className="grid gap-3 rounded-lg bg-white p-6 shadow-base max-[900px]:p-5">
-          <h2 className="font-display text-lg font-bold tracking-[-0.01em]">Payouts to {round.supplier}</h2>
+          <h2 id="payouts-title" className="scroll-mt-6 font-display text-lg font-bold tracking-[-0.01em]">Payouts to {round.supplier}</h2>
           {payouts.length ? (
             <ul className="grid gap-2.5">
               {payouts.map((p) => (
@@ -365,7 +366,7 @@ export default function SupplierConsole({ id, initial }: { id: string; initial: 
 
       <section aria-labelledby="alloc-title" className="col-span-2 row-start-2 grid min-w-0 gap-3 max-[1100px]:col-span-1 max-[1100px]:row-start-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 id="alloc-title" className="font-display text-lg font-bold tracking-[-0.01em]">Allocation</h2>
+          <h2 id="alloc-title" className="scroll-mt-6 font-display text-lg font-bold tracking-[-0.01em]">Allocation</h2>
           {round.status === "closed" && (
             <button
               type="button"
@@ -449,5 +450,42 @@ function ClaimCard({ claim, state, busy, error, onDecide }: ClaimProps) {
       )}
       {error && <p role="alert" className="text-[13px] text-jam">{error}</p>}
     </article>
+  );
+}
+
+/** What "Mark shipped" did, in one place, with links to where each part lives on the page. */
+function ShipResult({ state }: { state: RoundState }) {
+  const p = state.payouts.find((x) => x.kind === "ship");
+  if (!p) return null;
+  const sent = state.commitments.filter((c) => c.tracking);
+  const real = sent.filter((c) => !c.simulated).length;
+  const held = state.commitments.reduce((n, c) => n + (c.captured ?? 0), 0) - p.cents;
+  const link = "font-semibold text-jam underline underline-offset-2";
+  return (
+    <div className="grid w-full gap-1.5 rounded-field bg-blush px-3 py-2.5 text-[13px]">
+      <p>
+        <b className="tabular-nums">{sent.length}</b> {sent.length === 1 ? "order" : "orders"} out for delivery
+        {real > 0 && `; tracking added to ${real === 1 ? "the real shop's" : `${real} real shops'`} PayPal ${real === 1 ? "order" : "orders"}`}.
+      </p>
+      <p className="tabular-nums">
+        {p.batchId ? (
+          <>
+            <b>{formatUSD(p.paypalCents)}</b> paid to {state.round.supplier} by PayPal Payout
+            {p.cents > p.paypalCents && <span className="text-muted"> (+{formatUSD(p.cents - p.paypalCents)} from demo shops, simulated)</span>}.
+          </>
+        ) : (
+          <>
+            <b>{formatUSD(p.cents)}</b> to {state.round.supplier}, simulated: only demo shops, so no PayPal Payout.
+          </>
+        )}
+      </p>
+      <p className="tabular-nums">
+        <b>{formatUSD(held)}</b> held back for claims, released once every order is delivered.
+      </p>
+      <p className="flex flex-wrap gap-x-3">
+        <a href="#payouts-title" className={link}>See payouts</a>
+        <a href="#alloc-title" className={link}>See orders</a>
+      </p>
+    </div>
   );
 }
