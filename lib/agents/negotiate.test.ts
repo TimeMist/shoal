@@ -1,7 +1,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { MAX_TURNS, chat, negotiate, negotiatorFor, claudeNegotiator, geminiNegotiator } from "./negotiate.ts";
-import type { Decision } from "./negotiate.ts";
+import { ApiError } from "@google/genai";
+import { MAX_TURNS, chat, negotiate, negotiatorFor, claudeNegotiator, geminiNegotiator, withClaudeFallback } from "./negotiate.ts";
+import type { Decision, Model } from "./negotiate.ts";
+import { withRetry } from "../gemini.ts";
 import { seedRound, simulateShops } from "../seed.ts";
 
 function full() {
@@ -70,4 +72,30 @@ test("history alternates roles and starts and ends with user", () => {
   assert.equal(m[0].role, "user");
   assert.equal(m.at(-1)!.role, "user");
   assert.ok(m.every((x, i) => i === 0 || x.role !== m[i - 1].role));
+});
+
+test("withRetry retries busy errors with the given waits, then gives up", async () => {
+  const waits: number[] = [];
+  let calls = 0;
+  const busy = new Error("503");
+  const sleep = async (ms: number) => void waits.push(ms);
+  await assert.rejects(withRetry(async () => { calls++; throw busy; }, (e) => e === busy, [1000, 3000], sleep), busy);
+  assert.deepEqual([calls, waits], [3, [1000, 3000]]);
+  calls = 0;
+  assert.equal(await withRetry(async () => (++calls < 2 ? Promise.reject(busy) : "ok"), (e) => e === busy, [5], sleep), "ok");
+  await assert.rejects(withRetry(async () => { throw new Error("400"); }, (e) => e === busy, [5], sleep), /400/);
+});
+
+test("an overloaded Gemini move falls back to Claude and says so; other errors still throw", async () => {
+  const overloaded = new ApiError({ message: "high demand", status: 503 });
+  const claude: Model = async () => ({ tool: "propose", price: 110, message: "hi", provider: "claude" });
+  const d = await withClaudeFallback(async () => { throw overloaded; }, claude)("supplier", [], seedRound("receipts"));
+  assert.deepEqual([d.provider, d.price, d.note], ["claude", 110, "Gemini was overloaded, so Claude made this move"]);
+  await assert.rejects(withClaudeFallback(async () => { throw new ApiError({ message: "bad", status: 400 }); }, claude)("shop", [], seedRound("receipts")), /bad/);
+});
+
+test("onTurn reports every turn once, with the guard's verdict, including the last", async () => {
+  const seen: [string, string][] = [];
+  await negotiate(full(), script([d("propose", 170), d("propose", 186), d("accept", 186)]), MAX_TURNS, (t) => seen.push([t.move, t.verdict]));
+  assert.deepEqual(seen, [["propose", "rejected"], ["propose", "ok"], ["accept", "ok"]]);
 });

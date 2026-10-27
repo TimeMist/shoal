@@ -7,10 +7,10 @@ import { formatUSD } from "@/lib/money";
 import { capitalise, tierAt, unitLabel } from "@/lib/round";
 import type { Claim, RoundState } from "@/lib/store";
 import { RESET_EVENT } from "../DemoBar";
-import { api, errorText, retailFor, retailSource, type Retail } from "../rounds/[id]/api";
+import { api, errorText, retailFor, retailSource, streamNegotiation, type Retail } from "../rounds/[id]/api";
 import { KIND_WORD } from "../rounds/[id]/ClaimForm";
 import AllocationGrid, { exportPurchaseOrder, type GridHandle } from "./AllocationGrid";
-import Negotiation from "./Negotiation";
+import Negotiation, { type Live } from "./Negotiation";
 import Timeline from "./Timeline";
 import { DEAL, GHOST, GHOST_SM, PRIMARY, SPINNER } from "./ui";
 
@@ -22,7 +22,7 @@ export default function SupplierConsole({ id, initial }: { id: string; initial: 
   const [state, setState] = useState(initial);
   const [busy, setBusy] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [replay, setReplay] = useState(0); // bumps per fresh negotiation, remounting the replay
+  const [live, setLive] = useState<Live | null>(null); // turns streamed by the negotiation in flight
   const [said, setSaid] = useState("");
   const grid = useRef<GridHandle>(null);
   const [retail, setRetail] = useState<Retail>();
@@ -52,7 +52,7 @@ export default function SupplierConsole({ id, initial }: { id: string; initial: 
     } catch {} // a missed poll is retried on the next tick
   }, [id]);
   useEffect(() => {
-    const onReset = () => (gen.current++, setReplay(0), setErrors({}), setSaid(""), refresh());
+    const onReset = () => (gen.current++, setLive(null), setErrors({}), setSaid(""), refresh());
     addEventListener(RESET_EVENT, onReset);
     return () => removeEventListener(RESET_EVENT, onReset);
   }, [refresh]);
@@ -114,8 +114,17 @@ export default function SupplierConsole({ id, initial }: { id: string; initial: 
       busyLabel: "Negotiating",
       why: !open ? notOpen : !commitments.length ? "No shops have joined yet" : undefined,
       note: open && commitments.length ? `Agents negotiate below the ${formatUSD(tier.price)} tier price, never under the ${formatUSD(round.floor)} floor.` : undefined,
-      run: () =>
-        act("negotiate", post("negotiate"), () => (setReplay((n) => n + 1), "")),
+      run: () => {
+        setLive(null);
+        const g = gen.current;
+        return act("negotiate", () =>
+          streamNegotiation(id, (e) => {
+            if (g !== gen.current) return;
+            if (e.type === "start") setLive({ turns: [], providers: e.providers, maxTurns: e.maxTurns });
+            if (e.type === "turn") setLive((l) => l && { ...l, turns: [...l.turns, e.turn] });
+          }),
+        );
+      },
     },
     {
       key: "close",
@@ -162,9 +171,12 @@ export default function SupplierConsole({ id, initial }: { id: string; initial: 
       label: "Mark shipped",
       busyLabel: "Sending payout",
       primary: true,
-      why: round.status === "failed" ? "The round ended without reaching a tier" : round.status !== "closed" ? "Close the round first" : shipped ? "Shipped; payout sent" : !sold.length ? "Nothing was captured" : undefined,
+      why: round.status === "failed" ? "The round ended without reaching a tier" : round.status !== "closed" ? "Close the round first" : shipped ? (payouts.find((p) => p.kind === "ship")?.batchId ? "Shipped; payout sent" : "Shipped; demo shops only, so no PayPal Payout") : !sold.length ? "Nothing was captured" : undefined,
       note: round.status === "closed" && !shipped ? `Pays ${100 - round.holdbackPct}% of what was captured now and holds ${round.holdbackPct}% for claims.` : undefined,
-      run: () => act("ship", post("ship"), () => `Shipped. Payout sent to ${round.supplier}.`),
+      run: () => act("ship", post("ship"), (s) => {
+        const p = s.payouts.find((x) => x.kind === "ship");
+        return p?.batchId ? `Shipped. ${formatUSD(p.paypalCents)} paid to ${round.supplier} by PayPal Payout.` : "Shipped. Only demo shops, so no PayPal Payout.";
+      }),
     },
     {
       key: "deliver",
@@ -269,7 +281,7 @@ export default function SupplierConsole({ id, initial }: { id: string; initial: 
           </div>
           <div className="grid gap-3">
             <h2 className="font-display text-lg font-bold tracking-[-0.01em]">Negotiating the tier</h2>
-            <Negotiation key={replay} state={state} pending={busy === "negotiate"} animate={replay > 0} />
+            <Negotiation state={state} pending={busy === "negotiate"} live={live} />
           </div>
         </section>
 
@@ -327,11 +339,18 @@ export default function SupplierConsole({ id, initial }: { id: string; initial: 
           {payouts.length ? (
             <ul className="grid gap-2.5">
               {payouts.map((p) => (
-                <li key={p.batchId} className="flex items-baseline justify-between gap-3 border-t border-rule pt-2.5 first:border-0 first:pt-0">
+                <li key={p.kind} className="flex items-baseline justify-between gap-3 border-t border-rule pt-2.5 first:border-0 first:pt-0">
                   <span className="grid min-w-0">
                     <span className="text-[15px]">{p.kind === "ship" ? "Shipment payout" : "Holdback release"}</span>
-                    <span className="truncate text-xs text-muted">
-                      PayPal batch <code>{p.batchId}</code>
+                    <span className="text-xs text-muted">
+                      {p.batchId ? (
+                        <>
+                          {formatUSD(p.paypalCents)} by PayPal Payout, batch <code className="break-all">{p.batchId}</code>
+                        </>
+                      ) : (
+                        "No PayPal Payout: only demo shops"
+                      )}
+                      {p.batchId && p.cents > p.paypalCents && `. ${formatUSD(p.cents - p.paypalCents)} from demo shops is simulated.`}
                     </span>
                   </span>
                   <b className="font-display text-lg font-[750] text-leaf-ink tabular-nums">{formatUSD(p.cents)}</b>

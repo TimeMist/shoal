@@ -1,7 +1,7 @@
 import type Anthropic from "@anthropic-ai/sdk";
 import type { Content, FunctionDeclaration } from "@google/genai";
 import { ask } from "../claude.ts";
-import { askGemini } from "../gemini.ts";
+import { askGemini, geminiBusy } from "../gemini.ts";
 import { validateOffer } from "../guard.ts";
 import { ConfigError } from "../http.ts";
 import { tierAt } from "../round.ts";
@@ -15,6 +15,7 @@ export type Decision = {
   price?: number;
   message: string;
   provider: Provider;
+  note?: string;
 };
 export type Model = (side: Side, transcript: NegotiationTurn[], s: RoundState) => Promise<Decision>;
 
@@ -49,31 +50,36 @@ export async function negotiate(
   s: RoundState,
   model: Model,
   maxTurns = MAX_TURNS,
+  onTurn?: (turn: NegotiationTurn) => void, // called once per turn, after the guard's verdict
 ): Promise<{ turns: NegotiationTurn[]; agreed?: number }> {
   const turns: NegotiationTurn[] = [];
   const units = unitsCommitted(s);
   for (let i = 0; i < maxTurns; i++) {
     const side: Side = i % 2 === 0 ? "shop" : "supplier";
     const d = await model(side, turns, s);
-    const turn: NegotiationTurn = { side, provider: d.provider, move: d.tool, price: d.price ?? 0, message: d.message, verdict: "ok" };
+    const turn: NegotiationTurn = { side, provider: d.provider, move: d.tool, price: d.price ?? 0, message: d.message, verdict: "ok", ...(d.note && { note: d.note }) };
     turns.push(turn);
-    if (d.tool === "none") {
-      Object.assign(turn, { verdict: "rejected", reason: "no tool call" });
-      continue;
-    }
-    if (d.tool === "walk_away") return { turns };
-    const verdict = d.price === undefined ? { ok: false as const, reason: "price_cents is required" } : validateOffer(s.round, units, d.price);
-    if (!verdict.ok) {
-      Object.assign(turn, { verdict: "rejected", reason: verdict.reason });
-      continue;
-    }
-    if (d.tool === "accept") {
-      const offer = turns.findLast((t) => t.side !== side && t.verdict === "ok");
-      if (offer?.price !== d.price) {
-        Object.assign(turn, { verdict: "rejected", reason: "You can only accept the other agent's last valid price" });
+    try {
+      if (d.tool === "none") {
+        Object.assign(turn, { verdict: "rejected", reason: "no tool call" });
         continue;
       }
-      return { turns, agreed: d.price };
+      if (d.tool === "walk_away") return { turns };
+      const verdict = d.price === undefined ? { ok: false as const, reason: "price_cents is required" } : validateOffer(s.round, units, d.price);
+      if (!verdict.ok) {
+        Object.assign(turn, { verdict: "rejected", reason: verdict.reason });
+        continue;
+      }
+      if (d.tool === "accept") {
+        const offer = turns.findLast((t) => t.side !== side && t.verdict === "ok");
+        if (offer?.price !== d.price) {
+          Object.assign(turn, { verdict: "rejected", reason: "You can only accept the other agent's last valid price" });
+          continue;
+        }
+        return { turns, agreed: d.price };
+      }
+    } finally {
+      onTurn?.(turn);
     }
   }
   return { turns };
@@ -171,11 +177,28 @@ export function negotiatorFor(provider: string): Model {
 
 const KEYS = { claude: "ANTHROPIC_API_KEY", gemini: "GEMINI_API_KEY" } as const;
 
-// Reads the two provider settings and fails loudly: no silent fallback.
-export function modelFromEnv(env = process.env): Model {
+/** If Gemini stays overloaded after its retries, Claude makes that one move, and the turn says so. */
+export function withClaudeFallback(gemini: Model, claude: Model): Model {
+  return async (side, transcript, s) => {
+    try {
+      return await gemini(side, transcript, s);
+    } catch (e) {
+      if (!geminiBusy(e)) throw e;
+      return { ...(await claude(side, transcript, s)), note: "Gemini was overloaded, so Claude made this move" };
+    }
+  };
+}
+
+// Reads the two provider settings and fails loudly on bad config; the only fallback (overloaded Gemini) is visible on the turn.
+export const providersFromEnv = (env = process.env) => {
   const pick = (v: string | undefined) => v || "claude";
-  const byside = { shop: pick(env.SHOP_AGENT_PROVIDER), supplier: pick(env.SUPPLIER_AGENT_PROVIDER) };
-  const models = { shop: negotiatorFor(byside.shop), supplier: negotiatorFor(byside.supplier) };
+  return { shop: pick(env.SHOP_AGENT_PROVIDER), supplier: pick(env.SUPPLIER_AGENT_PROVIDER) };
+};
+
+export function modelFromEnv(env = process.env): Model {
+  const byside = providersFromEnv(env);
+  const pickModel = (p: string) => (p === "gemini" && env.ANTHROPIC_API_KEY ? withClaudeFallback(geminiNegotiator, claudeNegotiator) : negotiatorFor(p));
+  const models = { shop: pickModel(byside.shop), supplier: pickModel(byside.supplier) };
   for (const p of new Set(Object.values(byside)) as Set<Provider>) {
     if (!env[KEYS[p]]) throw new ConfigError(`${KEYS[p]} is not set (needed for the ${p} agent)`);
   }

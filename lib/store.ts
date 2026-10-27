@@ -40,7 +40,8 @@ export type Claim = {
   status: "open" | "approved" | "rejected";
 };
 
-export type Payout = { batchId: string; kind: "ship" | "holdback"; cents: number };
+// cents covers every shop; paypalCents is the real shops' share, the only part PayPal pays (simulated shops never paid in).
+export type Payout = { batchId: string; kind: "ship" | "holdback"; cents: number; paypalCents: number };
 
 export type NegotiationTurn = {
   side: "shop" | "supplier";
@@ -50,6 +51,8 @@ export type NegotiationTurn = {
   message: string;
   verdict: "ok" | "rejected";
   reason?: string;
+  /** Shown on the turn, e.g. why another model made this move. */
+  note?: string;
 };
 
 export type RoundState = {

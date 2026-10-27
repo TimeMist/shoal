@@ -162,7 +162,7 @@ export default function AllocationGrid({ state, busyId, disabled, onDeliver, ref
       { field: "delivery", headerName: "Delivery cost", type: "rightAligned", minWidth: 118, flex: 0.5, valueFormatter: money },
       { field: "captured", headerName: "Captured", type: "rightAligned", minWidth: 92, flex: 0.6, valueFormatter: money },
       { field: "saved", headerName: "Saved", type: "rightAligned", minWidth: 80, flex: 0.5, valueFormatter: money, cellClass: `${RIGHT} font-semibold text-leaf-ink` },
-      { field: "status", headerName: "Delivery", minWidth: 124, flex: 0.6, cellRenderer: Delivery },
+      { field: "status", headerName: "Delivery", minWidth: 176, flex: 0.8, cellRenderer: Delivery }, // fits the widest chip, "Out for delivery"
       { field: "refunded", headerName: "Refunded", type: "rightAligned", minWidth: 100, flex: 0.5, valueFormatter: ({ value }) => (value ? formatUSD(value) : "—") },
       { field: "invoice", headerName: "Invoice", minWidth: 110, flex: 0.8, cellRenderer: Invoice },
       ...(["address", "unit", "goods", "captureId", "invoiceNumber", "tracking"] as const).map((field) => ({ field, hide: true })),
