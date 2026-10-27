@@ -34,5 +34,9 @@ services:
         sync: false
       - key: SUPPLIER_PAYPAL_EMAIL
         sync: false
+      - key: SHOAL_PAYPAL_EMAIL
+        sync: false
+      - key: SHOP_PAYPAL_EMAILS
+        sync: false
       - key: CHANNEL3_API_KEY
         sync: false

@@ -18,7 +18,9 @@ const DEMO_SHOPS = 8; // lib/seed.ts DEMO_SHOPS
 
 type Step = { key: string; label: string; busyLabel: string; why?: string; note?: string; primary?: boolean; run?: () => Promise<void> };
 
-export default function SupplierConsole({ id, initial, supplierEmail }: { id: string; initial: RoundState; supplierEmail?: string }) {
+export type SandboxAccounts = { shoal?: string; supplier?: string; shops: string[] };
+
+export default function SupplierConsole({ id, initial, accounts }: { id: string; initial: RoundState; accounts: SandboxAccounts }) {
   const [state, setState] = useState(initial);
   const [busy, setBusy] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -363,7 +365,7 @@ export default function SupplierConsole({ id, initial, supplierEmail }: { id: st
           )}
         </section>
 
-        <PayPalAccounts roundId={id} supplier={round.supplier} supplierEmail={supplierEmail} paidAtShip={100 - round.holdbackPct} />
+        <PayPalAccounts roundId={id} supplier={round.supplier} accounts={accounts} paidAtShip={100 - round.holdbackPct} />
       </aside>
 
       <section aria-labelledby="alloc-title" className="col-span-2 row-start-2 grid min-w-0 gap-3 max-[1100px]:col-span-1 max-[1100px]:row-start-3">
@@ -493,36 +495,72 @@ function ShipResult({ state }: { state: RoundState }) {
   );
 }
 
-const SANDBOX_ACTIVITY = "https://www.sandbox.paypal.com/myaccount/activities/";
+// PayPal's sandbox sign-in ignores an email in the URL, so the link signs in and returns to the activity page, and Copy fills the clipboard.
+const SANDBOX_SIGNIN = `https://www.sandbox.paypal.com/signin?returnUri=${encodeURIComponent("https://www.sandbox.paypal.com/myaccount/activities/")}`;
+
+function CopyEmail({ email }: { email: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button
+      type="button"
+      className="rounded-pill bg-tint px-2 py-0.5 text-xs font-semibold text-muted hover:text-ink"
+      onClick={() => navigator.clipboard.writeText(email).then(() => (setCopied(true), setTimeout(() => setCopied(false), 1500)), () => {})}
+    >
+      {copied ? "Copied" : "Copy email"}
+      <span className="sr-only"> {email}</span>
+    </button>
+  );
+}
+
+function Login({ email, fallback }: { email?: string; fallback: string }) {
+  return email ? (
+    <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+      <code className="text-[13px] font-semibold text-ink">{email}</code>
+      <CopyEmail email={email} />
+    </span>
+  ) : (
+    <span className="text-muted">{fallback}</span>
+  );
+}
+
+const OPEN = "font-semibold text-jam underline underline-offset-2";
+const SignIn = () => (
+  <a href={SANDBOX_SIGNIN} target="_blank" rel="noreferrer" className={OPEN}>
+    Sign in to PayPal sandbox<span className="sr-only"> (opens in a new tab)</span>
+  </a>
+);
 
 /** Where to see the money in PayPal itself: each sandbox account has its own login. */
-function PayPalAccounts({ roundId, supplier, supplierEmail, paidAtShip }: { roundId: string; supplier: string; supplierEmail?: string; paidAtShip: number }) {
-  const out = "font-semibold text-jam underline underline-offset-2";
-  const rows = [
-    { who: "Shoal (the platform)", what: "Shop payments captured, refunds and payouts sent.", login: "the business account that owns this app's PayPal credentials (Developer Dashboard › Sandbox accounts), not the supplier's", href: SANDBOX_ACTIVITY },
-    { who: supplier, what: `Payouts received: ${paidAtShip}% at shipping, the holdback after delivery.`, login: supplierEmail ? `the supplier sandbox account (${supplierEmail})` : "the supplier sandbox account", href: SANDBOX_ACTIVITY },
-  ];
+function PayPalAccounts({ roundId, supplier, accounts, paidAtShip }: { roundId: string; supplier: string; accounts: SandboxAccounts; paidAtShip: number }) {
+  const row = "grid gap-1 border-t border-rule pt-2.5 text-[13px] first:border-0 first:pt-0";
   return (
     <section aria-labelledby="paypal-title" className="grid gap-3 rounded-lg bg-white p-6 shadow-base max-[900px]:p-5">
       <h2 id="paypal-title" className="scroll-mt-6 font-display text-lg font-bold tracking-[-0.01em]">See it in PayPal</h2>
+      <p className="text-xs text-muted">Three roles, one sandbox account each. Copy the email, then sign in with it.</p>
       <ul className="grid gap-2.5">
-        {rows.map((r) => (
-          <li key={r.who} className="grid gap-0.5 border-t border-rule pt-2.5 text-[13px] first:border-0 first:pt-0">
-            <span className="text-[15px] font-semibold">{r.who}</span>
-            <span>{r.what}</span>
-            <span className="text-muted">Sign in as {r.login}.</span>
-            <a href={r.href} target="_blank" rel="noreferrer" className={out}>
-              Open PayPal sandbox activity<span className="sr-only"> (opens in a new tab)</span>
-            </a>
-          </li>
-        ))}
-        <li className="grid gap-0.5 border-t border-rule pt-2.5 text-[13px]">
-          <span className="text-[15px] font-semibold">Each shop</span>
-          <span>Pays with a personal (buyer) sandbox account, never the supplier&apos;s. Its payment and PayPal invoice are on its receipt.</span>
-          <a href={`/rounds/${roundId}`} className={out}>Open the shop view</a>
+        <li className={row}>
+          <span className="text-[15px] font-semibold">Shoal (the platform)</span>
+          <span>Shop payments captured, refunds, payouts sent, invoices issued.</span>
+          <Login email={accounts.shoal} fallback="The business account that owns this app's PayPal credentials (set SHOAL_PAYPAL_EMAIL to show it)." />
+          <SignIn />
+        </li>
+        <li className={row}>
+          <span className="text-[15px] font-semibold">{supplier} (the supplier)</span>
+          <span>Payouts received: {paidAtShip}% at shipping, the holdback after delivery.</span>
+          <Login email={accounts.supplier} fallback="The account in SUPPLIER_PAYPAL_EMAIL." />
+          <SignIn />
+        </li>
+        <li className={row}>
+          <span className="text-[15px] font-semibold">Shops (the buyers)</span>
+          <span>Pay at join with one of these personal accounts, never the supplier&apos;s or Shoal&apos;s. Each shop&apos;s payment and invoice are on its receipt.</span>
+          {accounts.shops.length ? accounts.shops.map((e) => <Login key={e} email={e} fallback="" />) : <span className="text-muted">Any personal (buyer) sandbox account (set SHOP_PAYPAL_EMAILS to list them).</span>}
+          <span className="flex flex-wrap gap-x-3">
+            <SignIn />
+            <a href={`/rounds/${roundId}`} className={OPEN}>Open the shop view</a>
+          </span>
         </li>
       </ul>
-      <p className="text-xs text-muted">PayPal keeps one sign-in per browser, so open the second account in a private window.</p>
+      <p className="text-xs text-muted">PayPal keeps one sign-in per browser: log out, or use a private window, to switch accounts.</p>
     </section>
   );
 }

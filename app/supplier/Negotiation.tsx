@@ -1,6 +1,7 @@
 "use client";
 
 import LiveRegion from "@/components/LiveRegion";
+import ModelLogo from "@/components/ModelLogo";
 import Swimmy, { type AgentState } from "@/components/Swimmy";
 import { formatUSD } from "@/lib/money";
 import { tierAt, unitLabel } from "@/lib/round";
@@ -113,7 +114,7 @@ function Party({ name, sub, provider, tint, lines, fish }: PartyProps) {
         <div className="min-w-0">
           <h3 className="flex flex-wrap items-center gap-x-2 font-display text-base font-bold tracking-[-0.01em]">
             {name}
-            {provider && <span className="rounded-pill bg-tint px-2 py-0.5 font-sans text-xs font-semibold text-muted">{PROVIDER[provider]}</span>}
+            {provider && <ModelLogo provider={provider} />}
           </h3>
           <p className="text-xs text-muted tabular-nums">{sub}</p>
         </div>

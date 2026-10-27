@@ -5,7 +5,7 @@ import { Suspense } from "react";
 import Wordmark from "@/components/Wordmark";
 import { getState } from "@/lib/store";
 import SupplierConsole from "../SupplierConsole";
-import { maskEmail, publicState } from "@/lib/privacy";
+import { publicState } from "@/lib/privacy";
 
 export const metadata: Metadata = { title: "Supplier console · Shoal" };
 
@@ -27,5 +27,12 @@ async function Console({ params }: Pick<PageProps<"/supplier/[id]">, "params">) 
   const { id } = await params;
   const state = getState(id);
   if (!state) notFound();
-  return <SupplierConsole id={id} initial={publicState(state)} supplierEmail={maskEmail(process.env.SUPPLIER_PAYPAL_EMAIL)} />;
+  return <SupplierConsole id={id} initial={publicState(state)} accounts={sandboxAccounts()} />;
+}
+
+// Sandbox logins only (fake addresses), shown so the demo user knows which PayPal account plays which role.
+function sandboxAccounts() {
+  const env = process.env;
+  const shops = (env.SHOP_PAYPAL_EMAILS ?? "").split(",").map((e) => e.trim()).filter(Boolean);
+  return { shoal: env.SHOAL_PAYPAL_EMAIL || undefined, supplier: env.SUPPLIER_PAYPAL_EMAIL || undefined, shops };
 }

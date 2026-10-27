@@ -85,6 +85,7 @@ You need Node 24 and a free Bryntum trial login (for `@bryntum/scheduler-trial`,
 3. **A supplier.** Create a second **business** sandbox account and put its email in `SUPPLIER_PAYPAL_EMAIL`. Payouts go there.
 
    That makes three sandbox accounts, one per role. Keep them apart: Shoal refuses a join paid with the supplier's account.
+   Optionally set `SHOAL_PAYPAL_EMAIL` and `SHOP_PAYPAL_EMAILS` (comma-separated) so the supplier console's **See it in PayPal** panel lists each login with a Copy button. PayPal's sandbox sign-in can't be pre-filled from a link.
 
    | Role | Sandbox account | What you see in its PayPal activity |
    |---|---|---|
