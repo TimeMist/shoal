@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { DOTS, DOT_COUNT, EYE, dotsPerShop } from "./swimmy.ts";
+import { DOTS, DOT_COUNT, EYE, SMALL_DOTS, SMALL_EYE, SMALL_R, dotsPerShop } from "./swimmy.ts";
 
 test("the Swimmy is exactly 61 dots, ordered head to tail", () => {
   assert.equal(DOTS.length, 61);
@@ -39,4 +39,10 @@ test("many tiny shops are capped at 61 dots in total", () => {
 
 test("no shops, no dots", () => {
   assert.deepEqual(dotsPerShop([], 0, 1500), []);
+});
+
+test("the small mark is 30 dots, clear of its eye, ramping coral to plum", () => {
+  assert.equal(SMALL_DOTS.length, 30);
+  for (const d of SMALL_DOTS) assert.ok(Math.hypot(d.x - SMALL_EYE.x, d.y - SMALL_EYE.y) > SMALL_EYE.r + SMALL_R * 0.9);
+  assert.equal(SMALL_DOTS.find((d) => d.x === 6)?.c, "#F45D4F");
 });

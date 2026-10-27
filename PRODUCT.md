@@ -39,7 +39,7 @@ On-demand buying rounds with automatic settlement: no membership scheme, no fixe
 ## Brand Commitments
 
 - Name: **Shoal**. Small fish swim together to move like a big one; independent shops buy together to get chain prices.
-- Mark: the **Swimmy**, 61 small dots (shops) that together form one fish; the ink-outlined eye is the agent. It evolved from the approved Agent Tag via a "many become one" exploration the user chose. Solid fish below 48px; lighter dot ramp on Jam and ink.
+- Mark: the **Swimmy**, 61 small dots (shops) that together form one fish; the ink-outlined eye is the agent. It evolved from the approved Agent Tag via a "many become one" exploration the user chose. A coarser 30-dot small mark below 48px; lighter dot ramp on Jam and ink.
 - Visual world: the locked Berry palette and its five ownership rules, Funnel Display and Funnel Sans, flat never glowing (see DESIGN.md).
 - References the owner admires: Linear, Stripe, Revolut. Rejected: retro, bland fintech, playful-soft (Arc, Raycast), generic AI pink-violet.
 

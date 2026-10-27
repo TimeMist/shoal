@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useId, useState, useSyncExternalStore, type CSSProperties } from "react";
-import { DOTS, EYE, R, RAMP, SLOT_R, SOLID, SOLID_EYE } from "@/lib/swimmy";
+import { useEffect, useState, useSyncExternalStore, type CSSProperties } from "react";
+import { DOTS, EYE, R, SLOT_R, SMALL_DOTS, SMALL_EYE, SMALL_R } from "@/lib/swimmy";
 
 const INK = "#1F0A24";
 const SLOT = "#E8C3CE";
@@ -80,7 +80,7 @@ export function Fish({ delays, tone = "light", mono, state = "idle", look = [0, 
 }
 
 type SwimmyProps = Omit<FishProps, "delays" | "closed"> & {
-  /** Rendered size in px. Below 48 the solid fish replaces the dots. */
+  /** Rendered size in px. Below 48 the small mark (30 bigger dots) replaces the 61 dots. */
   size?: number;
   /** Accessible name; omit when decorative. */
   label?: string;
@@ -89,22 +89,16 @@ type SwimmyProps = Omit<FishProps, "delays" | "closed"> & {
 
 /** The Shoal mark, alive: blinks at idle, tilts while thinking, smiles when happy. */
 export default function Swimmy({ size = 56, label, className, ...fish }: SwimmyProps) {
-  const id = "sw" + useId().replace(/[^\w-]/g, ""); // safe inside url(#...)
   const a11y = label ? { role: "img", "aria-label": label } : { "aria-hidden": true };
   if (size < 48) {
-    const e = SOLID_EYE;
+    const e = SMALL_EYE;
     return (
       <svg viewBox="0 0 64 64" width={size} height={size} className={className} {...a11y}>
-        <defs>
-          <linearGradient id={id} x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0" stopColor={RAMP[0]} />
-            <stop offset=".5" stopColor={RAMP[1]} />
-            <stop offset="1" stopColor={RAMP[2]} />
-          </linearGradient>
-        </defs>
-        <path d={SOLID} fill={fish.mono ?? `url(#${id})`} />
+        {SMALL_DOTS.map((d, k) => (
+          <circle key={k} cx={d.x} cy={d.y} r={SMALL_R} fill={fish.mono ?? (fish.tone === "dark" ? d.dark : d.c)} />
+        ))}
         <circle cx={e.x} cy={e.y} r={e.r} fill="#fff" stroke={INK} strokeWidth={e.stroke} />
-        <circle cx={e.x + 0.7} cy={e.y} r={e.pupil} fill={INK} />
+        <circle cx={e.x + 0.6} cy={e.y} r={e.pupil} fill={INK} />
       </svg>
     );
   }

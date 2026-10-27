@@ -256,7 +256,7 @@ A berry palette held almost entirely in calm neutrals, so its saturated role col
 - **Field Stroke** (#E3C9D1) and **Disabled Fill** (#EEDDE2): input borders and disabled buttons.
 
 ### Named Rules
-**The One Gradient, One Moment Rule.** Coral to berry to plum appears only across the logo's dots and the completed fish (and the solid-fish favicon, which is the same mark at small sizes). Never on backgrounds, buttons, cards or text. The same-hue shading inside the coral and plum role swatches (#FF8476 to #F45D4F, #7A35B5 to #5A1E8C) is swatch material, not a second gradient.
+**The One Gradient, One Moment Rule.** Coral to berry to plum appears only across the logo's dots and the completed fish (and the small-mark favicon, which is the same mark at small sizes). Never on backgrounds, buttons, cards or text. The same-hue shading inside the coral and plum role swatches (#FF8476 to #F45D4F, #7A35B5 to #5A1E8C) is swatch material, not a second gradient.
 
 **The Jam, Not Black Rule.** Deep surfaces, headline numbers and primary buttons use Jam, never near-black or navy. Blackberry Ink is for text, and appears as a surface only as the second on-dark logo ground.
 
@@ -314,7 +314,7 @@ A hybrid of tonal layering and one soft shadow. The default depth is white on bl
 
 Rounded and calm. Radii step 10px (navigation items), 12px (fields, negotiation lines), 14px (ladder rungs, demo wells), 16px (cards, swatches, photo wells), 22px (the pool), 24px (panels, tiles, data views), 28px (Jam bands), 32px (the round card), and full pills for buttons, chips, status and lanes. Small marks use 4 to 8px: 6px on inline code and focus rings, 8px on timeline bars, 4px on tiny demo glyph bars. Borders are rare: hairline Rule dividers, 1px field strokes and the 2px Ink top rule on definition rows.
 
-The Swimmy is the brand's silhouette. On a 64-unit grid: 61 flat dots of radius 1.75 on a hex lattice (4.4 across, 3.8 down, odd rows offset 2.2) inside a fish outline with a forked tail to the right. The eye sits at the head (left): radius 3.6, white sclera with a 1.1 Blackberry Ink outline and an ink pupil of radius 1.9, so it reads on white. Clear space is one eye diameter. Below 48px the dot mark is replaced by the solid fish: the same silhouette filled with the ramp, with a larger eye (radius 6.2, 1.6 outline, pupil 3.3). Logo files: full colour, on-dark (ink and Jam), one-colour Ink / Jam / white (the eye becomes an outline ring in the mono colour), lockups with the lowercase "shoal" wordmark in ink and white, the solid-fish favicon, and an app icon of on-dark dots on a Jam rounded square (112 / 512 corner).
+The Swimmy is the brand's silhouette. On a 64-unit grid: 61 flat dots of radius 1.75 on a hex lattice (4.4 across, 3.8 down, odd rows offset 2.2) inside a fish outline with a forked tail to the right. The eye sits at the head (left): radius 3.6, white sclera with a 1.1 Blackberry Ink outline and an ink pupil of radius 1.9, so it reads on white. Clear space is one eye diameter. Below 48px the 61-dot mark is replaced by the small mark: the same fish built from 30 dots of radius 2.45 on a coarser hex lattice (6 across, 5.2 down, odd rows offset 3) in the same ramp, with a larger eye (radius 4.6, 1.3 outline, pupil 2.4), so it still reads as many becoming one at 16px. Logo files: full colour, on-dark (ink and Jam), one-colour Ink / Jam / white (the eye becomes an outline ring in the mono colour), lockups with the lowercase "shoal" wordmark in ink and white, the small-mark favicon, and an app icon of on-dark dots on a Jam rounded square (112 / 512 corner).
 
 ## Components
 
@@ -345,7 +345,7 @@ Soft, pill-shaped and calm at rest; one confident colour per action.
 - **Quantity stepper:** A pill with a Rule inset stroke, 42px square buttons on white (Tint on hover) and a 17px Display 700 tabular value announced in a polite live region; the reservation sentence beneath updates with it.
 
 ### Navigation
-- **Style:** A quiet text index in Muted Plum 14px, 6px 10px padding, 10px radius; hover and current item take Ink text on Tint. The solid-fish mark and the "shoal" wordmark in Funnel Display 700 sit above it. Below 900px it becomes a sticky horizontal strip on Blush with a Rule bottom border; the wordmark hides and the mark stays.
+- **Style:** A quiet text index in Muted Plum 14px, 6px 10px padding, 10px radius; hover and current item take Ink text on Tint. The small dot mark and the "shoal" wordmark in Funnel Display 700 sit above it. Below 900px it becomes a sticky horizontal strip on Blush with a Rule bottom border; the wordmark hides and the mark stays.
 
 ### Round Pool (signature)
 The defining component. A white round card (32px radius, soft lift) holds a header with the product and supplier, the pool and the tier ladder side by side, a feed of arrival chips and a caption. The pool is a Pool Well (22px radius, 230px minimum height) showing the Swimmy at about 3.6x scale as faint Slot dots (radius 1.05). Each shop that joins fills `round(totalUnits / roundUnits × 61)` dots: each dot flies in from the right, grows to radius 1.75 and takes its ramp colour (ease-spring 900ms, 25ms stagger). The committed-units count (Display 750 28px, tabular) sits outside the fish in the pool's top-left, so text never overlaps the dots. The ladder lists each tier (Blush rungs, 14px radius, Display 750 20px prices); the current tier is Jam with white text, scaled 1.02, and passed tiers are struck through. The eye glances at every arrival; feed chips are Shop Tint for shops and Supplier Tint for the supplier. At close the fish completes, pulses once (scale 1.06), one 2.5px Berry ripple spreads, the eye closes into a smile, the tier rungs release and a Berry "Agreed" rung appears with the achieved price. Then everything is still. The card is a polite live region.
@@ -368,7 +368,7 @@ Motion tells the story of the round: shops arrive, the price steps down, the gro
 - **Do** set every price and count in tabular figures, with the group price in Ink and the solo price struck through in Muted Plum.
 - **Do** say where the money is: Reserved, Captured or Released, always as a word on the chip, never colour alone.
 - **Do** use the on-dark ramp (#FF8A7A to #FF6FA8 to #C9A0E8) whenever the dot mark sits on Jam or ink.
-- **Do** use the dot mark at 48px and up and the solid fish below 48px.
+- **Do** use the 61-dot mark at 48px and up and the 30-dot small mark below 48px.
 - **Do** meet WCAG 2.2 AA: body text at least 4.5:1, dots and UI shapes at least 3:1.
 - **Do** render PayPal buttons through PayPal's SDK, after the one-sentence reservation explanation.
 - **Do** give every animation a still equivalent under reduced motion.
@@ -380,7 +380,7 @@ Motion tells the story of the round: shops arrive, the price steps down, the gro
 - **Don't** use gold, yellow or PayPal blue in Shoal UI, and never restyle PayPal's buttons.
 - **Don't** put white text on Coral.
 - **Don't** add neon halos, glassmorphism, backdrop blur or coloured glows; dots are flat.
-- **Don't** flip or tilt the Swimmy, recolour it outside the palette, use the solid fish at 48px and up, or add glows, shadows or effects to it.
+- **Don't** flip or tilt the Swimmy, recolour it outside the palette, use the small mark at 48px and up, fill the fish as a solid shape, or add glows, shadows or effects to it.
 - **Don't** put numbers or text over the fish in the round pool.
 - **Don't** use Leaf as decoration or as a generic success colour.
 - **Don't** animate for decoration: nothing drifts or loops without meaning, and a closed round gets one final moment, then stillness.

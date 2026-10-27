@@ -16,9 +16,6 @@ function ramp(t: number, stops: RGB[]): string {
 export const R = 1.75; // filled dot radius
 export const SLOT_R = 1.05; // empty dot radius in the pool
 export const EYE = { x: 14, y: 30, r: 3.6, pupil: 1.9, stroke: 1.1 };
-// Solid silhouette for marks under 48px, with its larger eye.
-export const SOLID = "M6.2 31 Q8 19 25 19 Q38 19 43.5 26 L57 16.5 Q58.6 15.6 58.2 17.4 L54.4 32 L58.2 46.6 Q58.6 48.4 57 47.5 L43.5 38 Q38 47 25 47 Q8 47 6.2 33 Z";
-export const SOLID_EYE = { x: 16, y: 31, r: 6.2, pupil: 3.3, stroke: 1.6 };
 export const RAMP = LIGHT.map(hex);
 export const RAMP_DARK = DARK.map(hex);
 
@@ -36,6 +33,17 @@ for (let row = 0; row < 14; row++)
     if (inside(x, y) && Math.hypot(x - EYE.x, y - EYE.y) > 4.6)
       dots.push({ x: +x.toFixed(2), y: +y.toFixed(2), c: ramp((x - 6) / 52, LIGHT), dark: ramp((x - 6) / 52, DARK) });
   }
+// The small mark (under 48px): the same fish from 30 bigger dots on a coarser lattice, so it stays a shoal at 16px.
+export const SMALL_R = 2.45;
+export const SMALL_EYE = { x: 14, y: 32, r: 4.6, pupil: 2.4, stroke: 1.3 };
+export const SMALL_DOTS: readonly Dot[] = [];
+for (let k = -4; k <= 4; k++)
+  for (let col = 0; col < 10; col++) {
+    const x = 6 + col * 6 + (k % 2 ? 3 : 0), y = 32 + k * 5.196;
+    if (inside(x, y) && Math.hypot(x - SMALL_EYE.x, y - SMALL_EYE.y) > SMALL_EYE.r + SMALL_R * 0.9)
+      (SMALL_DOTS as Dot[]).push({ x, y: +y.toFixed(2), c: ramp((x - 6) / 52, LIGHT), dark: ramp((x - 6) / 52, DARK) });
+  }
+
 /** Ordered head to tail, so the fish builds forward as shops join. */
 export const DOTS: readonly Dot[] = dots.sort((a, b) => a.x - b.x || a.y - b.y);
 export const DOT_COUNT = DOTS.length;
