@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import RoundPool from "@/components/RoundPool";
 import StatusChip from "@/components/StatusChip";
 import { useReducedMotion } from "@/components/Swimmy";
@@ -11,9 +11,9 @@ import { GHOST_SM } from "./ui";
 
 type Props = { product: string; supplier: string; unit: Round["unit"]; tiers: Tier[]; shops: { shop: string; qty: number }[] };
 
-// One shop every 350 ms, then the close beat; the whole play, choreography included, ends inside 5 s (WCAG 2.2.2).
-// All client-side, nothing is written.
-const START = 250, STEP = 350, CLOSE = 500;
+// One shop a second, slow enough to watch each price drop, then the close beat. The play runs past 5 s,
+// so Skip stops it (WCAG 2.2.2). All client-side, nothing is written.
+const START = 400, STEP = 1000, CLOSE = 900;
 
 /** The landing hero: the demo round's eight shops join, the price steps down, the fish completes. */
 export default function HeroRound({ product, supplier, unit, tiers, shops }: Props) {
@@ -21,10 +21,12 @@ export default function HeroRound({ product, supplier, unit, tiers, shops }: Pro
   const [run, setRun] = useState(0);
   const [n, setN] = useState(0);
   const [closed, setClosed] = useState(false);
+  const skipped = useRef(false);
 
   useEffect(() => {
     // Reduced motion: the completed fish, still.
-    if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches || skipped.current) {
+      skipped.current = false;
       const t = setTimeout(() => (setN(shops.length), setClosed(true)));
       return () => clearTimeout(t);
     }
@@ -32,6 +34,13 @@ export default function HeroRound({ product, supplier, unit, tiers, shops }: Pro
     ts.push(setTimeout(() => setClosed(true), START + (shops.length - 1) * STEP + CLOSE));
     return () => ts.forEach(clearTimeout);
   }, [run, shops]);
+
+  function skip() {
+    skipped.current = true;
+    setRun((r) => r + 1); // cancels the pending timers
+    setN(shops.length);
+    setClosed(true);
+  }
 
   function replay() {
     setN(0);
@@ -59,6 +68,11 @@ export default function HeroRound({ product, supplier, unit, tiers, shops }: Pro
           <p className="text-[13px] text-muted">Round by {supplier} · demo</p>
         </div>
         <div className="flex items-center gap-3">
+          {!closed && !reduce && (
+            <button type="button" className={GHOST_SM} onClick={skip}>
+              Skip
+            </button>
+          )}
           {closed && !reduce && (
             <button type="button" className={GHOST_SM} onClick={replay}>
               Replay

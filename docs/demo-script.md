@@ -9,7 +9,7 @@ Host: https://shoal-m7zz.onrender.com (or `http://localhost:3000`). Paths below 
 1. Set `SHOP_AGENT_PROVIDER=claude` and `SUPPLIER_AGENT_PROVIDER=gemini`.
 2. Open `/`, click **Reset demo**.
 3. Open `/supplier/receipts` once so the retail benchmark loads. Check the header shows "Retail benchmark ≈ $1.50 a roll". If it doesn't, click **Refresh retail** (once a minute at most).
-4. Click **Simulate 8 shops**. The console shows 1,100 rolls, 8 shops, tier price $1.13.
+4. Click **Simulate 8 shops**. They join one at a time over about 8 seconds; the price tiers step down to 1,100 rolls, 8 shops, $1.13.
 5. Open `/rounds/receipts` in a second tab. Log in to the PayPal sandbox buyer (personal) account in this browser beforehand, so the PayPal window doesn't ask for a password on camera.
 6. Have a JPEG of a damaged roll ready (optional).
 

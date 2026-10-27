@@ -13,6 +13,8 @@ type Props = {
   closed?: boolean;
   /** Channel3 retail price per unit: context above the ladder, never a rung. */
   retail?: Benchmark | null;
+  /** "row" lays the rungs side by side (the supplier console header); the default is a column. */
+  layout?: "column" | "row";
 };
 
 const unitCount = (n: number, unit: Round["unit"]) => `${n.toLocaleString("en-US")} ${n === 1 ? unit.one : unit.many}`;
@@ -21,12 +23,12 @@ const RUNG = "flex items-baseline justify-between gap-2 rounded-rung px-3 py-2.5
 const PRICE = "font-display text-xl font-[750] tracking-[-0.02em] tabular-nums";
 
 /** Price per tier; the current tier is Jam, passed tiers struck through, and an Agreed rung appears at close. */
-export default function TierLadder({ tiers, units, unit, agreed, closed = false, retail }: Props) {
+export default function TierLadder({ tiers, units, unit, agreed, closed = false, retail, layout = "column" }: Props) {
   const idx = tiers.indexOf(tierAt(tiers, units));
   // Tiers only step down, so any tier past the first is a drop.
   const message = agreed != null ? `Agreed at ${formatUSD(agreed)} a ${unit.one}.` : idx > 0 && !closed ? `Price dropped to ${formatUSD(tiers[idx].price)} a ${unit.one}.` : "";
   return (
-    <div className="flex flex-col gap-1.5 max-[900px]:flex-row max-[900px]:flex-wrap">
+    <div className={layout === "row" ? "flex flex-row flex-wrap gap-1.5 [&>li]:flex-[1_1_120px] [&_li]:flex-[1_1_120px] [&>div]:flex-[1_1_120px]" : "flex flex-col gap-1.5 max-[900px]:flex-row max-[900px]:flex-wrap"}>
       {retail && (
         <p className="px-3 pb-1 text-[13px] text-muted tabular-nums max-[900px]:basis-full">
           Retail elsewhere <span className="whitespace-nowrap">≈ {formatUSD(retail.perUnit)} a {unit.one}</span>

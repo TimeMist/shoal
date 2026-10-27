@@ -10,6 +10,7 @@ import { RESET_EVENT } from "../DemoBar";
 import { api, errorText, retailFor, retailSource, streamNegotiation, type Retail } from "../rounds/[id]/api";
 import { KIND_WORD } from "../rounds/[id]/ClaimForm";
 import AllocationGrid, { exportPurchaseOrder, type GridHandle } from "./AllocationGrid";
+import TierLadder from "@/components/TierLadder";
 import Negotiation, { type Live } from "./Negotiation";
 import Timeline from "./Timeline";
 import { DEAL, GHOST, GHOST_SM, PRIMARY, SPINNER } from "./ui";
@@ -108,7 +109,18 @@ export default function SupplierConsole({ id, initial, accounts }: { id: string;
       label: remaining > 0 ? `Simulate ${remaining} ${remaining === 1 ? "shop" : "shops"}` : "Simulate shops",
       busyLabel: "Adding shops",
       why: !open ? notOpen : remaining <= 0 ? `All ${DEMO_SHOPS} demo shops have joined` : undefined,
-      run: () => act("simulate", post("simulate", { count: remaining }), (s) => `${s.commitments.length} shops in the round.`),
+      // One shop at a time, a second apart, so each price drop shows here and on the shop page.
+      run: () =>
+        act("simulate", async () => {
+          const g = gen.current;
+          let s = state;
+          for (let i = 0; i < remaining && g === gen.current; i++) {
+            if (i) await new Promise((r) => setTimeout(r, 1000));
+            s = await post("simulate", { count: 1 })();
+            if (g === gen.current) setState(s);
+          }
+          return s;
+        }, (s) => `${s.commitments.length} shops in the round.`),
     },
     {
       key: "negotiate",
@@ -141,8 +153,9 @@ export default function SupplierConsole({ id, initial, accounts }: { id: string;
         ),
     },
     {
+      // Invoices go out automatically at close; this step only appears to retry one that failed.
       key: "invoices",
-      label: "Issue invoices",
+      label: failedInvoices ? `Retry ${failedInvoices === 1 ? "invoice" : `${failedInvoices} invoices`}` : "Issue invoices",
       busyLabel: "Issuing invoices",
       why:
         round.status !== "closed"
@@ -244,6 +257,8 @@ export default function SupplierConsole({ id, initial, accounts }: { id: string;
   );
 
   const price = round.finalPrice ?? tier.price;
+  const next = round.tiers.find((t) => t.min > units);
+  const deal = round.status === "closed" && state.agreedPrice !== undefined && state.agreedPrice === round.finalPrice ? round.finalPrice : undefined;
   const status = round.status === "open" ? <StatusChip status="open" /> : <span className="text-sm font-semibold">{round.status === "closed" ? "Round closed" : "Round ended"}</span>;
 
   return (
@@ -263,8 +278,21 @@ export default function SupplierConsole({ id, initial, accounts }: { id: string;
             <Stat term={`${capitalise(round.unit.many)} committed`} value={units.toLocaleString("en-US")} />
             <Stat term="Shops" value={String(commitments.length)} />
             <Stat term={round.finalPrice !== undefined ? "Final price" : "Tier price now"} value={formatUSD(price)} />
-            <Stat term="Holdback held" value={formatUSD(state.holdbackLeft)} />
+            <Stat
+              term="Holdback held"
+              value={formatUSD(state.holdbackLeft)}
+              hint={`When the round ships, Shoal pays the supplier ${100 - round.holdbackPct}% and keeps ${round.holdbackPct}% back. If an order arrives damaged or short, the shop is refunded from it. Once every order is delivered or resolved, what is left goes to the supplier.`}
+            />
           </dl>
+          <div className="grid gap-2">
+            <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+              <h2 className="font-display text-base font-bold tracking-[-0.01em]">Price tiers</h2>
+              <p className="text-[13px] text-muted tabular-nums">
+                {round.status !== "open" ? `Closed at ${formatUSD(price)} a ${round.unit.one}` : next ? `${(next.min - units).toLocaleString("en-US")} more ${round.unit.many} to ${formatUSD(next.price)} a ${round.unit.one}` : "Top tier reached"}
+              </p>
+            </div>
+            <TierLadder layout="row" tiers={round.tiers} units={units} unit={round.unit} agreed={deal} closed={round.status !== "open"} />
+          </div>
           <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-t border-rule pt-3 text-sm">
             <p className="min-w-0 tabular-nums" aria-live="polite">
               <b>Retail benchmark</b>{" "}
@@ -298,7 +326,7 @@ export default function SupplierConsole({ id, initial, accounts }: { id: string;
         <section className="grid gap-3 rounded-lg bg-white p-6 shadow-lift max-[900px]:p-5">
           <h2 className="font-display text-lg font-bold tracking-[-0.01em]">Run the round</h2>
           <ol className="grid gap-3">
-            {steps.map((s, i) => (
+            {steps.filter((s) => s.key !== "invoices" || (round.status === "closed" && toInvoice.length > 0)).map((s, i) => (
               <li key={s.key} className="grid grid-cols-[22px_minmax(0,1fr)] gap-x-2.5 border-t border-rule pt-3 first:border-0 first:pt-0">
                 <span className="pt-2 text-[13px] font-semibold text-muted tabular-nums">{i + 1}</span>
                 <div className="grid justify-items-start gap-1.5">
@@ -397,10 +425,23 @@ export default function SupplierConsole({ id, initial, accounts }: { id: string;
   );
 }
 
-function Stat({ term, value }: { term: string; value: string }) {
+function Stat({ term, value, hint }: { term: string; value: string; hint?: string }) {
+  const id = `hint-${term.replace(/\W+/g, "-").toLowerCase()}`;
   return (
     <div className="border-t border-ink pt-2.5">
-      <dt className="text-[13px] text-muted">{term}</dt>
+      <dt className="flex items-center gap-1.5 text-[13px] text-muted">
+        {term}
+        {hint && (
+          <span className="group relative inline-flex">
+            <button type="button" aria-describedby={id} aria-label={`What is ${term.toLowerCase()}?`} className="grid size-[18px] place-items-center rounded-full bg-tint text-[11px] font-bold text-muted hover:text-ink focus-visible:text-ink">
+              ?
+            </button>
+            <span id={id} role="tooltip" className="pointer-events-none invisible absolute top-full right-0 z-20 mt-2 w-[260px] rounded-field bg-ink px-3 py-2.5 text-[13px] leading-snug font-normal text-white opacity-0 shadow-lift transition-opacity group-focus-within:visible group-focus-within:opacity-100 group-hover:visible group-hover:opacity-100">
+              {hint}
+            </span>
+          </span>
+        )}
+      </dt>
       <dd className="font-display text-[22px] font-[750] tracking-[-0.02em] tabular-nums">{value}</dd>
     </div>
   );
