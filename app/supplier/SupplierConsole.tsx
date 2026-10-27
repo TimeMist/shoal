@@ -321,7 +321,7 @@ export default function SupplierConsole({ id, initial, accounts }: { id: string;
                     {s.why ?? s.note}
                   </p>
                   {errors[s.key] && <p role="alert" className="text-[13px] text-jam">{errors[s.key]}</p>}
-                  {s.key === "ship" && shipped && <ShipResult state={state} />}
+                  {s.key === "ship" && shipped && <ShipResult state={state} accounts={accounts} />}
                 </div>
               </li>
             ))}
@@ -337,7 +337,7 @@ export default function SupplierConsole({ id, initial, accounts }: { id: string;
           </section>
         )}
 
-        <section className="grid gap-3 rounded-lg bg-white p-6 shadow-base max-[900px]:p-5">
+        <section id="payouts" className="grid gap-3 rounded-lg bg-white p-6 shadow-base max-[900px]:p-5">
           <h2 id="payouts-title" className="scroll-mt-6 font-display text-lg font-bold tracking-[-0.01em]">Payouts to {round.supplier}</h2>
           {payouts.length ? (
             <ul className="grid gap-2.5">
@@ -368,7 +368,7 @@ export default function SupplierConsole({ id, initial, accounts }: { id: string;
         <PayPalAccounts roundId={id} supplier={round.supplier} accounts={accounts} paidAtShip={100 - round.holdbackPct} />
       </aside>
 
-      <section aria-labelledby="alloc-title" className="col-span-2 row-start-2 grid min-w-0 gap-3 max-[1100px]:col-span-1 max-[1100px]:row-start-3">
+      <section id="orders" aria-labelledby="alloc-title" className="rounded-lg col-span-2 row-start-2 grid min-w-0 gap-3 max-[1100px]:col-span-1 max-[1100px]:row-start-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 id="alloc-title" className="scroll-mt-6 font-display text-lg font-bold tracking-[-0.01em]">Allocation</h2>
           {round.status === "closed" && (
@@ -458,7 +458,7 @@ function ClaimCard({ claim, state, busy, error, onDecide }: ClaimProps) {
 }
 
 /** What "Mark shipped" did, in one place, with links to where each part lives on the page. */
-function ShipResult({ state }: { state: RoundState }) {
+function ShipResult({ state, accounts }: { state: RoundState; accounts: SandboxAccounts }) {
   const p = state.payouts.find((x) => x.kind === "ship");
   if (!p) return null;
   const sent = state.commitments.filter((c) => c.tracking);
@@ -487,10 +487,21 @@ function ShipResult({ state }: { state: RoundState }) {
         <b>{formatUSD(held)}</b> held back for claims, released once every order is delivered.
       </p>
       <p className="flex flex-wrap gap-x-3">
-        <a href="#payouts-title" className={link}>See payouts</a>
-        <a href="#alloc-title" className={link}>See orders</a>
-        <a href="#paypal-title" className={link}>See it in PayPal</a>
+        <a href="#payouts" className={link} onClick={jumpTo("payouts")}>See the payout</a>
+        <a href="#orders" className={link} onClick={jumpTo("orders")}>See the orders</a>
       </p>
+      <details className="group">
+        <summary className={`${link} cursor-pointer list-none [&::-webkit-details-marker]:hidden`}>
+          Check it in PayPal <span aria-hidden="true" className="inline-block transition-transform group-open:rotate-90">›</span>
+        </summary>
+        <div className="mt-2 grid gap-1.5 border-t border-rule pt-2">
+          <span className="text-muted">Payout sent from Shoal:</span>
+          <Login email={accounts.shoal} fallback="The business account that owns the app's credentials." />
+          <span className="text-muted">Payout received by {state.round.supplier}:</span>
+          <Login email={accounts.supplier} fallback="The account in SUPPLIER_PAYPAL_EMAIL." />
+          <SignIn />
+        </div>
+      </details>
     </div>
   );
 }
@@ -563,4 +574,19 @@ function PayPalAccounts({ roundId, supplier, accounts, paidAtShip }: { roundId: 
       <p className="text-xs text-muted">PayPal keeps one sign-in per browser: log out, or use a private window, to switch accounts.</p>
     </section>
   );
+}
+
+/** Scroll to a section and flash it briefly, so two nearby targets never look like the same jump. */
+function jumpTo(id: string) {
+  return (e: React.MouseEvent) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    e.preventDefault();
+    const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    el.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "center" });
+    el.classList.remove("jump-flash");
+    void el.offsetWidth; // restart the animation on a repeat click
+    el.classList.add("jump-flash");
+    history.replaceState(null, "", `#${id}`);
+  };
 }

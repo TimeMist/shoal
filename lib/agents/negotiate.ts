@@ -24,7 +24,7 @@ const priceSchema = {
   type: "object",
   properties: {
     price_cents: { type: "integer", description: "Price per unit in whole cents" },
-    message: { type: "string", description: "One or two sentences to the other agent" },
+    message: { type: "string", description: "One or two sentences to the other agent. Write any price in dollars, like $1.06, never as cents." },
   },
   required: ["price_cents", "message"],
   additionalProperties: false,
@@ -93,7 +93,7 @@ function system(side: Side, s: RoundState): string {
   const { one, many } = round.unit;
   const tiers = round.tiers.map((t) => `${t.min}+ ${many}: ${t.price}`).join("; ");
   const facts =
-    `Product: ${round.product} from ${round.supplier}. Prices are whole cents per ${one}. ` +
+    `Product: ${round.product} from ${round.supplier}. Prices are whole cents per ${one} (106 means $1.06): use cents in price_cents, but write dollars like $1.06 in your messages, which people read. ` +
     `${s.commitments.length} independent shops have committed ${units} ${many} and prepaid-authorised them. Tier price list: ${tiers}. ` +
     `At ${units} ${many} the current tier price is ${now.price}.` +
     (next ? ` The next tier is ${next.min} ${many} at ${next.price}.` : "");
