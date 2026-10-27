@@ -499,7 +499,7 @@ const SANDBOX_ACTIVITY = "https://www.sandbox.paypal.com/myaccount/activities/";
 function PayPalAccounts({ roundId, supplier, supplierEmail, paidAtShip }: { roundId: string; supplier: string; supplierEmail?: string; paidAtShip: number }) {
   const out = "font-semibold text-jam underline underline-offset-2";
   const rows = [
-    { who: "Shoal (the platform)", what: "Shop payments captured, refunds and payouts sent.", login: "the sandbox business account that owns this app's PayPal credentials", href: SANDBOX_ACTIVITY },
+    { who: "Shoal (the platform)", what: "Shop payments captured, refunds and payouts sent.", login: "the business account that owns this app's PayPal credentials (Developer Dashboard › Sandbox accounts), not the supplier's", href: SANDBOX_ACTIVITY },
     { who: supplier, what: `Payouts received: ${paidAtShip}% at shipping, the holdback after delivery.`, login: supplierEmail ? `the supplier sandbox account (${supplierEmail})` : "the supplier sandbox account", href: SANDBOX_ACTIVITY },
   ];
   return (
@@ -518,7 +518,7 @@ function PayPalAccounts({ roundId, supplier, supplierEmail, paidAtShip }: { roun
         ))}
         <li className="grid gap-0.5 border-t border-rule pt-2.5 text-[13px]">
           <span className="text-[15px] font-semibold">Each shop</span>
-          <span>Its payment and PayPal invoice are on its receipt, signed in as the sandbox buyer.</span>
+          <span>Pays with a personal (buyer) sandbox account, never the supplier&apos;s. Its payment and PayPal invoice are on its receipt.</span>
           <a href={`/rounds/${roundId}`} className={out}>Open the shop view</a>
         </li>
       </ul>

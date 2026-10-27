@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { authorizationMatches, orderAmount } from "./join.ts";
+import { authorizationMatches, orderAmount, payerIsSupplier } from "./join.ts";
 
 const quote = { roundId: "demo", reserved: 25920 };
 
@@ -23,4 +23,11 @@ test("orderAmount splits goods and delivery", () => {
       shipping: { currencyCode: "USD", value: "18.00" },
     },
   });
+});
+
+test("payerIsSupplier matches the supplier email case-insensitively, never on missing emails", () => {
+  assert.equal(payerIsSupplier("SB-Sup@Business.example.com ", "sb-sup@business.example.com"), true);
+  assert.equal(payerIsSupplier("sb-shop@personal.example.com", "sb-sup@business.example.com"), false);
+  assert.equal(payerIsSupplier(undefined, "sb-sup@business.example.com"), false);
+  assert.equal(payerIsSupplier("sb-shop@personal.example.com", undefined), false);
 });

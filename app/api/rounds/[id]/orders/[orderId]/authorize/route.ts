@@ -1,6 +1,6 @@
 import { verifyQuoteToken } from "@/lib/deal";
 import { body, fail, paypalFail } from "@/lib/http";
-import { authorizationMatches } from "@/lib/join";
+import { authorizationMatches, payerIsSupplier } from "@/lib/join";
 import { publicCommitment } from "@/lib/privacy";
 import { authorizeOrder, type Authorization, dealSecret, voidAuthorization } from "@/lib/paypal";
 import { addCommitment, findByOrder, getState, markAuthorized } from "@/lib/store";
@@ -24,6 +24,10 @@ export async function POST(request: Request, ctx: RouteContext<"/api/rounds/[id]
   if (!authorizationMatches(auth, q)) {
     await voidAuthorization(auth.authorizationId).catch(() => {});
     return fail("Authorization does not match the quote", 400);
+  }
+  if (payerIsSupplier(auth.payerEmail, process.env.SUPPLIER_PAYPAL_EMAIL)) {
+    await voidAuthorization(auth.authorizationId).catch(() => {});
+    return fail(`That PayPal account is ${s.round.supplier}'s, the supplier's. Nothing was charged. Join with a sandbox buyer (personal) account instead.`, 409);
   }
   const again = findByOrder(s, orderId); // a double submit may have finished while PayPal was answering
   if (again) return Response.json({ commitment: publicCommitment(again) });

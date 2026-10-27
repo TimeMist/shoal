@@ -14,3 +14,8 @@ export function authorizationMatches(
 ): boolean {
   return auth.amount === toMoney(quote.reserved) && auth.referenceId === quote.roundId;
 }
+
+// A shop paying with the supplier's own PayPal account would get its own payouts back and tangle the demo.
+export function payerIsSupplier(payerEmail: string | undefined, supplierEmail: string | undefined): boolean {
+  return !!payerEmail && !!supplierEmail && payerEmail.trim().toLowerCase() === supplierEmail.trim().toLowerCase();
+}

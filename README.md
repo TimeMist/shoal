@@ -83,6 +83,14 @@ You need Node 24 and a free Bryntum trial login (for `@bryntum/scheduler-trial`,
 1. **PayPal app.** At developer.paypal.com > Apps & Credentials (Sandbox), create an app and turn on **Payouts** and **Invoicing**. Put its client ID in `PAYPAL_CLIENT_ID` and `NEXT_PUBLIC_PAYPAL_CLIENT_ID`, and its secret in `PAYPAL_CLIENT_SECRET`.
 2. **A buyer.** Under Testing Tools > Sandbox Accounts, use a **personal** account to join rounds through the PayPal button.
 3. **A supplier.** Create a second **business** sandbox account and put its email in `SUPPLIER_PAYPAL_EMAIL`. Payouts go there.
+
+   That makes three sandbox accounts, one per role. Keep them apart: Shoal refuses a join paid with the supplier's account.
+
+   | Role | Sandbox account | What you see in its PayPal activity |
+   |---|---|---|
+   | Shoal (platform) | the business account that owns the app (step 1) | shop payments captured, refunds, payouts sent, invoices issued |
+   | Supplier | the second business account (step 3) | payouts received |
+   | Shop | a personal account (step 2) | its payment and its invoice |
 4. **Secrets and agents.** Set `DEAL_SECRET` (`openssl rand -base64 32`), `ANTHROPIC_API_KEY`, and `GEMINI_API_KEY` if either side uses Gemini.
 5. **Channel3.** Get a free-tier key at trychannel3.com and set `CHANNEL3_API_KEY`. Each lookup costs one credit; results are cached for 24 hours.
 6. **Invoice emails.** Sandbox invoices don't reach a real inbox. Open them from the "View" link on the shop's receipt, or find the emails in the sandbox notifications in the PayPal developer dashboard.
