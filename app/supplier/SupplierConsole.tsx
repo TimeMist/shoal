@@ -18,7 +18,7 @@ const DEMO_SHOPS = 8; // lib/seed.ts DEMO_SHOPS
 
 type Step = { key: string; label: string; busyLabel: string; why?: string; note?: string; primary?: boolean; run?: () => Promise<void> };
 
-export default function SupplierConsole({ id, initial }: { id: string; initial: RoundState }) {
+export default function SupplierConsole({ id, initial, supplierEmail }: { id: string; initial: RoundState; supplierEmail?: string }) {
   const [state, setState] = useState(initial);
   const [busy, setBusy] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -362,6 +362,8 @@ export default function SupplierConsole({ id, initial }: { id: string; initial: 
             <p className="text-sm text-muted">No payouts yet. Shipping pays {100 - round.holdbackPct}% of what was captured; the rest is released after claims.</p>
           )}
         </section>
+
+        <PayPalAccounts roundId={id} supplier={round.supplier} supplierEmail={supplierEmail} paidAtShip={100 - round.holdbackPct} />
       </aside>
 
       <section aria-labelledby="alloc-title" className="col-span-2 row-start-2 grid min-w-0 gap-3 max-[1100px]:col-span-1 max-[1100px]:row-start-3">
@@ -485,7 +487,42 @@ function ShipResult({ state }: { state: RoundState }) {
       <p className="flex flex-wrap gap-x-3">
         <a href="#payouts-title" className={link}>See payouts</a>
         <a href="#alloc-title" className={link}>See orders</a>
+        <a href="#paypal-title" className={link}>See it in PayPal</a>
       </p>
     </div>
+  );
+}
+
+const SANDBOX_ACTIVITY = "https://www.sandbox.paypal.com/myaccount/activities/";
+
+/** Where to see the money in PayPal itself: each sandbox account has its own login. */
+function PayPalAccounts({ roundId, supplier, supplierEmail, paidAtShip }: { roundId: string; supplier: string; supplierEmail?: string; paidAtShip: number }) {
+  const out = "font-semibold text-jam underline underline-offset-2";
+  const rows = [
+    { who: "Shoal (the platform)", what: "Shop payments captured, refunds and payouts sent.", login: "the sandbox business account that owns this app's PayPal credentials", href: SANDBOX_ACTIVITY },
+    { who: supplier, what: `Payouts received: ${paidAtShip}% at shipping, the holdback after delivery.`, login: supplierEmail ? `the supplier sandbox account (${supplierEmail})` : "the supplier sandbox account", href: SANDBOX_ACTIVITY },
+  ];
+  return (
+    <section aria-labelledby="paypal-title" className="grid gap-3 rounded-lg bg-white p-6 shadow-base max-[900px]:p-5">
+      <h2 id="paypal-title" className="scroll-mt-6 font-display text-lg font-bold tracking-[-0.01em]">See it in PayPal</h2>
+      <ul className="grid gap-2.5">
+        {rows.map((r) => (
+          <li key={r.who} className="grid gap-0.5 border-t border-rule pt-2.5 text-[13px] first:border-0 first:pt-0">
+            <span className="text-[15px] font-semibold">{r.who}</span>
+            <span>{r.what}</span>
+            <span className="text-muted">Sign in as {r.login}.</span>
+            <a href={r.href} target="_blank" rel="noreferrer" className={out}>
+              Open PayPal sandbox activity<span className="sr-only"> (opens in a new tab)</span>
+            </a>
+          </li>
+        ))}
+        <li className="grid gap-0.5 border-t border-rule pt-2.5 text-[13px]">
+          <span className="text-[15px] font-semibold">Each shop</span>
+          <span>Its payment and PayPal invoice are on its receipt, signed in as the sandbox buyer.</span>
+          <a href={`/rounds/${roundId}`} className={out}>Open the shop view</a>
+        </li>
+      </ul>
+      <p className="text-xs text-muted">PayPal keeps one sign-in per browser, so open the second account in a private window.</p>
+    </section>
   );
 }
