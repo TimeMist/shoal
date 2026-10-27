@@ -46,3 +46,12 @@ test("resetDemo seeds both rounds and getState lazily seeds either", () => {
   assert.equal(getState("demo")?.round.supplier, "Meadow Oat Co.");
   assert.equal(getState("nope"), undefined);
 });
+
+test("the console can simulate up to 10 shops; the receipts round then passes its top tier", () => {
+  const s = seedRound("receipts");
+  simulateShops(s, 10);
+  assert.equal(s.commitments.length, 10);
+  assert.equal(s.commitments.reduce((n, c) => n + c.qty, 0), 1250);
+  simulateShops(s, 1);
+  assert.equal(s.commitments.length, 10, "no eleventh demo shop");
+});

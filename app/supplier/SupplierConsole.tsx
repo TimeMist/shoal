@@ -15,9 +15,10 @@ import Negotiation, { type Live } from "./Negotiation";
 import Timeline from "./Timeline";
 import { DEAL, GHOST, GHOST_SM, PRIMARY, SPINNER } from "./ui";
 
-const DEMO_SHOPS = 8; // lib/seed.ts DEMO_SHOPS
+const DEMO_SHOPS = 10; // lib/seed.ts DEMO_SHOPS.length
+const SCRIPTED_SHOPS = 8; // the demo script and landing hero use the first eight
 
-type Step = { key: string; label: string; busyLabel: string; why?: string; note?: string; primary?: boolean; run?: () => Promise<void> };
+type Step = { key: string; label: string; busyLabel: string; why?: string; note?: string; primary?: boolean; run?: () => Promise<void>; extra?: React.ReactNode };
 
 export type SandboxAccounts = { shoal?: string; supplier?: string; shops: string[] };
 
@@ -25,6 +26,7 @@ export default function SupplierConsole({ id, initial, accounts }: { id: string;
   const [state, setState] = useState(initial);
   const [busy, setBusy] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [addCount, setAddCount] = useState<number | null>(null); // shops to simulate; null = the default
   const [live, setLive] = useState<Live | null>(null); // turns streamed by the negotiation in flight
   const [said, setSaid] = useState("");
   const grid = useRef<GridHandle>(null);
@@ -55,7 +57,7 @@ export default function SupplierConsole({ id, initial, accounts }: { id: string;
     } catch {} // a missed poll is retried on the next tick
   }, [id]);
   useEffect(() => {
-    const onReset = () => (gen.current++, setLive(null), setErrors({}), setSaid(""), refresh());
+    const onReset = () => (gen.current++, setLive(null), setAddCount(null), setErrors({}), setSaid(""), refresh());
     addEventListener(RESET_EVENT, onReset);
     return () => removeEventListener(RESET_EVENT, onReset);
   }, [refresh]);
@@ -92,7 +94,9 @@ export default function SupplierConsole({ id, initial, accounts }: { id: string;
   const open = round.status === "open" && !state.closing;
   const tier = tierAt(round.tiers, units);
   const first = round.tiers[1]?.min ?? 0;
-  const remaining = DEMO_SHOPS - commitments.filter((c) => c.simulated).length;
+  const simulated = commitments.filter((c) => c.simulated).length;
+  const remaining = DEMO_SHOPS - simulated;
+  const toAdd = Math.min(remaining, Math.max(1, addCount ?? SCRIPTED_SHOPS - simulated));
   const pendingClaims = new Set([...claims.filter((k) => k.status === "open").map((k) => k.commitmentId), ...commitments.filter((c) => c.status === "claim").map((c) => c.id)]).size;
   const awaiting = claims.filter((k) => k.status === "open");
   const sold = commitments.filter((c) => c.captured !== undefined);
@@ -106,7 +110,7 @@ export default function SupplierConsole({ id, initial, accounts }: { id: string;
   const steps: Step[] = [
     {
       key: "simulate",
-      label: remaining > 0 ? `Simulate ${remaining} ${remaining === 1 ? "shop" : "shops"}` : "Simulate shops",
+      label: remaining > 0 ? `Simulate ${toAdd} ${toAdd === 1 ? "shop" : "shops"}` : "Simulate shops",
       busyLabel: "Adding shops",
       why: !open ? notOpen : remaining <= 0 ? `All ${DEMO_SHOPS} demo shops have joined` : undefined,
       // One shop at a time, a second apart, so each price drop shows here and on the shop page.
@@ -114,13 +118,29 @@ export default function SupplierConsole({ id, initial, accounts }: { id: string;
         act("simulate", async () => {
           const g = gen.current;
           let s = state;
-          for (let i = 0; i < remaining && g === gen.current; i++) {
+          for (let i = 0; i < toAdd && g === gen.current; i++) {
             if (i) await new Promise((r) => setTimeout(r, 1000));
             s = await post("simulate", { count: 1 })();
             if (g === gen.current) setState(s);
           }
           return s;
-        }, (s) => `${s.commitments.length} shops in the round.`),
+        }, (s) => (setAddCount(null), `${s.commitments.length} shops in the round.`)),
+      extra:
+        open && remaining > 0 ? (
+          <label className="flex items-center gap-1.5 text-[13px] text-muted">
+            Shops
+            <select
+              value={toAdd}
+              disabled={!!busy}
+              onChange={(e) => setAddCount(Number(e.target.value))}
+              className="rounded-field border border-rule bg-white px-2 py-1 text-[14px] text-ink tabular-nums"
+            >
+              {Array.from({ length: remaining }, (_, i) => i + 1).map((n) => (
+                <option key={n} value={n}>{n}</option>
+              ))}
+            </select>
+          </label>
+        ) : undefined,
     },
     {
       key: "negotiate",
@@ -331,17 +351,20 @@ export default function SupplierConsole({ id, initial, accounts }: { id: string;
                 <span className="pt-2 text-[13px] font-semibold text-muted tabular-nums">{i + 1}</span>
                 <div className="grid justify-items-start gap-1.5">
                   {s.run ? (
-                    <button
-                      type="button"
-                      className={s.primary ? PRIMARY : GHOST}
-                      disabled={!!s.why || !!busy}
-                      aria-busy={busy === s.key || undefined}
-                      aria-describedby={`why-${s.key}`}
-                      onClick={s.run}
-                    >
-                      {busy === s.key && <span aria-hidden="true" className={SPINNER} />}
-                      {busy === s.key ? s.busyLabel : s.label}
-                    </button>
+                    <div className="flex flex-wrap items-center gap-2.5">
+                      <button
+                        type="button"
+                        className={s.primary ? PRIMARY : GHOST}
+                        disabled={!!s.why || !!busy}
+                        aria-busy={busy === s.key || undefined}
+                        aria-describedby={`why-${s.key}`}
+                        onClick={s.run}
+                      >
+                        {busy === s.key && <span aria-hidden="true" className={SPINNER} />}
+                        {busy === s.key ? s.busyLabel : s.label}
+                      </button>
+                      {s.extra}
+                    </div>
                   ) : (
                     <p className="pt-1 text-[15px] font-semibold">{s.label}</p>
                   )}

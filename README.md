@@ -102,7 +102,7 @@ This follows the video ([docs/demo-script.md](docs/demo-script.md)).
 
 1. Click **Reset demo** in the top bar.
 2. Open the supplier view once after every restart or deploy (`/supplier/receipts`), so the retail benchmark is loaded. Shop pages only read the cached benchmark; the supplier console runs the lookup. **Refresh retail** runs it again, at most once a minute.
-3. On the supplier console, click **Simulate 8 shops**. They join one at a time, about a second apart, and the price tiers step down to 1,100 rolls at $1.13.
+3. On the supplier console, click **Simulate 8 shops** (the Shops picker beside it goes up to 10; 8 is the scripted demo). They join one at a time, about a second apart, and the price tiers step down to 1,100 rolls at $1.13.
 4. Open `/rounds/receipts`. The ladder shows "Retail elsewhere ≈ $1.50 a roll" and its Sources. Enter a shop name, keep 50 rolls and pay with the PayPal sandbox buyer. Shoal reserves $66.50 (goods $56.50 + delivery $10.00), not charged. Keep this tab open: it remembers which shop is yours.
 5. On the supplier console, click **Negotiate**. The two agents trade offers between the $1.13 tier and the $1.02 floor; each offer is checked against the supplier's rules.
 6. Click **Close round**. Each shop is captured at the group price, and the real shop gets a PayPal invoice in Brightline Paper Co.'s name, marked paid. If an invoice fails, a **Retry invoice** step appears.

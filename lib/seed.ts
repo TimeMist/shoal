@@ -15,6 +15,9 @@ export const DEMO_SHOPS = [
   { shop: "Pressed Juice Bar", qty: { demo: 144, receipts: 100 }, address: "21 Demo Way, Shelbyville (demo)" },
   { shop: "Rye & Co", qty: { demo: 120, receipts: 100 }, address: "43 Demo Place, Springfield (demo)" },
   { shop: "The Daily Grind", qty: { demo: 240, receipts: 150 }, address: "65 Demo Close, Capital City (demo)" },
+  // Optional extras when the console simulates 9 or 10 shops; the scripted demo and the landing hero use the first 8.
+  { shop: "Maple Street Market", qty: { demo: 120, receipts: 100 }, address: "87 Demo Row, Springfield (demo)" },
+  { shop: "Harbor Noodle House", qty: { demo: 96, receipts: 50 }, address: "19 Demo Quay, Shelbyville (demo)" },
 ];
 
 // The demo shops with one round's quantities.

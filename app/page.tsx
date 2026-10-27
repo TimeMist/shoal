@@ -11,7 +11,7 @@ import HeroRound from "./HeroRound";
 import { GHOST, PRIMARY } from "./ui";
 
 const { tiers, product, supplier, unit } = DEMO_ROUND;
-const DEMO_SHOPS = shopsFor("demo");
+const DEMO_SHOPS = shopsFor("demo").slice(0, 8); // the scripted eight; shops 9 and 10 are console extras
 const units = DEMO_SHOPS.reduce((u, s) => u + s.qty, 0);
 const alone = formatUSD(tiers[0].price), group = formatUSD(tierAt(tiers, units).price);
 
