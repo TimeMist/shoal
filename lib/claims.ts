@@ -22,7 +22,7 @@ export async function approveClaim(
   const f = find(s, claimId);
   if (!f) return { ok: false, status: 404, error: "Claim not found" };
   const { claim, c } = f;
-  if (releasing(s.round.id)) return { ok: false, status: 409, error: "Holdback release in progress" };
+  if (releasing(s)) return { ok: false, status: 409, error: "Holdback release in progress" };
   if (claim.status !== "open" || busy.has(claimId)) return { ok: false, status: 409, error: "Claim is not open" };
   // Re-clamp: the holdback or earlier refunds may have changed since the proposal. Delivery is never refunded.
   const goods = (c.captured ?? 0) - c.delivery;

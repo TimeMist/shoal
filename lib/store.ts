@@ -67,16 +67,30 @@ export type RoundState = {
 };
 
 // shortcut: in-memory, single instance; move to Postgres (Render) if the demo needs to survive restarts.
-const g = globalThis as unknown as { __shoal?: Map<string, RoundState> };
+// Each visitor (cookie set in proxy.ts) gets its own rounds, so people trying the public demo never share state.
+const g = globalThis as unknown as { __shoal?: Map<string, Map<string, RoundState>> };
 const store = (g.__shoal ??= new Map());
+// shortcut: least recently used visitors are dropped past this cap; their sandbox holds just expire.
+export const MAX_VISITORS = 500;
 
-export function resetDemo(): void {
-  for (const id of ROUND_IDS) store.set(id, seedRound(id));
+function roundsFor(visitor: string): Map<string, RoundState> {
+  const rounds = store.get(visitor) ?? new Map<string, RoundState>();
+  store.delete(visitor); // re-insert so Map order is least recently used first
+  store.set(visitor, rounds);
+  if (store.size > MAX_VISITORS) store.delete(store.keys().next().value!);
+  return rounds;
 }
 
-export function getState(roundId: string): RoundState | undefined {
-  if (ROUND_IDS.includes(roundId as RoundId) && !store.has(roundId)) store.set(roundId, seedRound(roundId as RoundId));
-  return store.get(roundId);
+export function resetDemo(visitor = "local"): void {
+  const rounds = roundsFor(visitor);
+  for (const id of ROUND_IDS) rounds.set(id, seedRound(id));
+}
+
+export function getState(roundId: string, visitor = "local"): RoundState | undefined {
+  if (!ROUND_IDS.includes(roundId as RoundId)) return undefined;
+  const rounds = roundsFor(visitor);
+  if (!rounds.has(roundId)) rounds.set(roundId, seedRound(roundId as RoundId));
+  return rounds.get(roundId);
 }
 
 export function unitsCommitted(s: RoundState): number {

@@ -8,14 +8,16 @@ import type { Commitment } from "@/lib/store";
 import { api, ApiError, errorText } from "./api";
 
 const CLIENT_ID = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID;
+// A sandbox-only buyer login, published on purpose so anyone trying the hosted demo can approve the payment.
+const BUYER = { email: process.env.NEXT_PUBLIC_SANDBOX_BUYER_EMAIL, password: process.env.NEXT_PUBLIC_SANDBOX_BUYER_PASSWORD };
 
 type Props = { round: Round; units: number; onJoined: (c: Commitment) => void };
 
 /** Quantity stepper, the reservation sentence, then PayPal's own button. */
 export default function JoinPanel({ round, units, onJoined }: Props) {
   const { step, minPerShop, unit } = round;
-  // Start a little above the minimum: 120 cartons, 150 rolls (always a whole pack).
-  const [qty, setQty] = useState(Math.ceil(Math.max(120, minPerShop) / step) * step);
+  // Start at the minimum (96 cartons, 50 rolls), the quantity the demo script and README use.
+  const [qty, setQty] = useState(minPerShop);
   const [shop, setShop] = useState("Your shop");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -122,6 +124,11 @@ export default function JoinPanel({ round, units, onJoined }: Props) {
         </PayPalProvider>
       ) : (
         <p className="text-[13px] text-jam">PayPal isn&apos;t configured: set NEXT_PUBLIC_PAYPAL_CLIENT_ID in .env.local.</p>
+      )}
+      {CLIENT_ID && BUYER.email && BUYER.password && (
+        <p className="text-xs text-muted">
+          PayPal sandbox buyer (test money only): <code className="font-semibold text-ink">{BUYER.email}</code> / <code className="font-semibold text-ink">{BUYER.password}</code>
+        </p>
       )}
     </section>
   );

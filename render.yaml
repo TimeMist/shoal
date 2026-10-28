@@ -38,5 +38,10 @@ services:
         sync: false
       - key: SHOP_PAYPAL_EMAILS
         sync: false
+      # Public sandbox buyer login shown on the shop page. Read at build time.
+      - key: NEXT_PUBLIC_SANDBOX_BUYER_EMAIL
+        sync: false
+      - key: NEXT_PUBLIC_SANDBOX_BUYER_PASSWORD
+        sync: false
       - key: CHANNEL3_API_KEY
         sync: false

@@ -91,15 +91,15 @@ export async function issueInvoices(s: RoundState, api: InvoiceApi): Promise<{ i
   return { issued, failed };
 }
 
-const busy = new Set<string>(); // shortcut: in-process guard, single instance only
+const busy = new WeakSet<RoundState>(); // shortcut: in-process guard, single instance only
 
 // Close and the retry route both issue; an overlapping run gets null instead of creating twice.
 export async function issueInvoicesOnce(s: RoundState, api: InvoiceApi): Promise<{ issued: number; failed: number } | null> {
-  if (busy.has(s.round.id)) return null;
-  busy.add(s.round.id);
+  if (busy.has(s)) return null;
+  busy.add(s);
   try {
     return await issueInvoices(s, api);
   } finally {
-    busy.delete(s.round.id);
+    busy.delete(s);
   }
 }

@@ -4,6 +4,8 @@ Shoal lets independent shops buy supplies together, so they pay closer to what c
 
 Built for the [PayPal AI Hackathon](https://paypalaihackathon.devpost.com/). Live demo (PayPal sandbox): https://shoal-m7zz.onrender.com
 
+**Try it:** open the live demo; your browser gets its own copy of both rounds, so nobody else's clicks change yours. On the shop page, pay with the PayPal sandbox buyer login shown under the PayPal button (test money only). The first visit after an idle spell can take about 40 seconds while Render wakes the server.
+
 ## Money flow
 
 ```
@@ -85,6 +87,7 @@ You need Node 24 and a free Bryntum trial login (for `@bryntum/scheduler-trial`,
 3. **A supplier.** Create a second **business** sandbox account and put its email in `SUPPLIER_PAYPAL_EMAIL`. Payouts go there.
 
    That makes three sandbox accounts, one per role. Keep them apart: Shoal refuses a join paid with the supplier's account.
+   For a public demo, set `NEXT_PUBLIC_SANDBOX_BUYER_EMAIL` and `NEXT_PUBLIC_SANDBOX_BUYER_PASSWORD` to a dedicated sandbox personal account: the shop page shows that login under the PayPal button. It's public, so never use a real account.
    Optionally set `SHOAL_PAYPAL_EMAIL` and `SHOP_PAYPAL_EMAILS` (comma-separated) so the supplier console's **See it in PayPal** panel lists each login with a Copy button. PayPal's sandbox sign-in can't be pre-filled from a link.
 
    | Role | Sandbox account | What you see in its PayPal activity |
@@ -115,8 +118,8 @@ This follows the video ([docs/demo-script.md](docs/demo-script.md)).
 - **Shops are simulated**, apart from the one you join with. Demo shops get no PayPal order or invoice.
 - **Payouts stand in for PayPal multiparty.** In the demo, Shoal's sandbox account collects the money and pays the supplier with Payouts. In production, shops would pay the supplier directly through multiparty, and Shoal would take a platform fee without holding funds.
 - **Invoices come from the app's sandbox account** with the supplier's business name and the note "Issued by Shoal on behalf of …". In production, Shoal would call Invoicing for the connected supplier, so invoices come from the supplier's own PayPal account.
-- **The store is in memory.** A restart resets the rounds, and only one instance can run. On Render's free plan the instance sleeps when idle, which also resets the demo.
-- **There are no logins.** The shop, invoice and purchase-order routes are open in the demo.
+- **The store is in memory, one copy per browser.** A cookie gives each visitor their own rounds; **Reset demo** resets only yours. A restart resets everyone's, and only one instance can run. On Render's free plan the instance sleeps when idle, which also resets the demo; `.github/workflows/keep-alive.yml` pings it every 10 minutes once it's on the default branch.
+- **There are no logins.** Within your own copy, the shop, invoice and purchase-order routes are open. Negotiation and claim triage are limited to one call per client every 30 and 15 seconds, so the hosted demo's model credits can't be drained.
 
 ## Sponsor tools
 

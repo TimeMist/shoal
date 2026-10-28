@@ -2,8 +2,10 @@ import { claudeTriage, triage } from "@/lib/agents/triage";
 import type { Photo } from "@/lib/agents/triage";
 import { ConfigError, body, fail } from "@/lib/http";
 import type { Claim } from "@/lib/store";
+import { visitor } from "@/lib/visitor";
 import { getState } from "@/lib/store";
 import { capitalise } from "@/lib/round";
+import { clientIp, waitSeconds } from "@/lib/throttle";
 
 const MAX_PHOTO = 5 * 1024 * 1024;
 
@@ -16,7 +18,7 @@ function parsePhoto(v: unknown): Photo | null {
 
 export async function POST(request: Request, ctx: RouteContext<"/api/rounds/[id]/claims">) {
   const { id } = await ctx.params;
-  const s = getState(id);
+  const s = getState(id, await visitor());
   if (!s) return fail("Round not found", 404);
   const b = await body(request);
   const c = s.commitments.find((x) => x.id === b.commitmentId);
@@ -41,6 +43,8 @@ export async function POST(request: Request, ctx: RouteContext<"/api/rounds/[id]
     priorStatus: c.status,
     status: "open",
   };
+  const wait = waitSeconds(`claim:${clientIp(request)}`, 15_000);
+  if (wait) return fail(`One claim every 15 seconds. Try again in ${wait} s.`, 429);
   // Claim the slot before the slow model call so a second filing gets a 409.
   const before = c.status;
   c.status = "claim";

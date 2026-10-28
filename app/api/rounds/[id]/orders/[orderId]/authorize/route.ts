@@ -4,10 +4,11 @@ import { authorizationMatches, payerIsSupplier } from "@/lib/join";
 import { publicCommitment } from "@/lib/privacy";
 import { authorizeOrder, type Authorization, dealSecret, voidAuthorization } from "@/lib/paypal";
 import { addCommitment, findByOrder, getState, markAuthorized } from "@/lib/store";
+import { visitor } from "@/lib/visitor";
 
 export async function POST(request: Request, ctx: RouteContext<"/api/rounds/[id]/orders/[orderId]/authorize">) {
   const { id, orderId } = await ctx.params;
-  const s = getState(id);
+  const s = getState(id, await visitor());
   if (!s) return fail("Round not found", 404);
   const { token } = await body(request);
   const q = typeof token === "string" ? verifyQuoteToken(token, dealSecret()) : null;

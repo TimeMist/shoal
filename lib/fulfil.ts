@@ -5,9 +5,10 @@ export type Payer = (receiverEmail: string, cents: number, note: string, senderB
 export type Tracker = (orderId: string, captureId: string, trackingNumber: string, carrier: string) => Promise<void>;
 export type Outcome = { ok: true } | { ok: false; status: number; error: string };
 
-const busy = new Set<string>(); // shortcut: in-process guard, single instance only
+// Keyed by state, not round id: every visitor has a round called "receipts". shortcut: in-process guard, single instance only
+const busy = { ship: new WeakSet<RoundState>(), holdback: new WeakSet<RoundState>() };
 const err = (status: number, error: string): Outcome => ({ ok: false, status, error });
-export const releasing = (roundId: string) => busy.has(`${roundId}-holdback`);
+export const releasing = (s: RoundState) => busy.holdback.has(s);
 const paid = (s: RoundState, kind: "ship" | "holdback") => s.payouts.some((p) => p.kind === kind);
 // PayPal refuses a reused sender_batch_id for 30 days, and a demo reset reuses the round id, so add the round's seeded close time.
 // Only real shops' money reached PayPal, so only their share is paid out; the simulated shops' share is ledger only.
@@ -17,10 +18,9 @@ export const senderBatchId = (s: RoundState, kind: "ship" | "holdback") => `${s.
 
 export async function shipRound(s: RoundState, email: string, fns: { payout: Payer; track: Tracker }): Promise<Outcome> {
   // A stable sender_batch_id makes PayPal reject a duplicate retry, so a lost response needs a manual lookup.
-  const key = `${s.round.id}-ship`;
   if (s.round.status !== "closed") return err(409, "Round is not closed");
-  if (paid(s, "ship") || busy.has(key)) return err(409, "Round already shipped");
-  busy.add(key);
+  if (paid(s, "ship") || busy.ship.has(s)) return err(409, "Round already shipped");
+  busy.ship.add(s);
   try {
     const sold = s.commitments.filter((c) => c.captured);
     for (const [i, c] of sold.entries()) {
@@ -45,7 +45,7 @@ export async function shipRound(s: RoundState, email: string, fns: { payout: Pay
     s.holdbackLeft = held;
     return { ok: true };
   } finally {
-    busy.delete(key);
+    busy.ship.delete(s);
   }
 }
 
@@ -59,7 +59,6 @@ export function deliver(s: RoundState, commitmentId: string): Outcome {
 
 export async function releaseRound(s: RoundState, email: string, payout: Payer): Promise<Outcome> {
   // Stable sender_batch_id: PayPal rejects a duplicate retry, so a lost response needs a manual lookup.
-  const key = `${s.round.id}-holdback`;
   if (!paid(s, "ship")) return err(409, "Round has not shipped");
   // A commitment in "claim" may have triage in flight with no claim filed yet.
   const open = new Set([
@@ -73,8 +72,8 @@ export async function releaseRound(s: RoundState, email: string, payout: Payer):
   const cents = releaseHoldback(s.holdbackLeft, 0); // claim refunds are already netted out of holdbackLeft
   const refundedReal = s.commitments.reduce((n, c) => n + (c.simulated ? 0 : c.refunded), 0);
   const real = Math.min(cents, releaseHoldback(realHeld(s).held, refundedReal));
-  if (cents === 0 || paid(s, "holdback") || busy.has(key)) return { ok: true };
-  busy.add(key);
+  if (cents === 0 || paid(s, "holdback") || busy.holdback.has(s)) return { ok: true };
+  busy.holdback.add(s);
   s.holdbackLeft = 0; // take it off the table so a claim can't also refund from it mid-payout
   try {
     let batchId = "";
@@ -89,6 +88,6 @@ export async function releaseRound(s: RoundState, email: string, payout: Payer):
     s.payouts.push({ batchId, kind: "holdback", cents, paypalCents: real });
     return { ok: true };
   } finally {
-    busy.delete(key);
+    busy.holdback.delete(s);
   }
 }

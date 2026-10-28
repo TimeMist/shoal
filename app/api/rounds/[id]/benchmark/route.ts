@@ -1,10 +1,11 @@
 import { fail } from "@/lib/http";
 import { roundBenchmark } from "@/lib/benchmark";
 import { getState } from "@/lib/store";
+import { visitor } from "@/lib/visitor";
 
 async function run(ctx: RouteContext<"/api/rounds/[id]/benchmark">, refresh: boolean, cachedOnly = false) {
   const { id } = await ctx.params;
-  const s = getState(id);
+  const s = getState(id, await visitor());
   if (!s) return fail("Round not found", 404);
   try {
     return Response.json(await roundBenchmark(s.round, { refresh, cachedOnly }));

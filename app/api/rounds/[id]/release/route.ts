@@ -2,11 +2,12 @@ import { releaseRound } from "@/lib/fulfil";
 import { ConfigError, fail, supplierEmail } from "@/lib/http";
 import { sendPayout } from "@/lib/paypal";
 import { getState } from "@/lib/store";
+import { visitor } from "@/lib/visitor";
 import { publicState } from "@/lib/privacy";
 
 export async function POST(_request: Request, ctx: RouteContext<"/api/rounds/[id]/release">) {
   const { id } = await ctx.params;
-  const s = getState(id);
+  const s = getState(id, await visitor());
   if (!s) return fail("Round not found", 404);
   // shortcut: one sandbox supplier account for both demo suppliers; production pays each round's own supplier.
   try {

@@ -7,6 +7,7 @@ import { tierAt, unitLabel } from "@/lib/round";
 import { DEMO_ROUND, ROUND_IDS, shopsFor } from "@/lib/seed";
 import { publicState } from "@/lib/privacy";
 import { getState, unitsCommitted } from "@/lib/store";
+import { visitor } from "@/lib/visitor";
 import HeroRound from "./HeroRound";
 import { GHOST, PRIMARY } from "./ui";
 
@@ -90,7 +91,8 @@ const LINK = "font-semibold text-ink underline underline-offset-2 hover:text-jam
 /** Both demo rounds as they stand right now, each with its shop page and supplier console. */
 async function OpenRounds() {
   await connection(); // live in-memory state: render per request
-  const rounds = ROUND_IDS.map((id) => publicState(getState(id)!));
+  const v = await visitor();
+  const rounds = ROUND_IDS.map((id) => publicState(getState(id, v)!));
   const anyOver = rounds.some((s) => s.round.status !== "open");
   return (
     <section aria-labelledby="open-rounds" className="mt-10 max-w-[560px]">

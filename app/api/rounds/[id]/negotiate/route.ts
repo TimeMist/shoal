@@ -5,7 +5,9 @@ import { geminiBusy } from "@/lib/gemini";
 import { ConfigError, fail } from "@/lib/http";
 import { validateOffer } from "@/lib/guard";
 import { getState, unitsCommitted } from "@/lib/store";
+import { visitor } from "@/lib/visitor";
 import { publicState } from "@/lib/privacy";
+import { clientIp, waitSeconds } from "@/lib/throttle";
 
 const open = (s: NonNullable<ReturnType<typeof getState>>) => s.round.status === "open" && !s.closing;
 
@@ -22,9 +24,9 @@ function errorMessage(e: unknown): string {
  * { type: "start", providers, maxTurns }, then { type: "turn", turn } per turn,
  * then { type: "state", state } or { type: "error", error }.
  */
-export async function POST(_request: Request, ctx: RouteContext<"/api/rounds/[id]/negotiate">) {
+export async function POST(request: Request, ctx: RouteContext<"/api/rounds/[id]/negotiate">) {
   const { id } = await ctx.params;
-  const s = getState(id);
+  const s = getState(id, await visitor());
   if (!s) return fail("Round not found", 404);
   if (!open(s)) return fail("Round is not open", 409);
   let model;
@@ -34,6 +36,8 @@ export async function POST(_request: Request, ctx: RouteContext<"/api/rounds/[id
     if (e instanceof ConfigError) return fail(e.message, e.status);
     throw e;
   }
+  const wait = waitSeconds(`negotiate:${clientIp(request)}`, 30_000);
+  if (wait) return fail(`One negotiation every 30 seconds. Try again in ${wait} s.`, 429);
   const encoder = new TextEncoder();
   const stream = new ReadableStream({
     async start(ctl) {

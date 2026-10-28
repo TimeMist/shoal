@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import Wordmark from "@/components/Wordmark";
 import { getState } from "@/lib/store";
+import { visitor } from "@/lib/visitor";
 import RoundScreen from "./RoundScreen";
 import { publicState } from "@/lib/privacy";
 
@@ -20,7 +21,7 @@ export default function RoundPage({ params }: PageProps<"/rounds/[id]">) {
 
 async function Round({ params }: Pick<PageProps<"/rounds/[id]">, "params">) {
   const { id } = await params;
-  const state = getState(id);
+  const state = getState(id, await visitor());
   if (!state) notFound();
   return <RoundScreen id={id} initial={publicState(state)} />;
 }

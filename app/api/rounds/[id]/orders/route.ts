@@ -3,10 +3,11 @@ import { body, fail, paypalFail } from "@/lib/http";
 import { createAuthorizeOrder, dealSecret } from "@/lib/paypal";
 import { deliveryCents } from "@/lib/round";
 import { getState } from "@/lib/store";
+import { visitor } from "@/lib/visitor";
 
 export async function POST(request: Request, ctx: RouteContext<"/api/rounds/[id]/orders">) {
   const { id } = await ctx.params;
-  const s = getState(id);
+  const s = getState(id, await visitor());
   if (!s) return fail("Round not found", 404);
   if (s.round.status !== "open" || s.closing) return fail("Round is not open", 409);
   const { token } = await body(request);

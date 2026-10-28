@@ -1,0 +1,12 @@
+# Render's free plan sleeps after 15 idle minutes, and a wake-up takes about 40 s and resets the in-memory demo.
+# This pings the hosted demo so judges find it awake. It fetches a static file so it never creates demo state. GitHub runs schedules from the default branch only.
+name: Keep demo awake
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - run: curl -fsS -o /dev/null --max-time 90 https://shoal-m7zz.onrender.com/icon.svg

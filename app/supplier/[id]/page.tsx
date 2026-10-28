@@ -4,6 +4,7 @@ import { connection } from "next/server";
 import { Suspense } from "react";
 import Wordmark from "@/components/Wordmark";
 import { getState } from "@/lib/store";
+import { visitor } from "@/lib/visitor";
 import SupplierConsole from "../SupplierConsole";
 import { publicState } from "@/lib/privacy";
 
@@ -25,7 +26,7 @@ export default function SupplierPage({ params }: PageProps<"/supplier/[id]">) {
 async function Console({ params }: Pick<PageProps<"/supplier/[id]">, "params">) {
   await connection(); // the round lives in memory: render per request, never at build time
   const { id } = await params;
-  const state = getState(id);
+  const state = getState(id, await visitor());
   if (!state) notFound();
   return <SupplierConsole id={id} initial={publicState(state)} accounts={sandboxAccounts()} />;
 }
