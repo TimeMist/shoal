@@ -18,6 +18,7 @@ const round: Round = {
   matchHint: "barista oat milk in 1 L cartons",
   tiers,
   floor: 180,
+  concession: { withinPct: 10, sharePct: 50 },
   minPerShop: 96,
   holdbackPct: 10,
   delivery: { perDrop: 1200, perUnit: 5 },

@@ -3,6 +3,7 @@
 import LiveRegion from "@/components/LiveRegion";
 import ModelLogo from "@/components/ModelLogo";
 import Swimmy, { type AgentState } from "@/components/Swimmy";
+import { policyFloor } from "@/lib/guard";
 import { formatUSD } from "@/lib/money";
 import { tierAt, unitLabel } from "@/lib/round";
 import type { NegotiationTurn, RoundState } from "@/lib/store";
@@ -67,7 +68,7 @@ export default function Negotiation({ state, pending, live }: Props) {
           <span className="text-[13px] text-muted">{end?.deal ? "Agreed" : speaking && lastPrice ? "Last offer" : "Group"} price per {round.unit.one}</span>
           <span className="font-display text-[44px] leading-none font-[750] tracking-[-0.035em] tabular-nums">{formatUSD(price)}</span>
           <span className="text-[13px] text-muted tabular-nums">
-            Supplier floor {formatUSD(round.floor)}
+            Policy floor {formatUSD(policyFloor(round, units))}
             {next ? ` · next tier ${next.min.toLocaleString("en-US")}` : " · top tier reached"}
           </span>
           <span className="self-center rounded-pill bg-settled-tint px-3 py-1.5 text-xs font-semibold text-leaf-ink">Every offer checked against supplier rules</span>

@@ -13,7 +13,8 @@ Things only the repo owner can do: accounts, secrets, decisions and the video. S
 
 ## Decisions
 
-- [ ] Negotiation economics (review P1 #6): (a) the supplier sets an explicit concession policy that its agent applies, or (b) a quantity agent asks shops to top up to reach the next tier. Pick one, or keep it as it is.
+- [x] Negotiation economics (review P1 #6): chose the supplier concession policy (within 10% of the next tier, up to 50% of the gap). Built.
+- [ ] Check the policy numbers suit the pitch: `concession` in `lib/seed.ts` (receipts at 1,150 rolls now negotiates between $1.08 and $1.13, not down to $1.02).
 
 ## Check the hosted demo by hand
 

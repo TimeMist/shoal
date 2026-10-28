@@ -23,7 +23,7 @@ const STEPS = [
   },
   {
     title: "The group price drops",
-    body: `Every order counts toward the supplier's tiers. In the demo round, ${DEMO_SHOPS.length} shops commit ${units.toLocaleString("en-US")} cartons and oat milk drops from ${alone} to ${group}. An AI agent negotiates the tier with the supplier; code holds it to the supplier's floor.`,
+    body: `Every order counts toward the supplier's tiers. In the demo round, ${DEMO_SHOPS.length} shops commit ${units.toLocaleString("en-US")} cartons and oat milk drops from ${alone} to ${group}. An AI agent negotiates the tier with the supplier; code holds it to the supplier's own concession policy.`,
   },
   {
     title: "Only the group price is charged",

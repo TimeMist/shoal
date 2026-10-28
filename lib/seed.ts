@@ -39,6 +39,7 @@ export const DEMO_ROUND = {
   ],
   delivery: { perDrop: 1200, perUnit: 5 },
   floor: 180,
+  concession: { withinPct: 10, sharePct: 50 },
   minPerShop: 96,
 };
 
@@ -59,6 +60,7 @@ export const RECEIPT_ROUND = {
   ],
   delivery: { perDrop: 900, perUnit: 2 },
   floor: 102,
+  concession: { withinPct: 10, sharePct: 50 },
   minPerShop: 50,
 };
 
@@ -72,6 +74,7 @@ export function seedRound(id: RoundId = "demo"): RoundState {
       ...r,
       unit: { ...r.unit },
       tiers: r.tiers.map((t) => ({ ...t })),
+      concession: { ...r.concession },
       delivery: { ...r.delivery },
       holdbackPct: 10,
       closesAt: new Date(Date.now() + 3 * DAY_MS).toISOString(),

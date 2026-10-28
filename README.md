@@ -42,7 +42,7 @@ AI does three jobs:
 
 Code in `lib/` decides every amount:
 
-- `lib/guard.ts` checks every offer against the supplier's tiers and floor. An offer outside them is rejected, whatever the agent says.
+- `lib/guard.ts` checks every offer against the supplier's tiers and its concession policy: within 10% of the next tier's volume, the supplier gives up to half the price gap to it, and never goes under its absolute floor. Further from the next tier there's nothing to negotiate. An offer outside the policy is rejected, whatever the agent says.
 - `lib/round.ts` computes reservations, delivery, captures and savings in integer cents. A capture never exceeds the reservation.
 - `lib/settle.ts` splits payouts and clamps each refund to what the shop paid for goods and what's still held. `lib/agents/triage.ts` turns the proposed units into cents and never refunds more units than were claimed.
 - `lib/benchmark.ts` turns offers into a per-unit price and takes the median. Fewer than 3 usable offers means no benchmark.
@@ -57,7 +57,7 @@ Both rounds use the same 8 demo shops, labelled as demo data.
 | Barista oat milk, 1 L carton (`/rounds/demo`) | Meadow Oat Co. | $2.40 alone · 500+ $2.16 · 1,000+ $1.92 · 1,500+ $1.80 | $12.00 per drop + $0.05 a carton | 1,440 cartons, $1.92 | None: Channel3 doesn't stock oat milk, and the console says so |
 | Thermal receipt paper, 3⅛″ × 230′ roll (`/rounds/receipts`) | Brightline Paper Co. | $1.43 alone · 400+ $1.28 · 800+ $1.13 · 1,200+ $1.02 | $9.00 per drop + $0.02 a roll | 1,100 rolls, $1.13 | ≈ $1.50 a roll from Channel3, with sources |
 
-Oat milk sells in packs of 12 (minimum 96 a shop); receipt rolls in packs of 50 (minimum 50). The lowest tier price is the supplier's floor.
+Oat milk sells in packs of 12 (minimum 96 a shop); receipt rolls in packs of 50 (minimum 50). The lowest tier price is the supplier's absolute floor. Both suppliers' concession policy: within 10% of the next tier, up to 50% of the price gap (receipts at 1,150 rolls: between $1.08 and $1.13).
 
 Verified in the sandbox on 2026-10-26: in the receipts round, with no simulated shops, a real shop joined with 500 rolls, the round closed at $1.28, PayPal captured $659.00 ($640.00 goods + $19.00 delivery), and the PayPal invoice `SH-receipts-1-…` was sent and recorded as paid.
 
@@ -107,7 +107,7 @@ This follows the video ([docs/demo-script.md](docs/demo-script.md)).
 2. Open the supplier view once after every restart or deploy (`/supplier/receipts`), so the retail benchmark is loaded. Shop pages only read the cached benchmark; the supplier console runs the lookup. **Refresh retail** runs it again, at most once a minute.
 3. On the supplier console, click **Simulate 8 shops** (the Shops picker beside it goes up to 10; 8 is the scripted demo). They join one at a time, about a second apart, and the price tiers step down to 1,100 rolls at $1.13.
 4. Open `/rounds/receipts`. The ladder shows "Retail elsewhere ≈ $1.50 a roll" and its Sources. Enter a shop name, keep 50 rolls and pay with the PayPal sandbox buyer. Shoal reserves $66.50 (goods $56.50 + delivery $10.00), not charged. Keep this tab open: it remembers which shop is yours.
-5. On the supplier console, click **Negotiate**. The two agents trade offers between the $1.13 tier and the $1.02 floor; each offer is checked against the supplier's rules.
+5. On the supplier console, click **Negotiate**. The two agents trade offers between the $1.13 tier and the $1.08 policy floor (1,150 rolls is within 10% of the 1,200 tier, so Brightline gives up to half the 11¢ gap); each offer is checked against the supplier's rules.
 6. Click **Close round**. Each shop is captured at the group price, and the real shop gets a PayPal invoice in Brightline Paper Co.'s name, marked paid. If an invoice fails, a **Retry invoice** step appears.
 7. The allocation grid and timeline show each shop. Click **Mark shipped**: 90% goes out as a PayPal Payout and 10% is held back.
 8. On the shop tab, click **Report a problem**, choose damaged rolls and send. The agent proposes a refund. On the supplier console, click **Approve**. PayPal refunds the shop from the holdback and the refund is recorded on its invoice.

@@ -11,7 +11,9 @@ export type Round = {
   searchQuery: string; // Channel3 query for the retail benchmark
   matchHint: string; // what counts as the same product and size, for the benchmark classifier
   tiers: Tier[];
-  floor: number;
+  floor: number; // the supplier's absolute minimum, whatever the policy allows
+  // Concession policy: within withinPct% of the next tier's volume, the supplier gives up to sharePct% of the price gap to it.
+  concession: { withinPct: number; sharePct: number };
   minPerShop: number;
   holdbackPct: number;
   delivery: { perDrop: number; perUnit: number };

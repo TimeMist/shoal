@@ -2,7 +2,7 @@ import type Anthropic from "@anthropic-ai/sdk";
 import type { Content, FunctionDeclaration } from "@google/genai";
 import { ask } from "../claude.ts";
 import { askGemini, geminiBusy } from "../gemini.ts";
-import { validateOffer } from "../guard.ts";
+import { policyFloor, policyText, validateOffer } from "../guard.ts";
 import { ConfigError } from "../http.ts";
 import { tierAt } from "../round.ts";
 import { unitsCommitted } from "../store.ts";
@@ -103,7 +103,7 @@ function system(side: Side, s: RoundState): string {
     `With no deal the round closes at the current tier price of ${now.price}, so both sides are better off agreeing before the last turn.`;
   return side === "shop"
     ? `You are the buying agent for a group of ${s.commitments.length} small shops. Get a lower price per ${one} than ${now.price}. ${facts} Open with a credible offer, not a lowball; the supplier has a floor you do not know. Each counter should move toward the supplier's last price, and accept a supplier price within a few cents of your own last offer. ${rules}`
-    : `You are the sales agent for ${round.supplier}. Your floor is ${round.floor} cents per ${one} and you must never go below it. ${facts} ${units} committed, prepaid ${many}${next ? ` are close to the ${next.min}-${one} tier` : ""} and are worth real value: guaranteed volume, no credit risk. Settle somewhere between your floor and ${now.price}, and close the deal rather than lose it. ${rules}`;
+    : `You are the sales agent for ${round.supplier}. Your company's concession policy: ${policyText(round)}. At ${units} ${many} that puts your floor at ${policyFloor(round, units)} cents per ${one}, and you must never go below it. ${facts} ${units} committed, prepaid ${many}${next ? ` are close to the ${next.min}-${one} tier` : ""} and are worth real value: guaranteed volume, no credit risk. Settle somewhere between your floor and ${now.price}, and close the deal rather than lose it. ${rules}`;
 }
 
 // Plain-text history from one side's point of view: its own moves as assistant text, everything else as user text.

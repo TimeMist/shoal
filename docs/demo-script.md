@@ -37,8 +37,8 @@ The negotiation and claim triage each take a few seconds to a minute. Keep recor
 ### 3. Negotiate (0:50–1:20, 30 s)
 
 - **Page:** `/supplier/receipts` (other tab).
-- **Action:** Point at 1,150 rolls and 9 shops. Click **Negotiate**. Point at the Claude label on the shops' side, the Gemini label on Brightline Paper Co.'s side, and the "Every offer checked against supplier rules" tag. Hold on the result line ("Agreed at $X a roll, inside Brightline Paper Co.'s rules" or "No deal… The tier price stands").
-- **Voice-over:** "Now the supplier's console. Claude negotiates for the shops, Gemini for the supplier. They can go below the $1.13 tier but never under the supplier's $1.02 floor. Every offer is checked against the supplier's rules in code, so the agents can't agree a price the supplier didn't allow. Agents decide prices; only code moves money."
+- **Action:** Point at 1,150 rolls and 9 shops. Click **Negotiate**. Point at the step note ("Within 10% of the next tier, Brightline Paper Co. gives up to 50% of the price gap to it: agents negotiate between $1.08 and the $1.13 tier price"), then at the Claude label on the shops' side, the Gemini label on Brightline Paper Co.'s side, and the "Every offer checked against supplier rules" tag. Hold on the result line ("Agreed at $X a roll, inside Brightline Paper Co.'s rules" or "No deal… The tier price stands").
+- **Voice-over:** "Now the supplier's console. Claude negotiates for the shops, Gemini for the supplier. Brightline's own policy: when the group is within ten percent of the next tier, it gives up to half the price gap. So the agents can go below $1.13, but never under $1.08. Every offer is checked against that policy in code, so the agents can't agree a price the supplier didn't allow. Agents decide prices; only code moves money."
 
 ### 4. Close (1:20–1:55, 35 s)
 
@@ -76,7 +76,7 @@ The negotiation and claim triage each take a few seconds to a minute. Keep recor
 | Delivery | $9.00 per drop + $0.02 a roll | `lib/seed.ts` |
 | Demo shops | 8 shops, 1,100 rolls | `lib/seed.ts` |
 | Join, 50 rolls at $1.13 | $56.50 goods + $10.00 delivery = $66.50 reserved | `lib/round.ts` `reserveCents` |
-| Negotiation | 8 turns in total, between $1.13 and $1.02 | `lib/agents/negotiate.ts` `MAX_TURNS` |
+| Negotiation | 8 turns in total, between $1.13 and the $1.08 policy floor | `lib/agents/negotiate.ts` `MAX_TURNS`, `lib/guard.ts` `policyFloor` |
 | Capture | 50 × final price + $10.00, never above $66.50 | `lib/round.ts` `captureCents` |
 | Payout at ship | 90% now, 10% holdback | `lib/seed.ts` `holdbackPct` |
 | Claim refund | rolls approved × final price, capped by the shop's goods and the holdback left | `lib/agents/triage.ts`, `lib/settle.ts` |

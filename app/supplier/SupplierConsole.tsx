@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import LiveRegion from "@/components/LiveRegion";
 import StatusChip from "@/components/StatusChip";
 import { formatUSD } from "@/lib/money";
+import { policyFloor, policyText } from "@/lib/guard";
 import { capitalise, tierAt, unitLabel } from "@/lib/round";
 import type { Claim, RoundState } from "@/lib/store";
 import { RESET_EVENT } from "../DemoBar";
@@ -93,6 +94,7 @@ export default function SupplierConsole({ id, initial, accounts }: { id: string;
   const units = commitments.reduce((n, c) => n + c.qty, 0);
   const open = round.status === "open" && !state.closing;
   const tier = tierAt(round.tiers, units);
+  const lowest = policyFloor(round, units); // the supplier's concession policy, lib/guard.ts
   const first = round.tiers[1]?.min ?? 0;
   const simulated = commitments.filter((c) => c.simulated).length;
   const remaining = DEMO_SHOPS - simulated;
@@ -148,8 +150,8 @@ export default function SupplierConsole({ id, initial, accounts }: { id: string;
       key: "negotiate",
       label: state.negotiation.length ? "Negotiate again" : "Negotiate",
       busyLabel: "Negotiating",
-      why: !open ? notOpen : !commitments.length ? "No shops have joined yet" : undefined,
-      note: open && commitments.length ? `Agents negotiate below the ${formatUSD(tier.price)} tier price, never under the ${formatUSD(round.floor)} floor.` : undefined,
+      why: !open ? notOpen : !commitments.length ? "No shops have joined yet" : lowest >= tier.price ? `Nothing to negotiate yet. ${policyText(round)}.` : undefined,
+      note: open && commitments.length ? `${policyText(round)}: agents negotiate between ${formatUSD(lowest)} and the ${formatUSD(tier.price)} tier price.` : undefined,
       run: () => {
         setLive(null);
         const g = gen.current;

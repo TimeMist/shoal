@@ -3,7 +3,8 @@ import { ApiError } from "@google/genai";
 import { MAX_TURNS, modelFromEnv, negotiate, providersFromEnv } from "@/lib/agents/negotiate";
 import { geminiBusy } from "@/lib/gemini";
 import { ConfigError, fail } from "@/lib/http";
-import { validateOffer } from "@/lib/guard";
+import { policyFloor, policyText, validateOffer } from "@/lib/guard";
+import { tierAt } from "@/lib/round";
 import { getState, unitsCommitted } from "@/lib/store";
 import { visitor } from "@/lib/visitor";
 import { publicState } from "@/lib/privacy";
@@ -29,6 +30,8 @@ export async function POST(request: Request, ctx: RouteContext<"/api/rounds/[id]
   const s = getState(id, await visitor());
   if (!s) return fail("Round not found", 404);
   if (!open(s)) return fail("Round is not open", 409);
+  const units = unitsCommitted(s);
+  if (policyFloor(s.round, units) >= tierAt(s.round.tiers, units).price) return fail(`Nothing to negotiate yet. ${policyText(s.round)}.`, 409);
   let model;
   try {
     model = modelFromEnv();
