@@ -20,6 +20,7 @@ Things only the repo owner can do: accounts, secrets, decisions and the video. S
 
 - [ ] Receipts round: join for real with the sandbox buyer, negotiate, close, open the invoice, ship, file a claim, approve it, deliver all, release the holdback.
 - [ ] In the Shoal sandbox account's PayPal Activity, confirm the payment shows the authorized amount and the smaller captured amount (beat 4 of the video shows this).
+- [ ] Run **Negotiate** a few times: turns now run at effort `low` for speed. If offers get sloppy, delete the `effort: "low"` line in `lib/agents/negotiate.ts`.
 - [ ] Oat milk round: join alone with 96 cartons, close, and confirm PayPal shows the authorization voided (beat 6).
 - [ ] Open the demo in two browsers and confirm each has its own rounds.
 
