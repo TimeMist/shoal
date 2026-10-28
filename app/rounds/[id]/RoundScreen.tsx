@@ -103,6 +103,8 @@ export default function RoundScreen({ id, initial }: { id: string; initial: Roun
   const units = commitments.reduce((n, c) => n + c.qty, 0);
   const myClaim = mine && state.claims.findLast((c) => c.commitmentId === mine.id);
   const price = round.finalPrice ?? tierAt(round.tiers, units).price;
+  // A deal the agents struck while the round is open; close charges it unless more shops drop the tier below it first.
+  const negotiated = round.status === "open" && state.agreedPrice !== undefined && state.agreedPrice < price ? state.agreedPrice : undefined;
   // Only a deal that set the final price earns the Agreed rung (a dropped deal leaves agreedPrice unset).
   const deal = round.status === "closed" && state.agreedPrice !== undefined && state.agreedPrice === round.finalPrice ? round.finalPrice : undefined;
   const canReport = !!mine && (mine.status === "delivered" || (mine.status === "captured" && !!mine.tracking)); // R13: claims only after shipping
@@ -156,6 +158,13 @@ export default function RoundScreen({ id, initial }: { id: string; initial: Roun
           <TierLadder tiers={round.tiers} units={units} unit={round.unit} agreed={deal} closed={round.status !== "open"} retail={retail} />
         </div>
         {retail && <RetailSources retail={retail} unit={round.unit} />}
+        <p aria-live="polite" className="text-sm tabular-nums empty:hidden">
+          {negotiated !== undefined && (
+            <>
+              <b className="text-leaf-ink">Negotiated {formatUSD(negotiated)} a {round.unit.one}</b> with {round.supplier}, below the {formatUSD(price)} tier. It applies when the round closes, unless more shops bring a lower tier first.
+            </>
+          )}
+        </p>
 
         <div className="grid gap-2.5">
           <h2 className="font-display text-[15px] font-bold">
@@ -185,8 +194,10 @@ export default function RoundScreen({ id, initial }: { id: string; initial: Roun
             <p className="text-sm text-muted">
               Reserved on PayPal for {unitLabel(round, mine.qty)}, not charged. You&apos;ll pay the group price when the round closes, never more. If it doesn&apos;t reach its first tier, nothing is charged.
             </p>
-            {mine.qty * price < mine.reserved && (
-              <p className="text-sm text-leaf-ink tabular-nums">At today&apos;s price of {formatUSD(price)} you&apos;d pay {formatUSD(mine.qty * price)}.</p>
+            {mine.qty * (negotiated ?? price) + mine.delivery < mine.reserved && (
+              <p className="text-sm text-leaf-ink tabular-nums">
+                At today&apos;s {negotiated !== undefined ? "negotiated " : ""}price of {formatUSD(negotiated ?? price)} you&apos;d pay {formatUSD(mine.qty * (negotiated ?? price) + mine.delivery)}.
+              </p>
             )}
           </Panel>
         )}

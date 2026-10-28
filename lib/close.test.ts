@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { closeRound } from "./close.ts";
+import { closeRound, retryClose, stuck } from "./close.ts";
 import { seedRound, simulateShops } from "./seed.ts";
 import { addCommitment } from "./store.ts";
 
@@ -89,4 +89,35 @@ test("a failing capture does not stop the others", async () => {
   assert.equal(b.status, "captured");
   assert.equal(s.round.status, "closed");
   assert.equal(s.closing, false);
+});
+
+test("retryClose captures only the shops that failed, at the final price", async () => {
+  const s = seedRound();
+  real(s, "A", 108);
+  real(s, "B", 108);
+  simulateShops(s, 8);
+  s.closing = true;
+  await closeRound(s, fakePay("auth-A"));
+  assert.equal(stuck(s).length, 1);
+  const pay = fakePay();
+  assert.deepEqual(await retryClose(s, pay), { ok: true, failed: 0 });
+  assert.deepEqual(pay.captures, [["auth-A", 108 * 180 + 1200 + 5 * 108]]); // 1,656 cartons: tier 180
+  assert.equal(s.commitments[0].status, "captured");
+  assert.equal(s.commitments[0].error, undefined);
+});
+
+test("retryClose voids for a failed round, and refuses an open or shipped round", async () => {
+  const s = seedRound();
+  assert.equal((await retryClose(s, fakePay())).ok, false); // still open
+  real(s, "A", 144);
+  s.closing = true;
+  const flaky = { ...fakePay(), void: async () => { throw new Error("PayPal down"); } };
+  await closeRound(s, flaky);
+  assert.equal(stuck(s).length, 1);
+  const pay = fakePay();
+  assert.deepEqual(await retryClose(s, pay), { ok: true, failed: 0 });
+  assert.deepEqual(pay.voids, ["auth-A"]);
+  assert.equal(s.commitments[0].status, "released");
+  s.payouts.push({ batchId: "b", kind: "ship", cents: 0, paypalCents: 0 });
+  assert.equal((await retryClose(s, pay)).ok, false);
 });

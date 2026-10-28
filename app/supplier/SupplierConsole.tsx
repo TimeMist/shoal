@@ -105,6 +105,8 @@ export default function SupplierConsole({ id, initial, accounts }: { id: string;
   const toInvoice = sold.filter((c) => !c.simulated && (!c.invoiceStatus || c.invoiceError));
   const failedInvoices = toInvoice.filter((c) => c.invoiceError).length;
   const outForDelivery = commitments.filter((c) => c.status === "captured").length; // lib/fulfil.ts releaseRound gate
+  const stuck = commitments.filter((c) => c.status === "reserved" && c.error); // lib/close.ts stuck: PayPal failed at close
+  const stuckVerb = round.status === "failed" ? "release" : "capture";
   const notOpen = round.status === "closed" ? "The round is closed" : round.status === "failed" ? "The round ended without reaching a tier" : "The round is closing";
 
   const steps: Step[] = [
@@ -171,6 +173,25 @@ export default function SupplierConsole({ id, initial, accounts }: { id: string;
         act("close", post("close"), (s) =>
           s.round.status === "closed" ? `Round closed at ${formatUSD(s.round.finalPrice ?? 0)} a ${round.unit.one}.` : "Round didn't reach its first tier. Every reservation was released.",
         ),
+    },
+    {
+      // Only appears when a capture or void failed at close, until the round ships.
+      key: "retry",
+      label: `Retry ${stuck.length === 1 ? stuckVerb : `${stuck.length} ${stuckVerb}s`}`,
+      busyLabel: round.status === "failed" ? "Releasing on PayPal" : "Capturing on PayPal",
+      note: `PayPal failed for ${stuck.map((c) => c.shop).join(", ")}: ${stuck[0]?.error ?? ""}. Retrying leaves every other shop as it is.`,
+      run: () => {
+        let failed = 0;
+        return act(
+          "retry",
+          async () => {
+            const res = await api<{ failed: number; state: RoundState }>(`/api/rounds/${id}/retry-close`, {});
+            failed = res.failed;
+            return res.state;
+          },
+          () => (failed ? `${failed} still failing; see the note.` : `Every ${stuckVerb} went through.`),
+        );
+      },
     },
     {
       // Invoices go out automatically at close; this step only appears to retry one that failed.
@@ -346,7 +367,7 @@ export default function SupplierConsole({ id, initial, accounts }: { id: string;
         <section className="grid gap-3 rounded-lg bg-white p-6 shadow-lift max-[900px]:p-5">
           <h2 className="font-display text-lg font-bold tracking-[-0.01em]">Run the round</h2>
           <ol className="grid gap-3">
-            {steps.filter((s) => s.key !== "invoices" || (round.status === "closed" && toInvoice.length > 0)).map((s, i) => (
+            {steps.filter((s) => (s.key !== "invoices" || (round.status === "closed" && toInvoice.length > 0)) && (s.key !== "retry" || (stuck.length > 0 && !shipped))).map((s, i) => (
               <li key={s.key} className="grid grid-cols-[22px_minmax(0,1fr)] gap-x-2.5 border-t border-rule pt-3 first:border-0 first:pt-0">
                 <span className="pt-2 text-[13px] font-semibold text-muted tabular-nums">{i + 1}</span>
                 <div className="grid justify-items-start gap-1.5">
