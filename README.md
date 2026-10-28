@@ -148,6 +148,10 @@ This follows the video ([docs/demo-script.md](docs/demo-script.md)).
 - [x] Hosted demo on Render
 - [ ] PayPal multiparty, persistent storage, logins
 
+## How it was built
+
+`docs/superpowers/` holds the design specs and implementation plans written before each stage of the build (with AI coding assistance), kept as a record of the decisions. `docs/demo-script.md` is the video script.
+
 ## License
 
 MIT. See [LICENSE](LICENSE).

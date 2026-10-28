@@ -152,6 +152,7 @@ export const claudeNegotiator: Model = async (side, transcript, s) => {
     system: system(side, s),
     messages,
     tools: TOOLS.map((t) => ({ name: t.name, description: t.description, strict: true, input_schema: t.schema as Anthropic.Beta.BetaTool["input_schema"] })),
+    effort: "low", // one short tool call per turn, eight turns in a row: latency matters more than depth here
   });
   if (res.stop_reason === "refusal") return { tool: "walk_away", message: "The model declined to continue.", provider: "claude" };
   const use = res.stop_reason === "tool_use" ? res.content.find((b) => b.type === "tool_use") : undefined;

@@ -156,7 +156,7 @@ export default function AllocationGrid({ state, busyId, disabled, onDeliver, ref
 
   const columns = useMemo<ColDef<Row>[]>(
     () => [
-      { field: "shop", headerName: "Shop", flex: 2, minWidth: 186, cellRenderer: Shop },
+      { field: "shop", headerName: "Shop", flex: 2, minWidth: 212, cellRenderer: Shop }, // fits the longest demo name, "Ground Control Coffee"
       { field: "qty", headerName: capitalise(round.unit.many), type: "rightAligned", minWidth: 92, flex: 0.5, valueFormatter: ({ value }) => value.toLocaleString("en-US") },
       { field: "reserved", headerName: "Reserved", type: "rightAligned", minWidth: 92, flex: 0.6, valueFormatter: money },
       { field: "delivery", headerName: "Delivery cost", type: "rightAligned", minWidth: 118, flex: 0.5, valueFormatter: money },

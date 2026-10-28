@@ -7,17 +7,18 @@ export function claude(): Anthropic {
   return new Anthropic({ apiKey });
 }
 
-export function ask(params: {
+export function ask({ effort = "medium", ...params }: {
   system: string;
   messages: Anthropic.Beta.BetaMessageParam[];
   tools: Anthropic.Beta.BetaTool[];
+  effort?: "low" | "medium";
 }, options?: { timeout?: number }): Promise<Anthropic.Beta.BetaMessage> {
   return claude().beta.messages.create({
     model: "claude-opus-5-5",
     max_tokens: 16000,
     betas: ["server-side-fallback-2026-07-01"],
     fallbacks: "default",
-    output_config: { effort: "medium" },
+    output_config: { effort },
     tool_choice: { type: "auto" },
     ...params,
   }, options);
