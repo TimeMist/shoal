@@ -603,7 +603,7 @@ function Copy({ text, what }: { text: string; what: "email" | "password" }) {
   return (
     <button
       type="button"
-      className="rounded-pill bg-tint px-2 py-0.5 text-xs font-semibold text-muted hover:text-ink"
+      className="flex-none whitespace-nowrap rounded-pill bg-tint px-2 py-0.5 text-xs font-semibold text-muted hover:text-ink"
       onClick={() => navigator.clipboard.writeText(text).then(() => (setCopied(true), setTimeout(() => setCopied(false), 1500)), () => {})}
     >
       {copied ? "Copied" : `Copy ${what}`}
@@ -615,12 +615,12 @@ function Copy({ text, what }: { text: string; what: "email" | "password" }) {
 function Login({ login }: { login: SandboxLogin }) {
   return (
     <span className="grid gap-1">
-      <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
-        <code className="text-[13px] font-semibold text-ink">{login.email}</code>
+      <span className="flex min-w-0 items-center gap-2">
+        <code title={login.email} className="min-w-0 truncate text-[13px] font-semibold text-ink">{login.email}</code>
         <Copy text={login.email} what="email" />
       </span>
-      <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
-        <code className="text-[13px] font-semibold text-ink">{login.password}</code>
+      <span className="flex min-w-0 items-center gap-2">
+        <code title={login.password} className="min-w-0 truncate text-[13px] font-semibold text-ink">{login.password}</code>
         <Copy text={login.password} what="password" />
       </span>
     </span>
@@ -663,7 +663,7 @@ function PayPalAccounts({ roundId, supplier, accounts, paidAtShip }: { roundId: 
           </li>
         )}
       </ul>
-      <p className="text-xs text-muted">Shoal&apos;s own account, which takes the payments and sends the payouts, isn&apos;t public. PayPal keeps one sign-in per browser: log out, or use a private window, to switch accounts.</p>
+      <p className="rounded-field bg-blush px-3 py-2 text-xs text-muted">Shoal&apos;s own account, which takes the payments and sends the payouts, isn&apos;t public. PayPal keeps one sign-in per browser: log out, or use a private window, to switch accounts.</p>
     </section>
   );
 }
