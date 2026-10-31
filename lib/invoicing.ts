@@ -55,9 +55,10 @@ export const invoiceApi: InvoiceApi = {
   },
   async recordPayment(id, cents, captureId) {
     // PayPal looks up payment_id as its own transaction id (404 for a capture id), so the capture goes in the note.
-    await call("POST", `/${id}/payments`, { method: "PAYPAL", payment_date: today(), amount: usd(cents), note: `Paid through Shoal, PayPal capture ${captureId}` });
+    // A full UTC time: a bare payment_date is read as midnight UTC and shows as the day before in US time zones.
+    await call("POST", `/${id}/payments`, { method: "PAYPAL", payment_date_time: new Date().toISOString(), amount: usd(cents), note: `Paid through Shoal, PayPal capture ${captureId}` });
   },
   async recordRefund(id, cents) {
-    await call("POST", `/${id}/refunds`, { method: "PAYPAL", refund_date: today(), amount: usd(cents) });
+    await call("POST", `/${id}/refunds`, { method: "PAYPAL", amount: usd(cents) }); // refund_date is optional; PayPal dates it itself
   },
 };

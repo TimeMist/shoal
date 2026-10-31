@@ -33,7 +33,7 @@ export function buildInvoice(s: RoundState, c: Commitment, number: string): Invo
   return {
     number,
     invoicer: supplier,
-    note: `Issued by Shoal on behalf of ${supplier}.`,
+    note: `Issued by Shoal on behalf of ${supplier}`.replace(/\.?$/, "."), // "Brightline Paper Co." already ends the sentence
     recipient: { email: c.payerEmail, business: c.shop },
     item: { name: product, quantity: c.qty, unitAmount: finalPrice },
     shipping: c.delivery,

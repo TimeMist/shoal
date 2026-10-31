@@ -16,19 +16,19 @@ import ClaimForm, { ClaimStatus } from "./ClaimForm";
 import JoinPanel from "./JoinPanel";
 import Receipt, { Panel } from "./Receipt";
 
-// shortcut: no accounts; shop identity is per browser tab (sessionStorage), add auth if shops return across devices.
+// shortcut: no accounts; shop identity is per browser (localStorage, like the visitor cookie), add auth if shops return across devices.
 const KEY = (id: string) => `shoal:round:${id}`;
 const MINE_EVENT = "shoal-mine";
 function readMine(id: string): string | null {
   try {
-    return sessionStorage.getItem(KEY(id));
+    return localStorage.getItem(KEY(id));
   } catch {
     return null;
   }
 }
 function saveMine(id: string, commitmentId: string) {
   try {
-    sessionStorage.setItem(KEY(id), commitmentId);
+    localStorage.setItem(KEY(id), commitmentId);
   } catch {}
   dispatchEvent(new Event(MINE_EVENT));
 }
@@ -55,7 +55,7 @@ function countdown(closesAt: string, minute: number): string {
 
 export default function RoundScreen({ id, initial }: { id: string; initial: RoundState }) {
   const [state, setState] = useState(initial);
-  const [joined, setJoined] = useState<string | null>(null); // fallback when sessionStorage is blocked
+  const [joined, setJoined] = useState<string | null>(null); // fallback when localStorage is blocked
   const [reporting, setReporting] = useState(false);
   const [joinMsg, setJoinMsg] = useState("");
   const claimRef = useRef<HTMLDivElement>(null);

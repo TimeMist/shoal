@@ -4,6 +4,7 @@ import {
   Environment,
   OrdersController,
   PaymentsController,
+  PaypalExperienceUserAction,
   ShipmentCarrier,
 } from "@paypal/paypal-server-sdk";
 import { orderAmount } from "./join.ts";
@@ -44,6 +45,8 @@ export async function createAuthorizeOrder(amount: { goods: number; delivery: nu
     body: {
       intent: CheckoutPaymentIntent.Authorize,
       purchaseUnits: [{ referenceId, description, amount: orderAmount(amount.goods, amount.delivery) }],
+      // PayPal's screens say "Shoal" (not the sandbox account's name) and "Continue": joining only reserves the money.
+      paymentSource: { paypal: { experienceContext: { brandName: "Shoal", userAction: PaypalExperienceUserAction.Continue } } },
     },
   });
   if (!result.id) throw new Error("PayPal createOrder returned no id");

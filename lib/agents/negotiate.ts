@@ -102,7 +102,7 @@ function system(side: Side, s: RoundState): string {
     `The negotiation has ${MAX_TURNS} turns in total, shared by both sides, and each turn you call exactly one tool. ` +
     `With no deal the round closes at the current tier price of ${now.price}, so both sides are better off agreeing before the last turn.`;
   return side === "shop"
-    ? `You are the buying agent for a group of ${s.commitments.length} small shops. Get a lower price per ${one} than ${now.price}. ${facts} Open with a credible offer, not a lowball; the supplier has a floor you do not know. Each counter should move toward the supplier's last price, and accept a supplier price within a few cents of your own last offer. ${rules}`
+    ? `You are the buying agent for a group of ${s.commitments.length} small shops. Get a lower price per ${one} than ${now.price}. ${facts} The supplier's published concession policy: ${policyText(round)}, so at ${units} ${many} it can go down to ${policyFloor(round, units)} cents and no lower. Open with a credible offer at or above that. Each counter should move toward the supplier's last price, and accept a supplier price within a few cents of your own last offer. ${rules}`
     : `You are the sales agent for ${round.supplier}. Your company's concession policy: ${policyText(round)}. At ${units} ${many} that puts your floor at ${policyFloor(round, units)} cents per ${one}, and you must never go below it. ${facts} ${units} committed, prepaid ${many}${next ? ` are close to the ${next.min}-${one} tier` : ""} and are worth real value: guaranteed volume, no credit risk. Settle somewhere between your floor and ${now.price}, and close the deal rather than lose it. ${rules}`;
 }
 
@@ -123,7 +123,7 @@ export function chat(side: Side, transcript: NegotiationTurn[], unit = "unit"): 
   for (const t of transcript) {
     if (t.side === side) {
       add("assistant", `${VERB[t.move]}${t.price ? ` ${t.price} cents` : ""}: ${t.message}`);
-      // The shop must not learn the supplier's floor from a rejection.
+      // Rejections reach the shop in plain words; it works from the published policy, not the guard's cents.
       const reason = side === "shop" && /floor/.test(t.reason ?? "") ? "Price is below what the supplier can accept" : t.reason;
       if (t.verdict === "rejected") add("user", `The guard rejected that move: ${reason}. Try again.`);
     } else if (t.verdict === "ok") {

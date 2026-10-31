@@ -37,7 +37,7 @@ test("buildInvoice: item, shipping and total match the capture", () => {
   assert.equal(d.shipping, 1800);
   assert.equal(d.item.quantity * d.item.unitAmount + d.shipping, 24000);
   assert.equal(d.invoicer, s.round.supplier);
-  assert.equal(d.note, `Issued by Shoal on behalf of ${s.round.supplier}.`);
+  assert.equal(d.note, "Issued by Shoal on behalf of Meadow Oat Co."); // one full stop, though the name ends in one
   assert.equal(d.reference, "cap0");
   assert.equal(d.recipient.email, "shop0@example.com");
 });
