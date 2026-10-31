@@ -14,8 +14,8 @@ Things only the repo owner can do: accounts, secrets, decisions and the video. S
 - [x] Decide on the buyer's two "−$64.00" activity lines (payment, plus the invoice Shoal records as paid): keep and explain, or stop recording invoice payments. Kept and explained in the README.
 - [ ] Set daily spend limits on the Anthropic, Gemini and Channel3 keys. The app throttles each client, but only a provider limit caps the total.
 - [x] After the merge, check the Actions tab: CI is green on `main`, and a manual "Keep demo awake" run succeeded (Oct 31). Glance at the Actions tab once more in a day to see the 10-minute scheduled runs, which GitHub can take a while to start.
-- [ ] Delete the old `design/brand-guidelines` branch: everything in it is already in `main`, and this session isn't allowed to delete branches on GitHub. At https://github.com/TimeMist/shoal/branches click the trash-can icon on its row.
-- [ ] Point Render at `main`: Render dashboard › the shoal service › Settings › Build & Deploy › Branch › `main`. Until then it deploys `feat/shoal-build`, so keep pushing to both.
+- [x] Delete the old `design/brand-guidelines` branch (done Oct 31): everything in it is already in `main`, and this session isn't allowed to delete branches on GitHub. At https://github.com/TimeMist/shoal/branches click the trash-can icon on its row.
+- [x] Point Render at `main` (done Oct 31): pushes to `main` now deploy the hosted demo.
 - [ ] Optional: a paid always-on Render instance for the judging window (Nov 12 to Dec 21) instead of relying on the keep-alive ping.
 
 ## Decisions
