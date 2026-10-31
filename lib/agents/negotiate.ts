@@ -17,7 +17,9 @@ export type Decision = {
   provider: Provider;
   note?: string;
 };
-export type Model = (side: Side, transcript: NegotiationTurn[], s: RoundState) => Promise<Decision>;
+// nudge: the model's last reply in this turn made no tool call, so remind it to make a move.
+export type Model = (side: Side, transcript: NegotiationTurn[], s: RoundState, nudge?: boolean) => Promise<Decision>;
+const NUDGE = "Your last reply made no move. Call exactly one tool now: propose_price, accept_price or walk_away.";
 
 const TOOL_NAMES = { propose_price: "propose", accept_price: "accept", walk_away: "walk_away" } as const;
 const priceSchema = {
@@ -56,7 +58,9 @@ export async function negotiate(
   const units = unitsCommitted(s);
   for (let i = 0; i < maxTurns; i++) {
     const side: Side = i % 2 === 0 ? "shop" : "supplier";
-    const d = await model(side, turns, s);
+    let d = await model(side, turns, s);
+    // A reply with no tool call gets one more try in the same turn, so a stray text answer doesn't waste a turn.
+    if (d.tool === "none") d = await model(side, turns, s, true);
     const turn: NegotiationTurn = { side, provider: d.provider, move: d.tool, price: d.price ?? 0, message: d.message, verdict: "ok", ...(d.note && { note: d.note }) };
     turns.push(turn);
     try {
@@ -146,8 +150,9 @@ function decision(name: string | undefined, input: unknown, provider: Provider):
   };
 }
 
-export const claudeNegotiator: Model = async (side, transcript, s) => {
+export const claudeNegotiator: Model = async (side, transcript, s, nudge) => {
   const messages: Anthropic.Beta.BetaMessageParam[] = chat(side, transcript, s.round.unit.one).map((m) => ({ role: m.role, content: m.text }));
+  if (nudge) messages.push({ role: "user", content: NUDGE });
   const res = await ask({
     system: system(side, s),
     messages,
@@ -159,8 +164,9 @@ export const claudeNegotiator: Model = async (side, transcript, s) => {
   return use && use.type === "tool_use" ? decision(use.name, use.input, "claude") : { tool: "none", message: "", provider: "claude" };
 };
 
-export const geminiNegotiator: Model = async (side, transcript, s) => {
+export const geminiNegotiator: Model = async (side, transcript, s, nudge) => {
   const contents: Content[] = chat(side, transcript, s.round.unit.one).map((m) => ({ role: m.role === "user" ? "user" : "model", parts: [{ text: m.text }] }));
+  if (nudge) contents.push({ role: "user", parts: [{ text: NUDGE }] });
   const res = await askGemini({
     system: system(side, s),
     contents,
@@ -180,12 +186,12 @@ const KEYS = { claude: "ANTHROPIC_API_KEY", gemini: "GEMINI_API_KEY" } as const;
 
 /** If Gemini stays overloaded after its retries, Claude makes that one move, and the turn says so. */
 export function withClaudeFallback(gemini: Model, claude: Model): Model {
-  return async (side, transcript, s) => {
+  return async (side, transcript, s, nudge) => {
     try {
-      return await gemini(side, transcript, s);
+      return await gemini(side, transcript, s, nudge);
     } catch (e) {
       if (!geminiBusy(e)) throw e;
-      return { ...(await claude(side, transcript, s)), note: "Gemini was overloaded, so Claude made this move" };
+      return { ...(await claude(side, transcript, s, nudge)), note: "Gemini was overloaded, so Claude made this move" };
     }
   };
 }
@@ -203,5 +209,5 @@ export function modelFromEnv(env = process.env): Model {
   for (const p of new Set(Object.values(byside)) as Set<Provider>) {
     if (!env[KEYS[p]]) throw new ConfigError(`${KEYS[p]} is not set (needed for the ${p} agent)`);
   }
-  return (side, transcript, s) => models[side](side, transcript, s);
+  return (side, transcript, s, nudge) => models[side](side, transcript, s, nudge);
 }

@@ -42,9 +42,20 @@ test("accepting a price that was never proposed is rejected; walk_away ends with
   assert.equal(r.agreed, undefined);
 });
 
-test("a turn with no tool call is rejected", async () => {
-  const r = await negotiate(full(), script([d("none", undefined), d("walk_away", undefined)]));
+test("a turn with no tool call, twice, is rejected", async () => {
+  const r = await negotiate(full(), script([d("none", undefined), d("none", undefined), d("walk_away", undefined)]));
   assert.equal(r.turns[0].reason, "no tool call");
+  assert.equal(r.turns[1].move, "walk_away");
+});
+
+test("a reply with no tool call is retried once in the same turn, with a nudge", async () => {
+  const nudges: (boolean | undefined)[] = [];
+  const moves = [d("none", undefined), d("propose", 186), d("accept", 186)];
+  let i = 0;
+  const r = await negotiate(full(), async (_side, _t, _s, nudge) => (nudges.push(nudge), moves[i++]));
+  assert.deepEqual(r.turns.map((t) => [t.side, t.move, t.verdict]), [["shop", "propose", "ok"], ["supplier", "accept", "ok"]]);
+  assert.equal(r.agreed, 186);
+  assert.deepEqual(nudges, [undefined, true, undefined]);
 });
 
 test("negotiatorFor picks the adapter and throws on unknown providers", () => {
