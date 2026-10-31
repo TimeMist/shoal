@@ -13,7 +13,7 @@ Host: https://shoal-m7zz.onrender.com (or `http://localhost:3000`). Paths below 
 5. Open `/rounds/receipts` in a second tab. Log in to the PayPal sandbox buyer (personal) account in this browser beforehand, so the PayPal window doesn't ask for a password on camera.
 6. Have a JPEG of a damaged roll ready (optional).
 7. For the failed-round beat: open `/rounds/demo` (oat milk) in the same tab set, join with the minimum 96 cartons and pay with the sandbox buyer. Don't simulate shops there: one shop's 96 cartons stays below the 500-carton first tier.
-8. In a second browser (PayPal keeps one sign-in per browser), sign in to the PayPal sandbox as the Shoal (platform) business account and open Activity, for the PayPal frame in beat 4.
+8. In a second browser (PayPal keeps one sign-in per browser), sign in to the PayPal sandbox as the Shoal (platform) business account, switch the language to **English** in the page footer, and open **Activity**, for the PayPal frame in beat 4.
 
 Record in one browser profile throughout: each browser gets its own copy of the demo rounds, so a private window or another browser starts from an empty round.
 
@@ -43,8 +43,12 @@ The negotiation and claim triage each take a few seconds to a minute. Keep recor
 ### 4. Close (1:20–1:55, 35 s)
 
 - **Page:** `/supplier/receipts`, then `/rounds/receipts`, then the PayPal sandbox (second browser).
-- **Action:** Click **Close round** ("Round closed at $X a roll."). Switch to the shop tab. Point at the receipt: amount captured, the saving in Leaf green, the delivery line, "PayPal invoice SH-receipts-1-… sent to …". Click **View** to show the invoice from Brightline Paper Co., marked paid. Cut to the Shoal account's PayPal Activity and open the shop's payment: $66.50 authorized, the smaller amount captured.
-- **Voice-over:** "I close the round. PayPal captures every shop at the group price, never more than it reserved. My receipt shows what I saved against buying alone, and the shop gets a real PayPal invoice in the supplier's name, already marked paid. In PayPal itself: sixty-six fifty reserved, less captured."
+- **Action:**
+  1. Click **Close round** ("Round closed at $X a roll.").
+  2. Switch to the shop tab. On the receipt, point at **Reserved $66.50**, then **Captured** (e.g. $64.00 at $1.08) and **Never taken** (e.g. $2.50), then the saving in Leaf green and the line "PayPal invoice SH-receipts-… sent to …".
+  3. Click **View** to show the invoice from Brightline Paper Co., marked paid.
+  4. Cut to the Shoal account's PayPal **Activity** (second browser, refreshed). Point at the newest line, "Payment from Shoal Demo Buyer · Completed", whose amount is the receipt's **Captured** figure, not the $66.50 reserved. The "Invoice to Shoal Demo Buyer · Paid" line next to it is the same payment's invoice.
+- **Voice-over:** "I close the round. PayPal captures every shop at the group price, never more than it reserved: I reserved sixty-six fifty and paid sixty-four; the rest was never taken. My receipt shows what I saved against buying alone, and the shop gets a real PayPal invoice in the supplier's name, already marked paid. And in PayPal itself, the payment is sixty-four: the group price, not the reservation." (Say the captured amount the receipt shows if the deal lands elsewhere than $1.08.)
 
 ### 5. Fulfil (1:55–2:25, 30 s)
 
