@@ -8,7 +8,7 @@ Host: https://shoal-m7zz.onrender.com (or `http://localhost:3000`). Paths below 
 
 1. Set `SHOP_AGENT_PROVIDER=claude` and `SUPPLIER_AGENT_PROVIDER=gemini`.
 2. Open `/`, click **Reset demo**.
-3. Open `/supplier/receipts` once so the retail benchmark loads. Check the header shows "Retail benchmark ≈ $1.50 a roll". If it doesn't, click **Refresh retail** (once a minute at most).
+3. Open `/supplier/receipts` once so the retail benchmark loads. Note the retail benchmark the header shows (≈ $1.43 a roll on Oct 31) and use that figure in beat 2. If there's none, click **Refresh retail** (once a minute at most).
 4. Click **Simulate 8 shops**. They join one at a time over about 8 seconds; the price tiers step down to 1,100 rolls, 8 shops, $1.13.
 5. Open `/rounds/receipts` in a second tab. Log in to the PayPal sandbox buyer (personal) account in this browser beforehand, so the PayPal window doesn't ask for a password on camera.
 6. Have a JPEG of a damaged roll ready (optional).
@@ -30,14 +30,14 @@ The negotiation and claim triage each take a few seconds to a minute. Keep recor
 ### 2. Join (0:15–0:50, 35 s)
 
 - **Page:** `/rounds/receipts`.
-- **Action:** Point at the ladder: $1.43 alone, $1.28, $1.13 (current), $1.02. Open **Sources** under "Retail elsewhere ≈ $1.50 a roll". Type a shop name, keep 50 rolls. Point at "We'll reserve $66.50 on PayPal (goods $56.50 + delivery $10.00)". Click the PayPal button, approve as the sandbox buyer.
+- **Action:** Point at the ladder: $1.43 alone, $1.28, $1.13 (current), $1.02. Open **Sources** under "Retail elsewhere ≈ …". Type a shop name, keep 50 rolls. Point at "We'll reserve $66.50 on PayPal (goods $56.50 + delivery $10.00)". Click the PayPal button, approve as the sandbox buyer.
 - **On screen after:** "You're in. $66.50 reserved on PayPal, not charged."
-- **Voice-over:** "This round is thermal receipt rolls. Eight shops are already in, so the price is $1.13 a roll, against $1.43 alone and about $1.50 at retail, with sources from Channel3. I join with 50 rolls. PayPal reserves goods plus delivery: sixty-six fifty. It's reserved, not charged, and my price can only go down."
+- **Voice-over:** "This round is thermal receipt rolls. Eight shops are already in, so the price is $1.13 a roll, against $1.43 alone, which is about what it costs at retail, with sources from Channel3. I join with 50 rolls. PayPal reserves goods plus delivery: sixty-six fifty. It's reserved, not charged, and my price can only go down."
 
 ### 3. Negotiate (0:50–1:20, 30 s)
 
 - **Page:** `/supplier/receipts` (other tab).
-- **Action:** Point at 1,150 rolls and 9 shops. Click **Negotiate**. Point at the step note ("Within 10% of the next tier, Brightline Paper Co. gives up to 50% of the price gap to it: agents negotiate between $1.08 and the $1.13 tier price"), then at the Claude label on the shops' side, the Gemini label on Brightline Paper Co.'s side, and the "Every offer checked against supplier rules" tag. Hold on the result line ("Agreed at $X a roll, inside Brightline Paper Co.'s rules" or "No deal… The tier price stands").
+- **Action:** Point at 1,150 rolls and 9 shops. Click **Negotiate**. Point at the step note ("Within 10% of the next tier, Brightline Paper Co. gives up to 50% of the price gap to it: agents negotiate between $1.08 and the $1.13 tier price"), then at the Claude label on the shops' side, the Gemini label on Brightline Paper Co.'s side, and the "Every offer checked against supplier rules" tag. When turn 1 appears, point at the shops' opening offer of $1.06 marked "Blocked by the rules": the agent tests the floor and the code refuses it. Hold on the result line ("Agreed at $X a roll, inside Brightline Paper Co.'s rules" or "No deal… The tier price stands").
 - **Voice-over:** "Now the supplier's console. Claude negotiates for the shops, Gemini for the supplier. Brightline's own policy: when the group is within ten percent of the next tier, it gives up to half the price gap. So the agents can go below $1.13, but never under $1.08. Every offer is checked against that policy in code, so the agents can't agree a price the supplier didn't allow. Agents decide prices; only code moves money."
 
 ### 4. Close (1:20–1:55, 35 s)

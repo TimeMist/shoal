@@ -55,7 +55,7 @@ Both rounds use the same 8 demo shops, labelled as demo data.
 | Round | Supplier | Tiers | Delivery | Demo shops | Retail benchmark |
 |---|---|---|---|---|---|
 | Barista oat milk, 1 L carton (`/rounds/demo`) | Meadow Oat Co. | $2.40 alone · 500+ $2.16 · 1,000+ $1.92 · 1,500+ $1.80 | $12.00 per drop + $0.05 a carton | 1,440 cartons, $1.92 | None: Channel3 doesn't stock oat milk, and the console says so |
-| Thermal receipt paper, 3⅛″ × 230′ roll (`/rounds/receipts`) | Brightline Paper Co. | $1.43 alone · 400+ $1.28 · 800+ $1.13 · 1,200+ $1.02 | $9.00 per drop + $0.02 a roll | 1,100 rolls, $1.13 | ≈ $1.50 a roll from Channel3, with sources |
+| Thermal receipt paper, 3⅛″ × 230′ roll (`/rounds/receipts`) | Brightline Paper Co. | $1.43 alone · 400+ $1.28 · 800+ $1.13 · 1,200+ $1.02 | $9.00 per drop + $0.02 a roll | 1,100 rolls, $1.13 | The current Channel3 median, with sources (≈ $1.43 a roll on Oct 31) |
 
 Oat milk sells in packs of 12 (minimum 96 a shop); receipt rolls in packs of 50 (minimum 50). The lowest tier price is the supplier's absolute floor. Both suppliers' concession policy: within 10% of the next tier, up to 50% of the price gap (receipts at 1,150 rolls: between $1.08 and $1.13).
 
@@ -106,7 +106,7 @@ This follows the video ([docs/demo-script.md](docs/demo-script.md)).
 1. Click **Reset demo** in the top bar.
 2. Open the supplier view once after every restart or deploy (`/supplier/receipts`), so the retail benchmark is loaded. Shop pages only read the cached benchmark; the supplier console runs the lookup. **Refresh retail** runs it again, at most once a minute.
 3. On the supplier console, click **Simulate 8 shops** (the Shops picker beside it goes up to 10; 8 is the scripted demo). They join one at a time, about a second apart, and the price tiers step down to 1,100 rolls at $1.13.
-4. Open `/rounds/receipts`. The ladder shows "Retail elsewhere ≈ $1.50 a roll" and its Sources. Enter a shop name, keep 50 rolls and pay with the PayPal sandbox buyer. Shoal reserves $66.50 (goods $56.50 + delivery $10.00), not charged. This browser remembers which shop is yours, in any tab.
+4. Open `/rounds/receipts`. The ladder shows "Retail elsewhere ≈ …" (the current Channel3 median) and its Sources. Enter a shop name, keep 50 rolls and pay with the PayPal sandbox buyer. Shoal reserves $66.50 (goods $56.50 + delivery $10.00), not charged. This browser remembers which shop is yours, in any tab.
 5. On the supplier console, click **Negotiate**. The two agents trade offers between the $1.13 tier and the $1.08 policy floor (1,150 rolls is within 10% of the 1,200 tier, so Brightline gives up to half the 11¢ gap); each offer is checked against the supplier's rules.
 6. Click **Close round**. Each shop is captured at the group price, and the real shop gets a PayPal invoice in Brightline Paper Co.'s name, marked paid. If an invoice fails, a **Retry invoice** step appears.
 7. The allocation grid and timeline show each shop. Click **Mark shipped**: 90% goes out as a PayPal Payout and 10% is held back.
@@ -121,6 +121,7 @@ This follows the video ([docs/demo-script.md](docs/demo-script.md)).
 - **The store is in memory, one copy per browser.** A cookie gives each visitor their own rounds; **Reset demo** resets only yours. A restart resets everyone's, and only one instance can run. On Render's free plan the instance sleeps when idle, which also resets the demo; `.github/workflows/keep-alive.yml` pings it every 10 minutes once it's on the default branch.
 - **Rounds last three days** because PayPal honors an authorization for three days. Nothing closes a round on its own yet; in the demo you close it from the supplier console. Longer rounds in production would use saved payment methods (PayPal vault) and charge at close.
 - **No webhooks yet.** Shoal reads PayPal's answer to each call. Production would also listen for authorization voided or expired and capture completed, so a round stays right if a browser closes mid-payment. If a capture or void fails at close, the supplier console offers **Retry capture** (or **Retry release**) before shipping.
+- **Invoices show up as their own line in the buyer's PayPal activity.** Shoal records each invoice as paid, so next to the payment the buyer sees an "Invoice Received" line for the same amount. It's a record of the same payment, not a second charge: each shop has one PayPal capture, shown on its receipt.
 - **There are no logins.** Within your own copy, the shop, invoice and purchase-order routes are open. Negotiation and claim triage are limited to one call per client every 30 and 15 seconds, so the hosted demo's model credits can't be drained.
 
 ## Sponsor tools
