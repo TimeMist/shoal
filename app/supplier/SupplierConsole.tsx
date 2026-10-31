@@ -578,7 +578,7 @@ function CopyEmail({ email }: { email: string }) {
   return (
     <button
       type="button"
-      className="rounded-pill bg-tint px-2 py-0.5 text-xs font-semibold text-muted hover:text-ink"
+      className="flex-none whitespace-nowrap rounded-pill bg-tint px-2 py-0.5 text-xs font-semibold text-muted hover:text-ink"
       onClick={() => navigator.clipboard.writeText(email).then(() => (setCopied(true), setTimeout(() => setCopied(false), 1500)), () => {})}
     >
       {copied ? "Copied" : "Copy email"}
@@ -589,8 +589,8 @@ function CopyEmail({ email }: { email: string }) {
 
 function Login({ email, fallback }: { email?: string; fallback: string }) {
   return email ? (
-    <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
-      <code className="text-[13px] font-semibold text-ink">{email}</code>
+    <span className="flex min-w-0 items-center gap-2">
+      <code title={email} className="min-w-0 truncate text-[13px] font-semibold text-ink">{email}</code>
       <CopyEmail email={email} />
     </span>
   ) : (
@@ -635,7 +635,7 @@ function PayPalAccounts({ roundId, supplier, accounts, paidAtShip }: { roundId: 
           </span>
         </li>
       </ul>
-      <p className="text-xs text-muted">PayPal keeps one sign-in per browser: log out, or use a private window, to switch accounts.</p>
+      <p className="rounded-field bg-blush px-3 py-2 text-xs text-muted">PayPal keeps one sign-in per browser: log out, or use a private window, to switch accounts.</p>
     </section>
   );
 }
