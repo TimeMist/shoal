@@ -115,6 +115,7 @@ export default function JoinPanel({ round, units, onJoined }: Props) {
       {CLIENT_ID ? (
         <PayPalProvider clientId={CLIENT_ID} environment="sandbox" components={["paypal-payments"]} pageType="checkout">
           <PayPalOneTimePaymentButton
+            commit={false} // PayPal says "Continue", not "Complete Purchase": Shoal only reserves the money here
             createOrder={createOrder}
             onApprove={onApprove}
             onCancel={() => setError("PayPal was closed before you approved. Nothing was reserved.")}
