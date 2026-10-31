@@ -1,5 +1,7 @@
 # Shoal
 
+[![CI](https://github.com/TimeMist/shoal/workflows/CI/badge.svg)](https://github.com/TimeMist/shoal/actions/workflows/ci.yml)
+
 Shoal lets independent shops buy supplies together, so they pay closer to what chains pay. Shops join a short buying round, PayPal reserves each shop's money, and when the round closes each shop pays only the price the group reached.
 
 Built for the [PayPal AI Hackathon](https://paypalaihackathon.devpost.com/). Live demo (PayPal sandbox): https://shoal-m7zz.onrender.com
@@ -36,7 +38,7 @@ Every order delivered or resolved ──► rest of the holdback paid out to the
 
 AI does three jobs:
 
-- **Negotiation.** One agent speaks for the shops and one for the supplier. Each side runs on Claude or Gemini, set by `SHOP_AGENT_PROVIDER` and `SUPPLIER_AGENT_PROVIDER` (`claude` or `gemini`). They have 8 turns between them to agree a price below the current tier.
+- **Negotiation.** One agent speaks for the shops and one for the supplier. Each side runs on Claude or Gemini, set by `SHOP_AGENT_PROVIDER` and `SUPPLIER_AGENT_PROVIDER` (`claude` or `gemini`). They have 8 turns between them to agree a price below the current tier. The supplier's concession policy is published, so the shop agent knows the floor; it opens one offer just under it to test it, the guard rejects that offer, and the agents settle between the floor and the tier price. A reply that makes no move is asked once more before the turn is lost, and if Gemini is overloaded, Claude makes that move and the turn says so.
 - **Claim triage.** When a shop reports missing, damaged or short goods, Claude reads the report (and photo, if any) and proposes how many units to refund. A person approves or rejects it on the supplier console.
 - **Pack sizing for the retail benchmark.** Claude reads Channel3 offers and says whether each is the same product and how many units are in the pack. It never supplies a price.
 
@@ -59,7 +61,10 @@ Both rounds use the same 8 demo shops, labelled as demo data.
 
 Oat milk sells in packs of 12 (minimum 96 a shop); receipt rolls in packs of 50 (minimum 50). The lowest tier price is the supplier's absolute floor. Both suppliers' concession policy: within 10% of the next tier, up to 50% of the price gap (receipts at 1,150 rolls: between $1.08 and $1.13).
 
-Verified in the sandbox on 2026-10-26: in the receipts round, with no simulated shops, a real shop joined with 500 rolls, the round closed at $1.28, PayPal captured $659.00 ($640.00 goods + $19.00 delivery), and the PayPal invoice `SH-receipts-1-…` was sent and recorded as paid.
+Verified end to end on the hosted demo, against the PayPal sandbox, on 2026-10-31:
+
+- **Receipts round** (8 simulated shops + one real shop with 50 rolls): $66.50 reserved; agreed at $1.08; $64.00 captured ($54.00 goods + $10.00 delivery, $2.50 never taken); PayPal invoice issued in Brightline Paper Co.'s name and recorded as paid; $57.60 paid out at shipping; a claim for 5 damaged rolls refunded $5.40 from the holdback and recorded on the invoice; the remaining $1.00 holdback paid out. The buyer's and supplier's PayPal activity show the same amounts.
+- **Oat milk round** (one real shop with 96 cartons, below the 500-carton first tier): the round failed and PayPal shows the $247.20 authorization voided.
 
 ## Run it locally
 
@@ -79,6 +84,8 @@ You need Node 24 and a free Bryntum trial login (for `@bryntum/scheduler-trial`,
    npm run dev                  # http://localhost:3000
    npm test                     # money, guard, claims, invoices, benchmark and agent tests
    ```
+
+CI (`.github/workflows/ci.yml`) runs lint, tests and the build on every push. It installs Bryntum with the repository secret `BRYNTUM_NPM_TOKEN`.
 
 ## Sandbox setup
 
@@ -107,7 +114,7 @@ This follows the video ([docs/demo-script.md](docs/demo-script.md)).
 2. Open the supplier view once after every restart or deploy (`/supplier/receipts`), so the retail benchmark is loaded. Shop pages only read the cached benchmark; the supplier console runs the lookup. **Refresh retail** runs it again, at most once a minute.
 3. On the supplier console, click **Simulate 8 shops** (the Shops picker beside it goes up to 10; 8 is the scripted demo). They join one at a time, about a second apart, and the price tiers step down to 1,100 rolls at $1.13.
 4. Open `/rounds/receipts`. The ladder shows "Retail elsewhere ≈ …" (the current Channel3 median) and its Sources. Enter a shop name, keep 50 rolls and pay with the PayPal sandbox buyer. Shoal reserves $66.50 (goods $56.50 + delivery $10.00), not charged. This browser remembers which shop is yours, in any tab.
-5. On the supplier console, click **Negotiate**. The two agents trade offers between the $1.13 tier and the $1.08 policy floor (1,150 rolls is within 10% of the 1,200 tier, so Brightline gives up to half the 11¢ gap); each offer is checked against the supplier's rules.
+5. On the supplier console, click **Negotiate**. The two agents trade offers between the $1.13 tier and the $1.08 policy floor (1,150 rolls is within 10% of the 1,200 tier, so Brightline gives up to half the 11¢ gap); each offer is checked against the supplier's rules. The shops' opening offer of $1.06 is blocked by the rules. A negotiation usually takes 15–40 seconds; the turns appear as they happen.
 6. Click **Close round**. Each shop is captured at the group price, and the real shop gets a PayPal invoice in Brightline Paper Co.'s name, marked paid. If an invoice fails, a **Retry invoice** step appears.
 7. The allocation grid and timeline show each shop. Click **Mark shipped**: 90% goes out as a PayPal Payout and 10% is held back.
 8. On the shop tab, click **Report a problem**, choose damaged rolls and send. The agent proposes a refund. On the supplier console, click **Approve**. PayPal refunds the shop from the holdback and the refund is recorded on its invoice.
@@ -118,7 +125,7 @@ This follows the video ([docs/demo-script.md](docs/demo-script.md)).
 - **Shops are simulated**, apart from the one you join with. Demo shops get no PayPal order or invoice.
 - **Payouts stand in for PayPal multiparty.** In the demo, Shoal's sandbox account collects the money and pays the supplier with Payouts. In production, shops would pay the supplier directly through multiparty, and Shoal would take a platform fee without holding funds.
 - **Invoices come from the app's sandbox account** with the supplier's business name and the note "Issued by Shoal on behalf of …". In production, Shoal would call Invoicing for the connected supplier, so invoices come from the supplier's own PayPal account.
-- **The store is in memory, one copy per browser.** A cookie gives each visitor their own rounds; **Reset demo** resets only yours. A restart resets everyone's, and only one instance can run. On Render's free plan the instance sleeps when idle, which also resets the demo; `.github/workflows/keep-alive.yml` pings it every 10 minutes once it's on the default branch.
+- **The store is in memory, one copy per browser.** A cookie gives each visitor their own rounds; **Reset demo** resets only yours. A restart resets everyone's, and only one instance can run. On Render's free plan the instance sleeps when idle, which also resets the demo; `.github/workflows/keep-alive.yml` pings it every 10 minutes to keep it awake.
 - **Rounds last three days** because PayPal honors an authorization for three days. Nothing closes a round on its own yet; in the demo you close it from the supplier console. Longer rounds in production would use saved payment methods (PayPal vault) and charge at close.
 - **No webhooks yet.** Shoal reads PayPal's answer to each call. Production would also listen for authorization voided or expired and capture completed, so a round stays right if a browser closes mid-payment. If a capture or void fails at close, the supplier console offers **Retry capture** (or **Retry release**) before shipping.
 - **Invoices show up as their own line in the buyer's PayPal activity.** Shoal records each invoice as paid, so next to the payment the buyer sees an "Invoice Received" line for the same amount. It's a record of the same payment, not a second charge: each shop has one PayPal capture, shown on its receipt.
@@ -147,6 +154,10 @@ This follows the video ([docs/demo-script.md](docs/demo-script.md)).
 - [x] Shop addresses, invoice links and emails kept off public round data
 - [x] Render config
 - [x] Hosted demo on Render
+- [x] Supplier concession policy enforced in code; the shop agent's below-floor opener is visibly rejected
+- [x] A separate demo copy per browser, per-client limits on the AI routes, retry steps for failed captures and invoices
+- [x] CI (lint, tests, build) and a keep-alive ping for the hosted demo
+- [x] Verified end to end against the PayPal sandbox (see "The two demo rounds")
 - [ ] PayPal multiparty, persistent storage, logins
 
 ## How it was built
