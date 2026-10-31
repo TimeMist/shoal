@@ -7,6 +7,7 @@ Things only the repo owner can do: accounts, secrets, decisions and the video. S
 - [ ] Merge `feat/shoal-build` into `main` (through a pull request) and keep `main` the default branch. Judges land on `main`, and GitHub only runs the CI and keep-alive workflows from the default branch.
 - [ ] Add the repository secret `BRYNTUM_NPM_TOKEN` (Settings > Secrets and variables > Actions) so CI can install Bryntum. Same token as on Render.
 - [ ] Make a dedicated PayPal sandbox personal account for visitors. On Render set `NEXT_PUBLIC_SANDBOX_BUYER_EMAIL` and `NEXT_PUBLIC_SANDBOX_BUYER_PASSWORD`, then redeploy (they're read at build time). This login is public: never a real account.
+- [ ] Make one PayPal sandbox **business** account per supplier, e.g. `meadow-oat-demo@business.example.com` (business name "Meadow Oat Co. (demo)") and `brightline-paper-demo@business.example.com` ("Brightline Paper Co. (demo)"), both with the same password used nowhere else. On Render set `SUPPLIER_PAYPAL_EMAIL_DEMO`, `SUPPLIER_PAYPAL_EMAIL_RECEIPTS` and `SANDBOX_SUPPLIER_PASSWORD`, then delete `SHOAL_PAYPAL_EMAIL` and `SHOP_PAYPAL_EMAILS`, which nothing reads any more.
 - [ ] Set daily spend limits on the Anthropic, Gemini and Channel3 keys. The app throttles each client, but only a provider limit caps the total.
 - [ ] After the merge, check the Actions tab: "Keep demo awake" runs every 10 minutes and CI is green.
 - [ ] Optional: a paid always-on Render instance for the judging window (Nov 12 to Dec 21) instead of relying on the keep-alive ping.

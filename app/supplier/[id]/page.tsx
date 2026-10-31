@@ -5,7 +5,8 @@ import { Suspense } from "react";
 import Wordmark from "@/components/Wordmark";
 import { getState } from "@/lib/store";
 import { visitor } from "@/lib/visitor";
-import SupplierConsole from "../SupplierConsole";
+import SupplierConsole, { type SandboxAccounts } from "../SupplierConsole";
+import { roundSupplierEmail } from "@/lib/http";
 import { publicState } from "@/lib/privacy";
 
 export const metadata: Metadata = { title: "Supplier console · Shoal" };
@@ -28,12 +29,16 @@ async function Console({ params }: Pick<PageProps<"/supplier/[id]">, "params">) 
   const { id } = await params;
   const state = getState(id, await visitor());
   if (!state) notFound();
-  return <SupplierConsole id={id} initial={publicState(state)} accounts={sandboxAccounts()} />;
+  return <SupplierConsole id={id} initial={publicState(state)} accounts={sandboxAccounts(id)} />;
 }
 
-// Sandbox logins only (fake addresses), shown so the demo user knows which PayPal account plays which role.
-function sandboxAccounts() {
+// Public sandbox logins only: the shop buyer and this round's supplier, each shown when its password is set.
+// Shoal's own platform account (it captures, refunds and pays out) is never listed.
+function sandboxAccounts(roundId: string): SandboxAccounts {
   const env = process.env;
-  const shops = (env.SHOP_PAYPAL_EMAILS ?? "").split(",").map((e) => e.trim()).filter(Boolean);
-  return { shoal: env.SHOAL_PAYPAL_EMAIL || undefined, supplier: env.SUPPLIER_PAYPAL_EMAIL || undefined, shops };
+  const login = (email?: string, password?: string) => (email?.trim() && password ? { email: email.trim(), password } : undefined);
+  return {
+    buyer: login(env.NEXT_PUBLIC_SANDBOX_BUYER_EMAIL, env.NEXT_PUBLIC_SANDBOX_BUYER_PASSWORD),
+    supplier: login(roundSupplierEmail(roundId), env.SANDBOX_SUPPLIER_PASSWORD),
+  };
 }

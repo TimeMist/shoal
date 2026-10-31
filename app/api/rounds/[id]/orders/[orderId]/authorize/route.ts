@@ -1,5 +1,5 @@
 import { verifyQuoteToken } from "@/lib/deal";
-import { body, fail, paypalFail } from "@/lib/http";
+import { body, fail, paypalFail, roundSupplierEmail } from "@/lib/http";
 import { authorizationMatches, payerIsSupplier } from "@/lib/join";
 import { publicCommitment } from "@/lib/privacy";
 import { authorizeOrder, type Authorization, dealSecret, voidAuthorization } from "@/lib/paypal";
@@ -26,7 +26,7 @@ export async function POST(request: Request, ctx: RouteContext<"/api/rounds/[id]
     await voidAuthorization(auth.authorizationId).catch(() => {});
     return fail("Authorization does not match the quote", 400);
   }
-  if (payerIsSupplier(auth.payerEmail, process.env.SUPPLIER_PAYPAL_EMAIL)) {
+  if (payerIsSupplier(auth.payerEmail, roundSupplierEmail(id))) {
     await voidAuthorization(auth.authorizationId).catch(() => {});
     return fail(`That PayPal account is ${s.round.supplier}'s, the supplier's. Nothing was charged. Join with a sandbox buyer (personal) account instead.`, 409);
   }

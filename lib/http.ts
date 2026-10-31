@@ -17,8 +17,14 @@ export class ConfigError extends Error {
   }
 }
 
-export function supplierEmail(): string {
-  const e = process.env.SUPPLIER_PAYPAL_EMAIL?.trim();
-  if (!e) throw new ConfigError("SUPPLIER_PAYPAL_EMAIL is not set");
+// Each round pays its own supplier's sandbox account: SUPPLIER_PAYPAL_EMAIL_RECEIPTS for round "receipts",
+// SUPPLIER_PAYPAL_EMAIL_DEMO for "demo" (oat milk). SUPPLIER_PAYPAL_EMAIL covers a round without its own.
+export function roundSupplierEmail(roundId: string, env: Record<string, string | undefined> = process.env): string | undefined {
+  return (env[`SUPPLIER_PAYPAL_EMAIL_${roundId.toUpperCase()}`] || env.SUPPLIER_PAYPAL_EMAIL)?.trim() || undefined;
+}
+
+export function supplierEmail(roundId: string): string {
+  const e = roundSupplierEmail(roundId);
+  if (!e) throw new ConfigError(`SUPPLIER_PAYPAL_EMAIL_${roundId.toUpperCase()} is not set`);
   return e;
 }

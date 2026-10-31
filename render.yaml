@@ -32,11 +32,15 @@ services:
         sync: false
       - key: SUPPLIER_AGENT_PROVIDER
         sync: false
+      # Each round's supplier account; SUPPLIER_PAYPAL_EMAIL covers a round without its own.
+      - key: SUPPLIER_PAYPAL_EMAIL_DEMO
+        sync: false
+      - key: SUPPLIER_PAYPAL_EMAIL_RECEIPTS
+        sync: false
       - key: SUPPLIER_PAYPAL_EMAIL
         sync: false
-      - key: SHOAL_PAYPAL_EMAIL
-        sync: false
-      - key: SHOP_PAYPAL_EMAILS
+      # Public supplier login shown in "See it in PayPal".
+      - key: SANDBOX_SUPPLIER_PASSWORD
         sync: false
       # Public sandbox buyer login shown on the shop page. Read at build time.
       - key: NEXT_PUBLIC_SANDBOX_BUYER_EMAIL

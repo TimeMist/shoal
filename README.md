@@ -84,16 +84,16 @@ You need Node 24 and a free Bryntum trial login (for `@bryntum/scheduler-trial`,
 
 1. **PayPal app.** At developer.paypal.com > Apps & Credentials (Sandbox), create an app and turn on **Payouts** and **Invoicing**. Put its client ID in `PAYPAL_CLIENT_ID` and `NEXT_PUBLIC_PAYPAL_CLIENT_ID`, and its secret in `PAYPAL_CLIENT_SECRET`.
 2. **A buyer.** Under Testing Tools > Sandbox Accounts, use a **personal** account to join rounds through the PayPal button.
-3. **A supplier.** Create a second **business** sandbox account and put its email in `SUPPLIER_PAYPAL_EMAIL`. Payouts go there.
+3. **The suppliers.** Create a **business** sandbox account for each round's supplier and put the emails in `SUPPLIER_PAYPAL_EMAIL_DEMO` (oat milk, Meadow Oat Co.) and `SUPPLIER_PAYPAL_EMAIL_RECEIPTS` (receipt rolls, Brightline Paper Co.). Each round's Payouts go to its own supplier. `SUPPLIER_PAYPAL_EMAIL` covers a round without its own address.
 
-   That makes three sandbox accounts, one per role. Keep them apart: Shoal refuses a join paid with the supplier's account.
+   Keep the roles apart: Shoal refuses a join paid with that round's supplier account.
    For a public demo, set `NEXT_PUBLIC_SANDBOX_BUYER_EMAIL` and `NEXT_PUBLIC_SANDBOX_BUYER_PASSWORD` to a dedicated sandbox personal account: the shop page shows that login under the PayPal button. It's public, so never use a real account.
-   Optionally set `SHOAL_PAYPAL_EMAIL` and `SHOP_PAYPAL_EMAILS` (comma-separated) so the supplier console's **See it in PayPal** panel lists each login with a Copy button. PayPal's sandbox sign-in can't be pre-filled from a link.
+   The supplier console's **See it in PayPal** panel lists only logins a visitor can use: that buyer, and the round's supplier if you set `SANDBOX_SUPPLIER_PASSWORD` (give both supplier accounts that password; it's public too). Shoal's own account is never listed. PayPal's sandbox sign-in can't be pre-filled from a link, so each login has Copy buttons.
 
    | Role | Sandbox account | What you see in its PayPal activity |
    |---|---|---|
    | Shoal (platform) | the business account that owns the app (step 1) | shop payments captured, refunds, payouts sent, invoices issued |
-   | Supplier | the second business account (step 3) | payouts received |
+   | Supplier | one business account per round (step 3) | payouts received |
    | Shop | a personal account (step 2) | its payment and its invoice |
 4. **Secrets and agents.** Set `DEAL_SECRET` (`openssl rand -base64 32`), `ANTHROPIC_API_KEY`, and `GEMINI_API_KEY` if either side uses Gemini.
 5. **Channel3.** Get a free-tier key at trychannel3.com and set `CHANNEL3_API_KEY`. Each lookup costs one credit; results are cached for 24 hours.
