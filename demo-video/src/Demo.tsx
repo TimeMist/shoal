@@ -58,13 +58,18 @@ const StatCard = ({stats}: {stats: Stats}) => {
 
 const Footage = ({beat}: {beat: Beat}) => {
   const {fps} = useVideoConfig();
+  // Cumulative shot offsets in source seconds, computed outside render callbacks.
+  const starts: number[] = [];
   let at = 0;
+  for (const s of beat.shots) {
+    starts.push(at);
+    at += s.len;
+  }
   return (
     <>
       {beat.shots.map((s, i) => {
-        const from = Math.round((at / beat.rate) * fps);
-        at += s.len;
-        const len = Math.round((at / beat.rate) * fps) - from;
+        const from = Math.round((starts[i] / beat.rate) * fps);
+        const len = Math.round(((starts[i] + s.len) / beat.rate) * fps) - from;
         if (len <= 0) return null;
         return (
           <Sequence key={i} from={from} durationInFrames={len}>
@@ -124,16 +129,20 @@ const Subtitles = ({beat}: {beat: Beat}) => {
 
 export const Demo = () => {
   const {fps} = useVideoConfig();
+  const starts: number[] = [];
   let at = INTRO * fps;
+  for (const b of plan.beats) {
+    starts.push(at);
+    at += Math.round(b.seconds * fps);
+  }
   return (
     <AbsoluteFill style={{background: INK}}>
       <Sequence durationInFrames={INTRO * fps}>
         <Card title="shoal" lines={['Independent shops, buying together.']} frames={INTRO * fps} />
       </Sequence>
-      {plan.beats.map((b) => {
-        const from = at;
+      {plan.beats.map((b, i) => {
+        const from = starts[i];
         const frames = Math.round(b.seconds * fps);
-        at += frames;
         return (
           <Sequence key={b.id} from={from} durationInFrames={frames} name={b.id}>
             {'card' in b && b.card ? (
