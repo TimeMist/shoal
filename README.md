@@ -108,7 +108,7 @@ CI (`.github/workflows/ci.yml`) runs lint, tests and the build on every push. It
 
 ## Demo walkthrough
 
-This follows the video ([docs/demo-script.md](docs/demo-script.md)).
+This is the flow the demo video follows.
 
 1. Click **Reset demo** in the top bar.
 2. Open the supplier view once after every restart or deploy (`/supplier/receipts`), so the retail benchmark is loaded. Shop pages only read the cached benchmark; the supplier console runs the lookup. **Refresh retail** runs it again, at most once a minute.
@@ -141,28 +141,19 @@ This follows the video ([docs/demo-script.md](docs/demo-script.md)).
 - **Channel3**: the retail benchmark.
 - **Render**: hosting (`render.yaml`, one instance). Set `BRYNTUM_NPM_TOKEN` (the token from your `~/.npmrc` after `npm login`) and the `.env.example` values in the Render dashboard.
 
-## Status
+## Not built yet
 
-- [x] Buying rounds with tiers: authorize at join, capture at the group price, void on failure
-- [x] Delivery split: per drop + per unit, reserved at join
-- [x] Tier negotiation between two agents (Claude or Gemini), every offer checked in code
-- [x] PayPal invoices in the supplier's name, payments and refunds recorded
-- [x] Per-shop shipping, delivery and claims with AI triage and holdback refunds
-- [x] Supplier payouts and holdback release via PayPal Payouts
-- [x] Channel3 retail benchmark (receipts round)
-- [x] Supplier console: AG Grid allocation and purchase-order export, Bryntum timeline
-- [x] Shop addresses, invoice links and emails kept off public round data
-- [x] Render config
-- [x] Hosted demo on Render
-- [x] Supplier concession policy enforced in code; the shop agent's below-floor opener is visibly rejected
-- [x] A separate demo copy per browser, per-client limits on the AI routes, retry steps for failed captures and invoices
-- [x] CI (lint, tests, build) and a keep-alive ping for the hosted demo
-- [x] Verified end to end against the PayPal sandbox (see "The two demo rounds")
-- [ ] PayPal multiparty, persistent storage, logins
+PayPal multiparty, persistent storage and logins (see "Demo vs production").
 
-## How it was built
+## Demo video
 
-`docs/superpowers/` holds the design specs and implementation plans written before each stage of the build (with AI coding assistance), kept as a record of the decisions. `docs/demo-script.md` is the video script.
+`demo-video/` makes the video from the live app, so every number on screen is a real sandbox transaction. `record.mjs` drives Chrome with Playwright through the walkthrough above and logs timestamps and the receipt's amounts; `voiceover.json` is the script, filled in with those amounts; `tts.mjs` voices it with Gemini text-to-speech; `plan.mjs` cuts the footage to fit the voice; and Remotion (`src/`) renders it with burned-in subtitles. Fonts are Funnel Display and Funnel Sans (SIL Open Font License); there is no music.
+
+```bash
+cd demo-video && npm install
+npm run prep && npm run record   # needs the app running and the DEMO_* sandbox logins in ../.env.local
+npm run tts && node plan.mjs && npm run render   # out/shoal-demo.mp4
+```
 
 ## License
 

@@ -1,4 +1,4 @@
-// Drives the Shoal demo in Chrome and records it, following docs/demo-script.md.
+// Drives the Shoal demo in Chrome and records it, beat by beat as in voiceover.json.
 //   node record.mjs login    one-time: sign in to the PayPal sandbox yourself in both profiles
 //   node record.mjs prep     reset the demo, simulate shops, set up the failing oat-milk round (not recorded)
 //   node record.mjs record   record all beats into recordings/ with markers.json

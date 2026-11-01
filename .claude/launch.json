@@ -2,21 +2,24 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "design-mocks",
-      "runtimeExecutable": "python3",
-      "runtimeArgs": ["-m", "http.server", "4173", "--bind", "127.0.0.1", "--directory", ".impeccable/mocks"],
-      "port": 4173
-    },
-    {
       "name": "app",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
+      "runtimeArgs": [
+        "run",
+        "dev"
+      ],
       "port": 3000
     },
     {
       "name": "app-demo",
       "runtimeExecutable": "env",
-      "runtimeArgs": ["SHOP_AGENT_PROVIDER=claude", "SUPPLIER_AGENT_PROVIDER=gemini", "npm", "run", "dev"],
+      "runtimeArgs": [
+        "SHOP_AGENT_PROVIDER=claude",
+        "SUPPLIER_AGENT_PROVIDER=gemini",
+        "npm",
+        "run",
+        "dev"
+      ],
       "port": 3000
     }
   ]
