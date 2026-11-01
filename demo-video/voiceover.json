@@ -1,0 +1,35 @@
+[
+  {
+    "id": "1-problem",
+    "text": "Independent shops pay more per unit than chains for the same supplies, because they buy in small quantities. Shoal lets them buy together."
+  },
+  {
+    "id": "2-join",
+    "text": "This round is thermal receipt rolls. Eight shops are already in, so the price is $1.13 a roll, against $1.43 alone. Retail is about {retail} a roll, with sources from Channel3. I join with 50 rolls. PayPal reserves goods plus delivery: sixty-six fifty. It's reserved, not charged, and my price can only go down."
+  },
+  {
+    "id": "3-negotiate",
+    "text": "Now the supplier's console. Claude negotiates for the shops, Gemini for the supplier. Brightline's own policy: when the group is within ten percent of the next tier, it gives up to half the price gap. So the agents can go below $1.13, but never under $1.08. Every offer is checked against that policy in code, so the agents can't agree a price the supplier didn't allow. The AI can negotiate, but it can never move money."
+  },
+  {
+    "id": "4-close",
+    "text": "I close the round. PayPal captures every shop at the group price, never more than it reserved: I reserved sixty-six fifty and paid {paid}; the rest was never taken. My receipt shows what I saved against buying alone, and the shop gets a real PayPal invoice in the supplier's name, already marked paid. And in PayPal itself, the payment is {paid}: the group price, not the reservation."
+  },
+  {
+    "id": "5-fulfil",
+    "text": "The grid shows each shop's order, and the timeline gives each shop its own lane. Marking it shipped pays the supplier ninety percent through PayPal Payouts, landing in Brightline's own PayPal, and holds ten percent back. One shop reports five damaged rolls. The AI checks the report and proposes a refund; a person approves it. PayPal refunds that shop from the holdback, and the refund is recorded on its invoice. The supplier exports one purchase order for the whole round."
+  },
+  {
+    "id": "6-fail",
+    "text": "And if a round misses its first tier, nobody pays. PayPal voids every reservation."
+  },
+  {
+    "id": "7-impact",
+    "card": true,
+    "text": "Receipt rolls cost cents, so the savings here are dollars. But it's the same {pct} percent on a two-thousand-dollar coffee grinder order. Shops get chain prices; the supplier gets one bulk order, prepaid, in one shipment. Everyone comes out ahead."
+  },
+  {
+    "id": "7-why",
+    "text": "Shoal uses PayPal Orders, Payments, Payouts and Invoicing. Rounds last three days, because that's how long PayPal honors a reservation. In production, shops would pay suppliers directly through PayPal multiparty, with Shoal taking a platform fee and never holding the money."
+  }
+]

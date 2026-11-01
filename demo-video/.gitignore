@@ -1,0 +1,7 @@
+node_modules/
+profiles/
+recordings/
+public/rec/
+out/
+public/vo/
+public/plan.json
