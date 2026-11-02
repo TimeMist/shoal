@@ -5,7 +5,7 @@ services:
   - type: web
     name: shoal
     runtime: node
-    plan: free
+    plan: starter
     # The token line is added at build time so the repo's .npmrc never overrides a local npm login.
     buildCommand: echo "//npm.bryntum.com/:_authToken=${BRYNTUM_NPM_TOKEN}" >> .npmrc && npm ci && npm run build
     startCommand: npm start

@@ -6,7 +6,7 @@ Shoal lets independent shops buy supplies together, so they pay closer to what c
 
 Built for the [PayPal AI Hackathon](https://paypalaihackathon.devpost.com/). Live demo (PayPal sandbox): https://shoal-m7zz.onrender.com
 
-**Try it:** open the live demo; your browser gets its own copy of both rounds, so nobody else's clicks change yours. On the shop page, pay with the PayPal sandbox buyer login shown under the PayPal button (test money only). The first visit after an idle spell can take about 40 seconds while Render wakes the server.
+**Try it:** open the live demo; your browser gets its own copy of both rounds, so nobody else's clicks change yours. On the shop page, pay with the PayPal sandbox buyer login shown under the PayPal button (test money only).
 
 ## Money flow
 
@@ -125,7 +125,7 @@ This is the flow the demo video follows.
 - **Shops are simulated**, apart from the one you join with. Demo shops get no PayPal order or invoice.
 - **Payouts stand in for PayPal multiparty.** In the demo, Shoal's sandbox account collects the money and pays the supplier with Payouts. In production, shops would pay the supplier directly through multiparty, and Shoal would take a platform fee without holding funds.
 - **Invoices come from the app's sandbox account** with the supplier's business name and the note "Issued by Shoal on behalf of …". In production, Shoal would call Invoicing for the connected supplier, so invoices come from the supplier's own PayPal account.
-- **The store is in memory, one copy per browser.** A cookie gives each visitor their own rounds; **Reset demo** resets only yours. A restart resets everyone's, and only one instance can run. On Render's free plan the instance sleeps when idle, which also resets the demo; `.github/workflows/keep-alive.yml` pings it every 10 minutes to keep it awake.
+- **The store is in memory, one copy per browser.** A cookie gives each visitor their own rounds; **Reset demo** resets only yours. A restart resets everyone's, and only one instance can run. The hosted demo runs on Render's Starter instance, which doesn't sleep, so the demo resets only on a redeploy.
 - **Rounds last three days** because PayPal honors an authorization for three days. Nothing closes a round on its own yet; in the demo you close it from the supplier console. Longer rounds in production would use saved payment methods (PayPal vault) and charge at close.
 - **No webhooks yet.** Shoal reads PayPal's answer to each call. Production would also listen for authorization voided or expired and capture completed, so a round stays right if a browser closes mid-payment. If a capture or void fails at close, the supplier console offers **Retry capture** (or **Retry release**) before shipping.
 - **Invoices show up as their own line in the buyer's PayPal activity.** Shoal records each invoice as paid, so next to the payment the buyer sees an "Invoice Received" line for the same amount. It's a record of the same payment, not a second charge: each shop has one PayPal capture, shown on its receipt.

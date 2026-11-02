@@ -1,4 +1,4 @@
-// Loads the retail benchmarks when the server starts, so shop pages show them after a Render wake-up
+// Loads the retail benchmarks when the server starts, so shop pages show them after a restart
 // without someone opening the supplier console first. Costs one Channel3 credit per round per boot.
 export async function register() {
   if (process.env.NEXT_RUNTIME !== "nodejs" || process.env.NEXT_PHASE === "phase-production-build") return;
